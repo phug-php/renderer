@@ -1,17 +1,18 @@
 <?php
 
-function removeDirectory($directory) {
+function removeDirectory($directory)
+{
     foreach (scandir($directory) as $entity) {
         if ($entity === '.' || $entity === '..') {
             continue;
         }
 
-        if (is_dir($directory . '/' . $entity)) {
-            removeDirectory($directory . '/' . $entity);
+        if (is_dir($directory.'/'.$entity)) {
+            removeDirectory($directory.'/'.$entity);
             continue;
         }
 
-        @unlink($directory . '/' . $entity);
+        @unlink($directory.'/'.$entity);
     }
 
     rmdir($directory);
