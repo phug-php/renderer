@@ -74,7 +74,6 @@ class Renderer
             $compilerOptions['parser_options']['lexer_options'] = $options['lexer_options'];
         }
 
-
         return $compilerOptions;
     }
 

@@ -8,16 +8,18 @@ class CasesTest extends AbstractRendererTest
     {
         return array_map(function ($file) {
             $file = realpath($file);
+            $pugFile = substr($file, 0, -5).'.pug';
+            $basename = basename($pugFile);
 
-            return [$file, substr($file, 0, -5).'.pug'];
+            return [$file, $pugFile, basename($file) . ' should render ' . basename($pugFile)];
         }, glob(__DIR__.'/../cases/*.html'));
     }
 
     /**
      * @dataProvider caseProvider
      */
-    public function testRender($expected, $actual)
+    public function testRender($expected, $actual, $message)
     {
-        self::asssertSameLines(file_get_contents($expected), $this->renderer->render($actual), $actual);
+        self::assertSameLines(file_get_contents($expected), $this->renderer->render($actual), $message);
     }
 }

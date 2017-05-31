@@ -19,13 +19,13 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
-    static public function linuxLines($content)
+    public static function linuxLines($content)
     {
-        return str_replace("\r\n", "\n", trim($content));
+        return str_replace(array("\r\n", '/><', ' />'), array("\n", "/>\n<", '/>'), trim($content));
     }
 
-    static public function asssertSameLines($expected, $actual)
+    public static function assertSameLines($expected, $actual, $message = null)
     {
-        self::assertSame(self::linuxLines($expected), self::linuxLines($actual));
+        self::assertSame(self::linuxLines($expected), self::linuxLines($actual), $message);
     }
 }
