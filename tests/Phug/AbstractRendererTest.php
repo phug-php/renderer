@@ -21,7 +21,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public static function linuxLines($content)
     {
-        return str_replace(array("\r\n", '/><', ' />'), array("\n", "/>\n<", '/>'), trim($content));
+        return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
     }
 
     public static function assertSameLines($expected, $actual, $message = null)
