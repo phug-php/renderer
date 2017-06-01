@@ -19,6 +19,11 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
+    public static function flatContent($content)
+    {
+        return implode('', array_map('trim', preg_split('/\r|\n/', self::linuxLines($content))));
+    }
+
     public static function linuxLines($content)
     {
         return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
@@ -26,6 +31,16 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public static function assertSameLines($expected, $actual, $message = null)
     {
-        self::assertSame(self::linuxLines($expected), self::linuxLines($actual), $message);
+        $flatExpected = self::flatContent($expected);
+        $flatActual = self::flatContent($actual);
+        if ($flatExpected === $flatActual) {
+            self::assertSame($flatExpected, $flatActual, $message);
+
+            return;
+        }
+        $expected = self::linuxLines($expected);
+        $actual = self::linuxLines($actual);
+
+        self::assertSame($expected, $actual, $message);
     }
 }
