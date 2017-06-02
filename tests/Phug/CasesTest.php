@@ -2,8 +2,6 @@
 
 namespace Phug\Test;
 
-use Pug\Pug;
-
 class CasesTest extends AbstractRendererTest
 {
     public function caseProvider()
