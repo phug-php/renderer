@@ -2,6 +2,8 @@
 
 namespace Phug\Test;
 
+use JsPhpize\JsPhpize;
+use Phug\Compiler;
 use Phug\Renderer;
 
 abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
@@ -13,9 +15,43 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        $lastCompiler = null;
         $this->renderer = new Renderer([
             'basedir' => __DIR__.'/..',
             'pretty'  => true,
+            'compiler_options' => [
+                'pre_compile' => [
+                    function ($pugCode, Compiler $compiler) use (&$lastCompiler) {
+                        $lastCompiler = $compiler;
+                        $compiler->setOption('jsphpize_engine', new JsPhpize([
+                            'catchDependencies' => true,
+                        ]));
+
+                        return $pugCode;
+                    }
+                ],
+                'post_compile' => [
+                    function ($phpCode, Compiler $compiler) {
+                        /** @var JsPhpize $jsPhpize */
+                        $jsPhpize = $compiler->getOption('jsphpize_engine');
+                        $phpCode = $compiler->getFormatter()->handleCode($jsPhpize->compileDependencies()).$phpCode;
+                        $jsPhpize->flushDependencies();
+                        $compiler->unsetOption('jsphpize_engine');
+
+                        return $phpCode;
+                    }
+                ],
+                'formatter_options' => [
+                    'patterns' => [
+                        'transform_expression' => function ($jsCode) use (&$lastCompiler) {
+                            /** @var JsPhpize $jsPhpize */
+                            $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
+
+                            return $jsPhpize->compile($jsCode);
+                        },
+                    ],
+                ],
+            ],
         ]);
     }
 
