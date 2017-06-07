@@ -2,7 +2,11 @@
 
 namespace Phug\Test;
 
+use Exception;
+use JsPhpize\Compiler\Exception as CompilerException;
 use JsPhpize\JsPhpize;
+use JsPhpize\Lexer\Exception as LexerException;
+use JsPhpize\Parser\Exception as ParserException;
 use Phug\Compiler;
 use Phug\Renderer;
 
@@ -13,8 +17,18 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
      */
     protected $renderer;
 
+    public static function secure($string)
+    {
+        return htmlspecialchars(
+            is_object($string) || is_array($string)
+                ? json_encode($string)
+                : strval($string)
+        );
+    }
+
     public function setUp()
     {
+        include_once __DIR__.'/Date.php';
         $lastCompiler = null;
         $this->renderer = new Renderer([
             'basedir' => __DIR__.'/..',
@@ -43,11 +57,24 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                 ],
                 'formatter_options' => [
                     'patterns' => [
-                        'transform_expression' => function ($jsCode) use (&$lastCompiler) {
+                        'html_expression_escape' => '\Phug\Test\AbstractRendererTest::secure(%s)',
+                        'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
                             /** @var JsPhpize $jsPhpize */
                             $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
 
-                            return $jsPhpize->compile($jsCode);
+                            try {
+                                return $jsPhpize->compile($jsCode);
+                            } catch(Exception $e) {
+                                if (
+                                    $e instanceof LexerException ||
+                                    $e instanceof ParserException ||
+                                    $e instanceof CompilerException
+                                ) {
+                                    return $jsCode;
+                                }
+
+                                throw $e;
+                            }
                         },
                     ],
                 ],
