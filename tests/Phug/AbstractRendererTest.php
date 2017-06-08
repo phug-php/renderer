@@ -23,8 +23,8 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         include_once __DIR__.'/secure.php';
         $lastCompiler = null;
         $this->renderer = new Renderer([
-            'basedir' => __DIR__.'/..',
-            'pretty'  => true,
+            'basedir'          => __DIR__.'/..',
+            'pretty'           => true,
             'compiler_options' => [
                 'pre_compile' => [
                     function ($pugCode, Compiler $compiler) use (&$lastCompiler) {
@@ -34,7 +34,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                         ]));
 
                         return $pugCode;
-                    }
+                    },
                 ],
                 'post_compile' => [
                     function ($phpCode, Compiler $compiler) {
@@ -45,7 +45,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                         $compiler->unsetOption('jsphpize_engine');
 
                         return $phpCode;
-                    }
+                    },
                 ],
                 'formatter_options' => [
                     'patterns' => [
@@ -56,7 +56,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
                             try {
                                 return $jsPhpize->compile($jsCode);
-                            } catch(Exception $e) {
+                            } catch (Exception $e) {
                                 if (
                                     $e instanceof LexerException ||
                                     $e instanceof ParserException ||
