@@ -20,7 +20,6 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         include_once __DIR__.'/Date.php';
-        include_once __DIR__.'/secure.php';
         $lastCompiler = null;
         $this->renderer = new Renderer([
             'basedir'          => __DIR__.'/..',
@@ -53,13 +52,16 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             ],
             'formatter_options' => [
                 'patterns' => [
-                    'html_expression_escape' => 'secure(%s)',
                     'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
                         /** @var JsPhpize $jsPhpize */
                         $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
 
                         try {
-                            return trim(preg_replace('/\{\s*\}$/', '', trim($jsPhpize->compile($jsCode))));
+                            return rtrim(trim(preg_replace(
+                                '/\{\s*\}$/',
+                                '',
+                                trim($jsPhpize->compile($jsCode))
+                            )), ';');
                         } catch (Exception $e) {
                             if (
                                 $e instanceof LexerException ||
