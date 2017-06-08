@@ -40,35 +40,38 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                     function ($phpCode, Compiler $compiler) {
                         /** @var JsPhpize $jsPhpize */
                         $jsPhpize = $compiler->getOption('jsphpize_engine');
-                        $phpCode = $compiler->getFormatter()->handleCode($jsPhpize->compileDependencies()).$phpCode;
+                        $dependencies = $jsPhpize->compileDependencies();
+                        if ($dependencies !== '') {
+                            $phpCode = $compiler->getFormatter()->handleCode($dependencies).$phpCode;
+                        }
                         $jsPhpize->flushDependencies();
                         $compiler->unsetOption('jsphpize_engine');
 
                         return $phpCode;
                     },
                 ],
-                'formatter_options' => [
-                    'patterns' => [
-                        'html_expression_escape' => 'secure(%s)',
-                        'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
-                            /** @var JsPhpize $jsPhpize */
-                            $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
+            ],
+            'formatter_options' => [
+                'patterns' => [
+                    'html_expression_escape' => 'secure(%s)',
+                    'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
+                        /** @var JsPhpize $jsPhpize */
+                        $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
 
-                            try {
-                                return $jsPhpize->compile($jsCode);
-                            } catch (Exception $e) {
-                                if (
-                                    $e instanceof LexerException ||
-                                    $e instanceof ParserException ||
-                                    $e instanceof CompilerException
-                                ) {
-                                    return $jsCode;
-                                }
-
-                                throw $e;
+                        try {
+                            return trim(preg_replace('/\{\s*\}$/', '', trim($jsPhpize->compile($jsCode))));
+                        } catch (Exception $e) {
+                            if (
+                                $e instanceof LexerException ||
+                                $e instanceof ParserException ||
+                                $e instanceof CompilerException
+                            ) {
+                                return $jsCode;
                             }
-                        },
-                    ],
+
+                            throw $e;
+                        }
+                    },
                 ],
             ],
         ]);
