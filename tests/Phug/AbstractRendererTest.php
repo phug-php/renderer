@@ -17,18 +17,10 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
      */
     protected $renderer;
 
-    public static function secure($string)
-    {
-        return htmlspecialchars(
-            is_object($string) || is_array($string)
-                ? json_encode($string)
-                : strval($string)
-        );
-    }
-
     public function setUp()
     {
         include_once __DIR__.'/Date.php';
+        include_once __DIR__.'/secure.php';
         $lastCompiler = null;
         $this->renderer = new Renderer([
             'basedir' => __DIR__.'/..',
@@ -57,7 +49,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                 ],
                 'formatter_options' => [
                     'patterns' => [
-                        'html_expression_escape' => '\Phug\Test\AbstractRendererTest::secure(%s)',
+                        'html_expression_escape' => 'secure(%s)',
                         'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
                             /** @var JsPhpize $jsPhpize */
                             $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
