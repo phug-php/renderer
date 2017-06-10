@@ -4,10 +4,14 @@ namespace Phug;
 
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
+use Phug\Util\ModulesContainerInterface;
+use Phug\Util\OptionInterface;
+use Phug\Util\Partial\ModuleTrait;
 use Phug\Util\Partial\OptionTrait;
 
-class Renderer
+class Renderer implements ModulesContainerInterface, OptionInterface
 {
+    use ModuleTrait;
     use OptionTrait;
 
     public function __construct(array $options = [])
@@ -26,6 +30,9 @@ class Renderer
                 ],
             ],
         ], $options);
+
+        $this->setExpectedModuleType(RendererModuleInterface::class);
+        $this->addModules($this->getOption('modules'));
     }
 
     protected function getCompilerOptions()
