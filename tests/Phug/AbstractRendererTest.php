@@ -2,12 +2,7 @@
 
 namespace Phug\Test;
 
-use Exception;
-use JsPhpize\Compiler\Exception as CompilerException;
-use JsPhpize\JsPhpize;
-use JsPhpize\Lexer\Exception as LexerException;
-use JsPhpize\Parser\Exception as ParserException;
-use Phug\Compiler;
+use JsPhpize\JsPhpizePhug;
 use Phug\Renderer;
 
 abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
@@ -21,60 +16,12 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         include_once __DIR__.'/Date.php';
         $lastCompiler = null;
-        $this->renderer = new Renderer([
+        $this->renderer = new Renderer();
+        $this->renderer->setOptionsRecursive([
             'basedir'          => __DIR__.'/..',
             'pretty'           => true,
             'compiler_options' => [
-                'pre_compile' => [
-                    function ($pugCode, Compiler $compiler) use (&$lastCompiler) {
-                        $lastCompiler = $compiler;
-                        $compiler->setOption('jsphpize_engine', new JsPhpize([
-                            'catchDependencies' => true,
-                        ]));
-
-                        return $pugCode;
-                    },
-                ],
-                'post_compile' => [
-                    function ($phpCode, Compiler $compiler) {
-                        /** @var JsPhpize $jsPhpize */
-                        $jsPhpize = $compiler->getOption('jsphpize_engine');
-                        $dependencies = $jsPhpize->compileDependencies();
-                        if ($dependencies !== '') {
-                            $phpCode = $compiler->getFormatter()->handleCode($dependencies).$phpCode;
-                        }
-                        $jsPhpize->flushDependencies();
-                        $compiler->unsetOption('jsphpize_engine');
-
-                        return $phpCode;
-                    },
-                ],
-            ],
-            'formatter_options' => [
-                'patterns' => [
-                    'transform_expression'   => function ($jsCode) use (&$lastCompiler) {
-                        /** @var JsPhpize $jsPhpize */
-                        $jsPhpize = $lastCompiler->getOption('jsphpize_engine');
-
-                        try {
-                            return rtrim(trim(preg_replace(
-                                '/\{\s*\}$/',
-                                '',
-                                trim($jsPhpize->compile($jsCode))
-                            )), ';');
-                        } catch (Exception $e) {
-                            if (
-                                $e instanceof LexerException ||
-                                $e instanceof ParserException ||
-                                $e instanceof CompilerException
-                            ) {
-                                return $jsCode;
-                            }
-
-                            throw $e;
-                        }
-                    },
-                ],
+                'modules' => [JsPhpizePhug::class],
             ],
         ]);
     }

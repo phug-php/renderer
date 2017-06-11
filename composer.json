@@ -25,7 +25,8 @@
     },
     "require-dev": {
         "phug/dev-tool": "^0.1.0",
-        "js-phpize/js-phpize": "^1.4"
+        "js-phpize/js-phpize": "^1.4",
+        "js-phpize/js-phpize-phug": "^1.0"
     },
     "autoload": {
         "psr-4": {
