@@ -151,6 +151,9 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         } catch (\Exception $e) {
             echo $e->getMessage()."\n\n".$e->getTraceAsString()."\n\n".$php."\n\n";
             exit;
+        } catch (\ParseError $e) {
+            echo $e->getMessage()."\n\n".$e->getTraceAsString()."\n\n".$php."\n\n";
+            exit;
         }
     }
 
