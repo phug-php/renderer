@@ -23,6 +23,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 : EvalAdapter::class,
             'renderer_options' => [],
             'shared_variables' => [],
+            'modules'          => [],
             'compiler_options' => [
                 'formatter_options' => [],
                 'parser_options'    => [
@@ -31,8 +32,33 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             ],
         ], $options);
 
+        $modules = $this->getOption('modules');
+        $optionsPaths = [
+            CompilerModuleInterface::class  => ['compiler_options'],
+            FormatterModuleInterface::class => ['compiler_options', 'formatter_options'],
+            ParserModuleInterface::class    => ['compiler_options', 'parser_options'],
+            LexerModuleInterface::class     => ['compiler_options', 'parser_options', 'lexer_options'],
+        ];
+
+        foreach ($modules as &$module) {
+            foreach ($optionsPaths as $interface => $optionPath) {
+                if (is_subclass_of($module, $interface)) {
+                    $list = $this->getOption($optionPath);
+                    $list = is_array($list) && isset($list['modules']) && is_array($list['modules'])
+                        ? $list['modules']
+                        : [];
+                    $list[] = $module;
+                    $optionPath[] = 'modules';
+                    $this->setOption($optionPath, $list);
+                    $module = false;
+
+                    break;
+                }
+            }
+        }
+
         $this->setExpectedModuleType(RendererModuleInterface::class);
-        $this->addModules($this->getOption('modules'));
+        $this->addModules(array_filter($modules));
     }
 
     protected function getCompilerOptions()
@@ -116,10 +142,16 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
     public function render($path, array $parameters = [])
     {
-        return $this->getAdapter()->render(
-            $this->getCompiler()->compileFile($path),
-            $this->mergeWithSharedVariables($parameters)
-        );
+        $php = $this->getCompiler()->compileFile($path);
+        try {
+            return $this->getAdapter()->render(
+                $php,
+                $this->mergeWithSharedVariables($parameters)
+            );
+        } catch (\Exception $e) {
+            echo $e->getMessage()."\n\n".$e->getTraceAsString()."\n\n".$php."\n\n";
+            exit;
+        }
     }
 
     public function renderString($path, array $parameters = [], $filename = null)
