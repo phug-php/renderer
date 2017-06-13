@@ -27,7 +27,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         return implode('', array_map(function ($line) {
             $line = trim($line);
-            $line = preg_replace_callback('/(\s+[a-z:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*")+/', function ($matches) {
+            $line = preg_replace_callback('/(\s+[a-z:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"){2,}/', function ($matches) {
                 $attributes = [];
                 $input = $matches[0];
                 while (mb_strlen($input) && preg_match('/^\s+[a-z:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"/', $input, $match)) {

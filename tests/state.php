@@ -23,5 +23,5 @@ foreach ($parts as $part) {
     $data[strtolower($name)] = intval(trim($number));
 }
 
-echo $text."\n".round($data['assertions'] * 100 / array_sum($data))."%\n";
+echo $text."\n".round($data['assertions'] * 100 / array_sum($data), 1)."%\n";
 exit(0);
