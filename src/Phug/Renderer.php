@@ -8,6 +8,7 @@ use Phug\Util\ModulesContainerInterface;
 use Phug\Util\OptionInterface;
 use Phug\Util\Partial\ModuleTrait;
 use Phug\Util\Partial\OptionTrait;
+use Throwable;
 
 class Renderer implements ModulesContainerInterface, OptionInterface
 {
@@ -18,6 +19,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     {
         $this->setOptionsRecursive([
             'cache'            => null,
+            'error_handler'    => null,
             'renderer_adapter' => isset($options['cache'])
                 ? FileAdapter::class
                 : EvalAdapter::class,
@@ -140,44 +142,84 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return new Compiler($this->getCompilerOptions());
     }
 
-    public function render($path, array $parameters = [])
+    public function handleError(Throwable $error, $code, $path, $source)
     {
-        $php = $this->getCompiler()->compileFile($path);
+        $source = explode("\n", rtrim($source));
+        $message = 'Renderer error';
+        if ($path) {
+            $message .= ' in '.$path;
+        }
+        $message .=":\n".$error->getMessage()."\n\n";
+        foreach ($source as $index => $line) {
+            if ($error->getLine() - 1 !== $index) {
+                $message .= $line."\n";
+
+                continue;
+            }
+            $message .= "\033[43;30m".$line."\e[0m\n";
+        }
+
+        $exception = new RendererException($message, $code, $error);
+        $handler = $this->getOption('error_handler');
+
+        if (!$handler) {
+            throw $exception;
+        }
+
+        $handler($exception);
+    }
+
+    public function callAdapter($method, $path, $source, array $parameters)
+    {
         try {
-            return $this->getAdapter()->render(
-                $php,
+            return $this->getAdapter()->$method(
+                $source,
                 $this->mergeWithSharedVariables($parameters)
             );
-        } catch (\Exception $e) {
-            echo $e->getMessage()."\n\n".$e->getTraceAsString()."\n\n".$php."\n\n";
-            exit;
-        } catch (\ParseError $e) {
-            echo $e->getMessage()."\n\n".$e->getTraceAsString()."\n\n".$php."\n\n";
-            exit;
+        } catch (\Exception $error) {
+            $this->handleError($error, 1, $path, $source);
+        } catch (\ParseError $error) {
+            $this->handleError($error, 2, $path, $source);
         }
+    }
+
+    public function render($path, array $parameters = [])
+    {
+        return $this->callAdapter(
+            'render',
+            $path,
+            $this->getCompiler()->compileFile($path),
+            $parameters
+        );
     }
 
     public function renderString($path, array $parameters = [], $filename = null)
     {
-        return $this->getAdapter()->render(
+        return $this->callAdapter(
+            'render',
+            null,
             $this->getCompiler()->compile($path, $filename),
-            $this->mergeWithSharedVariables($parameters)
+            $parameters
         );
     }
 
     public function display($path, array $parameters = [])
     {
-        return $this->getAdapter()->display(
+        return $this->callAdapter(
+            'display',
+            $path,
             $this->getCompiler()->compileFile($path),
-            $this->mergeWithSharedVariables($parameters)
+            $parameters
         );
     }
 
     public function displayString($path, array $parameters = [], $filename = null)
     {
-        return $this->getAdapter()->display(
+        return $this->callAdapter(
+            'display',
+            null,
             $this->getCompiler()->compile($path, $filename),
-            $this->mergeWithSharedVariables($parameters)
+            $parameters
         );
     }
 }
