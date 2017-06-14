@@ -149,7 +149,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         if ($path) {
             $message .= ' in '.$path;
         }
-        $message .=":\n".$error->getMessage()."\n\n";
+        $message .= ":\n".$error->getMessage()."\n\n";
         foreach ($source as $index => $line) {
             if ($error->getLine() - 1 !== $index) {
                 $message .= $line."\n";
