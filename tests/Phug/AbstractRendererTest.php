@@ -40,11 +40,13 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             }, $line);
 
             return $line;
-        }, preg_split('/\r|\n/', self::linuxLines($content))));
+        }, preg_split('/\r|\n/', self::standardLines($content))));
     }
 
-    public static function linuxLines($content)
+    public static function standardLines($content)
     {
+        $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
+
         return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
     }
 
@@ -57,8 +59,12 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
             return;
         }
-        $expected = self::linuxLines($expected);
-        $actual = self::linuxLines($actual);
+        $expected = self::standardLines($expected);
+        $actual = self::standardLines($actual);
+
+        if (is_callable($message)) {
+            $message = $message();
+        }
 
         self::assertSame($expected, $actual, $message);
     }
