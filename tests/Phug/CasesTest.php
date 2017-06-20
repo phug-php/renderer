@@ -33,9 +33,9 @@ class CasesTest extends AbstractRendererTest
             'http' => [
                 'method' => 'GET',
                 'header' => [
-                    'User-Agent: PHP'
-                ]
-            ]
+                    'User-Agent: PHP',
+                ],
+            ],
         ]);
         $json = json_decode(file_get_contents(
             'https://api.github.com/repos/pugjs/pug/commits?path=packages/pug/test/cases',
