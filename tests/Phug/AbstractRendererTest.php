@@ -4,6 +4,7 @@ namespace Phug\Test;
 
 use JsPhpize\JsPhpizePhug;
 use Phug\Renderer;
+use stdClass;
 
 abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 {
@@ -20,6 +21,11 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             'basedir' => __DIR__.'/..',
             'pretty'  => true,
             'modules' => [JsPhpizePhug::class],
+        ]);
+        $this->renderer->share('Object', [
+            'create' => function () {
+                return new stdClass();
+            },
         ]);
     }
 

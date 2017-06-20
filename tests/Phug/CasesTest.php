@@ -43,7 +43,7 @@ class CasesTest extends AbstractRendererTest
             $context
         ));
         $lastCommit = new DateTimeImmutable($json[0]->commit->author->date);
-        $upToDate = new DateTimeImmutable('@'.filemtime(glob(__DIR__.'/cases/*.pug')[0]));
+        $upToDate = new DateTimeImmutable('@'.filemtime(glob(__DIR__.'/../cases/*.pug')[0]));
 
         self::assertTrue(
             $lastCommit <= $upToDate,
