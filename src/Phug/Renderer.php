@@ -145,15 +145,18 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     public function handleError(Throwable $error, $code, $path, $source)
     {
         $source = explode("\n", rtrim($source));
-        $message = 'Renderer error';
+        $message = get_class($error);
         if ($path) {
             $message .= ' in '.$path;
         }
         $message .= ":\n".$error->getMessage().' on line '.$error->getLine()."\n\n";
         foreach ($source as $index => $line) {
             $number = strval($index + 1);
-            $line = str_repeat(' ', 4 - strlen($number)).$number.' | '.$line;
-            if ($error->getLine() - 1 !== $index) {
+            $markLine = $error->getLine() - 1 === $index;
+            $line = ($markLine ? '>' : ' ').
+                str_repeat(' ', 4 - strlen($number)).$number.' | '.
+                $line;
+            if (!$markLine) {
                 $message .= $line."\n";
 
                 continue;
@@ -178,10 +181,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
-        } catch (\Exception $error) {
+        } catch (Throwable $error) {
             $this->handleError($error, 1, $path, $source);
-        } catch (\ParseError $error) {
-            $this->handleError($error, 2, $path, $source);
         }
     }
 
