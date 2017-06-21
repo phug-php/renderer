@@ -6,8 +6,8 @@ use cebe\markdown\Markdown;
 use JsPhpize\JsPhpizePhug;
 use NodejsPhpFallback\CoffeeScript;
 use NodejsPhpFallback\Less;
-use NodejsPhpFallback\Uglify;
 use NodejsPhpFallback\Stylus;
+use NodejsPhpFallback\Uglify;
 use Phug\Renderer;
 use stdClass;
 
@@ -28,9 +28,9 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             return $engine->getResult();
         };
         $this->renderer = new Renderer([
-            'basedir' => __DIR__.'/..',
-            'pretty'  => true,
-            'modules' => [JsPhpizePhug::class],
+            'basedir'          => __DIR__.'/..',
+            'pretty'           => true,
+            'modules'          => [JsPhpizePhug::class],
             'compiler_options' => [
                 'filters' => [
                     'custom' => function ($contents) {
