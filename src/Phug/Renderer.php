@@ -31,6 +31,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 'parser_options'    => [
                     'lexer_options' => [],
                 ],
+                'filters' => [
+                    'cdata' => function ($contents) {
+                        return "<![CDATA[$contents]]>";
+                    },
+                ],
             ],
         ], $options);
 

@@ -26,7 +26,12 @@
     "require-dev": {
         "phug/dev-tool": "^0.1.0",
         "js-phpize/js-phpize": "^1.4",
-        "js-phpize/js-phpize-phug": "^1.0"
+        "js-phpize/js-phpize-phug": "^1.0",
+        "nodejs-php-fallback/coffeescript": "^1.0",
+        "nodejs-php-fallback/less": "^1.0",
+        "nodejs-php-fallback/uglify": "^1.0",
+        "nodejs-php-fallback/stylus": "^1.0",
+        "cebe/markdown": "^1.1"
     },
     "autoload": {
         "psr-4": {

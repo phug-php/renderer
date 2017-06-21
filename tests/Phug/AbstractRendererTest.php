@@ -2,7 +2,12 @@
 
 namespace Phug\Test;
 
+use cebe\markdown\Markdown;
 use JsPhpize\JsPhpizePhug;
+use NodejsPhpFallback\CoffeeScript;
+use NodejsPhpFallback\Less;
+use NodejsPhpFallback\Uglify;
+use NodejsPhpFallback\Stylus;
 use Phug\Renderer;
 use stdClass;
 
@@ -17,10 +22,57 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         include_once __DIR__.'/Date.php';
         $lastCompiler = null;
+        $uglify = function ($contents) {
+            $engine = new Uglify($contents);
+
+            return $engine->getResult();
+        };
         $this->renderer = new Renderer([
             'basedir' => __DIR__.'/..',
             'pretty'  => true,
             'modules' => [JsPhpizePhug::class],
+            'compiler_options' => [
+                'filters' => [
+                    'custom' => function ($contents) {
+                        return 'BEGIN'.$contents.'END';
+                    },
+                    'coffee-script' => function ($contents, $options) use ($uglify) {
+                        $engine = new CoffeeScript($contents, false);
+                        $result = $engine->getResult();
+                        if (isset($options['minify']) && $options['minify']) {
+                            $result = $uglify($result);
+                            // @TODO fix it when https://github.com/pugjs/pug/issues/2829 answered
+                            $result = '(function(){}).call(this);';
+                        }
+
+                        return "\n".$result."\n";
+                    },
+                    'less' => function ($contents) {
+                        $engine = new Less($contents);
+
+                        return "\n".$engine->getResult()."\n";
+                    },
+                    'makrdown-it' => function ($contents) {
+                        $engine = new Markdown();
+
+                        return $engine->parse($contents);
+                    },
+                    'stylus' => function ($contents) {
+                        $engine = new Stylus($contents);
+
+                        return "\n".$engine->getCss()."\n";
+                    },
+                    'uglify-js' => function ($contents) use ($uglify) {
+                        return "\n".$uglify($contents)."\n";
+                    },
+                    'minify' => function ($contents) use ($uglify) {
+                        return "\n".$uglify($contents)."\n";
+                    },
+                    'verbatim' => function ($contents) {
+                        return $contents;
+                    },
+                ],
+            ],
         ]);
         $this->renderer->share('Object', [
             'create' => function () {
