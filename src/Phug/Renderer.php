@@ -33,7 +33,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 ],
                 'filters' => [
                     'cdata' => function ($contents) {
-                        return "<![CDATA[$contents]]>";
+                        return '<![CDATA['.trim($contents).']]>';
                     },
                 ],
             ],
