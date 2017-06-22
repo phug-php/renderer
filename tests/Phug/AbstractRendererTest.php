@@ -32,44 +32,49 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
             return $engine->parse($contents);
         };
+        $coffee = function ($contents, $options) use ($uglify) {
+            $engine = new CoffeeScript($contents, false);
+            $result = $engine->getResult();
+            if (isset($options['minify']) && $options['minify']) {
+                // @TODO fix it when https://github.com/pugjs/pug/issues/2829 answered
+                return "\n(function(){}).call(this);\n";
+
+                //return $uglify($result);
+            }
+
+            return "\n".$result."\n";
+        };
+        $custom = function ($contents) {
+            return 'BEGIN'.$contents.'END';
+        };
+        $less = function ($contents) {
+            $engine = new Less($contents);
+
+            return "\n".$engine->getResult()."\n";
+        };
+        $stylus = function ($contents) {
+            $engine = new Stylus($contents);
+
+            return "\n".$engine->getCss()."\n";
+        };
+        $verbatim = function ($contents) {
+            return $contents;
+        };
         $this->renderer = new Renderer([
             'basedir'          => __DIR__.'/..',
             'pretty'           => true,
             'modules'          => [JsPhpizePhug::class],
             'compiler_options' => [
                 'filters' => [
-                    'custom' => function ($contents) {
-                        return 'BEGIN'.$contents.'END';
-                    },
-                    'coffee-script' => function ($contents, $options) use ($uglify) {
-                        $engine = new CoffeeScript($contents, false);
-                        $result = $engine->getResult();
-                        if (isset($options['minify']) && $options['minify']) {
-                            // @TODO fix it when https://github.com/pugjs/pug/issues/2829 answered
-                            return "\n(function(){}).call(this);\n";
-
-                            //return $uglify($result);
-                        }
-
-                        return "\n".$result."\n";
-                    },
-                    'less' => function ($contents) {
-                        $engine = new Less($contents);
-
-                        return "\n".$engine->getResult()."\n";
-                    },
-                    'markdown-it' => $markdown,
-                    'markdown' => $markdown,
-                    'stylus' => function ($contents) {
-                        $engine = new Stylus($contents);
-
-                        return "\n".$engine->getCss()."\n";
-                    },
-                    'uglify-js' => $uglify,
-                    'minify' => $uglify,
-                    'verbatim' => function ($contents) {
-                        return $contents;
-                    },
+                    'custom'        => $custom,
+                    'coffee-script' => $coffee,
+                    'less'          => $less,
+                    'markdown-it'   => $markdown,
+                    'markdown'      => $markdown,
+                    'stylus'        => $stylus,
+                    'uglify-js'     => $uglify,
+                    'minify'        => $uglify,
+                    'verbatim'      => $verbatim,
                 ],
             ],
         ]);
