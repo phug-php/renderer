@@ -25,7 +25,12 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         $uglify = function ($contents) {
             $engine = new Uglify($contents);
 
-            return $engine->getResult();
+            return "\n".$engine->getResult()."\n";
+        };
+        $markdown = function ($contents) {
+            $engine = new Markdown();
+
+            return $engine->parse($contents);
         };
         $this->renderer = new Renderer([
             'basedir'          => __DIR__.'/..',
@@ -40,9 +45,10 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                         $engine = new CoffeeScript($contents, false);
                         $result = $engine->getResult();
                         if (isset($options['minify']) && $options['minify']) {
-                            $result = $uglify($result);
                             // @TODO fix it when https://github.com/pugjs/pug/issues/2829 answered
-                            $result = '(function(){}).call(this);';
+                            return "\n(function(){}).call(this);\n";
+
+                            //return $uglify($result);
                         }
 
                         return "\n".$result."\n";
@@ -52,22 +58,15 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
                         return "\n".$engine->getResult()."\n";
                     },
-                    'markdown-it' => function ($contents) {
-                        $engine = new Markdown();
-
-                        return $engine->parse($contents);
-                    },
+                    'markdown-it' => $markdown,
+                    'markdown' => $markdown,
                     'stylus' => function ($contents) {
                         $engine = new Stylus($contents);
 
                         return "\n".$engine->getCss()."\n";
                     },
-                    'uglify-js' => function ($contents) use ($uglify) {
-                        return "\n".$uglify($contents)."\n";
-                    },
-                    'minify' => function ($contents) use ($uglify) {
-                        return "\n".$uglify($contents)."\n";
-                    },
+                    'uglify-js' => $uglify,
+                    'minify' => $uglify,
                     'verbatim' => function ($contents) {
                         return $contents;
                     },
@@ -104,6 +103,8 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     public static function standardLines($content)
     {
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
+        $content = preg_replace('/<p>\s*(\S[\s\S]*?\S)\s*<\/p>/', '<p>$1</p>', $content);
+        $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
 
         return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
     }
