@@ -52,7 +52,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
                         return "\n".$engine->getResult()."\n";
                     },
-                    'makrdown-it' => function ($contents) {
+                    'markdown-it' => function ($contents) {
                         $engine = new Markdown();
 
                         return $engine->parse($contents);
