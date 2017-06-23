@@ -159,7 +159,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             $number = strval($index + 1);
             $markLine = $error->getLine() - 1 === $index;
             $line = ($markLine ? '>' : ' ').
-                str_repeat(' ', 4 - strlen($number)).$number.' | '.
+                str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
                 $line;
             if (!$markLine) {
                 $message .= $line."\n";
