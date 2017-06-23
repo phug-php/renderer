@@ -105,18 +105,27 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         }, preg_split('/\r|\n/', self::standardLines($content))));
     }
 
-    public static function standardLines($content)
+    protected static function loopReplace($from, $to, $content)
     {
-        $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
-        $content = preg_replace('/<p>\s*(\S[\s\S]*?\S)\s*<\/p>/', '<p>$1</p>', $content);
-        $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
-        $content = str_replace('(){return ', '(){', $content);
         $newContent = null;
         do {
             $newContent = $newContent ?: $content;
             $content = $newContent;
-            $newContent = preg_replace('/\((function\(\)\{[\s\S]*?\})\)/', '!$1', $newContent);
+            $newContent = preg_replace($from, $to, $newContent);
         } while ($newContent !== $content);
+
+        return $content;
+    }
+
+    public static function standardLines($content)
+    {
+        $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
+        $content = preg_replace('/<p>\s*(\S[\s\S]*?\S)\s*<\/p>/', '<p>$1</p>', $content);
+        $content = static::loopReplace('/(\S)[ \t]*(<\/?(p|script)[^>]*>)/', "\\1\n\\2", $content);
+        $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
+        $content = preg_replace('/<script[^>]*>(?=\S)/', "\\0\n", $content);
+        $content = str_replace('(){return ', '(){', $content);
+        $content = static::loopReplace('/\((function\(\)\{[\s\S]*?\})\)/', '!$1', $content);
 
         return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
     }
