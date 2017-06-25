@@ -119,8 +119,11 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public static function standardLines($content)
     {
+        $content = preg_replace_callback('/<p[^>]*>([\s\S]*?)<\/p>/', function ($match) {
+            return str_replace("\n", ' ', $match[0]);
+        }, $content);
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
-        $content = preg_replace('/<p>\s*(\S[\s\S]*?\S)\s*<\/p>/', '<p>$1</p>', $content);
+        $content = preg_replace('/(<p[^>]*>)\s*(\S[\s\S]*?\S)\s*<\/p>/', '$1$2</p>', $content);
         $content = static::loopReplace('/(\S)[ \t]*(<\/?(p|script|h\d|div)[^>]*>)/', "\\1\n\\2", $content);
         $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
         $content = preg_replace('/<script[^>]*>(?=\S)/', "\\0\n", $content);
