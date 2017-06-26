@@ -78,10 +78,13 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                 ],
             ],
         ]);
-        $this->renderer->share('Object', [
-            'create' => function () {
-                return new stdClass();
-            },
+        $this->renderer->share([
+            'title' => 'Pug',
+            'Object' => [
+                'create' => function () {
+                    return new stdClass();
+                },
+            ]
         ]);
     }
 
