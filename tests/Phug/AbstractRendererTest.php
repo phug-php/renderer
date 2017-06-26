@@ -122,6 +122,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         $content = preg_replace_callback('/<p[^>]*>([\s\S]*?)<\/p>/', function ($match) {
             return str_replace("\n", ' ', $match[0]);
         }, $content);
+        $content = preg_replace('/\s+<li/', '<li', $content);
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
         $content = preg_replace('/(<p[^>]*>)\s*(\S[\s\S]*?\S)\s*<\/p>/', '$1$2</p>', $content);
         $content = static::loopReplace('/(\S)[ \t]*(<\/?(p|script|h\d|div)[^>]*>)/', "\\1\n\\2", $content);
