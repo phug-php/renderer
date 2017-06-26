@@ -119,12 +119,22 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public static function standardLines($content)
     {
-        $content = preg_replace_callback('/<p[^>]*>([\s\S]*?)<\/p>/', function ($match) {
-            return str_replace("\n", ' ', $match[0]);
-        }, $content);
+        // Tags used in tests where inside end whitespaces does not matter
+        foreach (['p', 'foo'] as $tag) {
+            $content = preg_replace(
+                '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
+                '$1$2$3',
+                $content
+            );
+            $content = preg_replace_callback('/<'.$tag.'[^>]*>([\s\S]*?)<\/'.$tag.'>/', function ($match) {
+                return str_replace("\n", ' ', $match[0]);
+            }, $content);
+        }
+        // List items squeeze
         $content = preg_replace('/\s+<li/', '<li', $content);
+        // Comment squeeze
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
-        $content = preg_replace('/(<p[^>]*>)\s*(\S[\s\S]*?\S)\s*<\/p>/', '$1$2</p>', $content);
+
         $content = static::loopReplace('/(\S)[ \t]*(<\/?(p|script|h\d|div)[^>]*>)/', "\\1\n\\2", $content);
         $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
         $content = preg_replace('/<script[^>]*>(?=\S)/', "\\0\n", $content);
