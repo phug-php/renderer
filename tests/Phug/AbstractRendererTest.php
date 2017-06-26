@@ -130,8 +130,6 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
                 return str_replace("\n", ' ', $match[0]);
             }, $content);
         }
-        // List items squeeze
-        $content = preg_replace('/\s+<li/', '<li', $content);
         // Comment squeeze
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
 
