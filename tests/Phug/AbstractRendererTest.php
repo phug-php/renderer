@@ -122,8 +122,9 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public static function standardLines($content)
     {
+        $content = str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
         // Tags used in tests where inside end whitespaces does not matter
-        foreach (['p', 'foo'] as $tag) {
+        foreach (['p', 'foo', 'form'] as $tag) {
             $content = preg_replace(
                 '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
                 '$1$2$3',
@@ -149,7 +150,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         $content = str_replace('(){return ', '(){', $content);
         $content = static::loopReplace('/\((function\(\)\{[\s\S]*?\})\)/', '!$1', $content);
 
-        return str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
+        return str_replace(['/><', ' />'], ["/>\n<", '/>'], trim($content));
     }
 
     public static function assertSameLines($expected, $actual, $message = null)
