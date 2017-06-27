@@ -79,12 +79,12 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             ],
         ]);
         $this->renderer->share([
-            'title' => 'Pug',
+            'title'  => 'Pug',
             'Object' => [
                 'create' => function () {
                     return new stdClass();
                 },
-            ]
+            ],
         ]);
     }
 
@@ -92,10 +92,10 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         return implode('', array_map(function ($line) {
             $line = trim($line);
-            $line = preg_replace_callback('/(\s+[a-z:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"){2,}/', function ($matches) {
+            $line = preg_replace_callback('/(\s+[a-z0-9:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"){2,}/', function ($matches) {
                 $attributes = [];
                 $input = $matches[0];
-                while (mb_strlen($input) && preg_match('/^\s+[a-z:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"/', $input, $match)) {
+                while (mb_strlen($input) && preg_match('/^\s+[a-z0-9:_-]+="(?:\\\\[\\S\\s]|[^"\\\\])*"/', $input, $match)) {
                     $attributes[] = trim($match[0]);
                     $input = mb_substr($input, mb_strlen($match[0]));
                 }
@@ -136,6 +136,13 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         // Comment squeeze
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
 
+        $content = preg_replace('/\s(class|id)\s*=\s*(""|\'\')/', '', $content);
+        $content = preg_replace_callback('/class=([\'"])\s*(([^\'"\s]+)(\s+[^\'"\s]+)+)\s*\\1/U', function ($match) {
+            $classes = preg_split('/\s+/', $match[2]);
+            sort($classes);
+
+            return 'class='.$match[1].implode(' ', $classes).$match[1];
+        }, $content);
         $content = static::loopReplace('/(\S)[ \t]*(<\/?(p|script|h\d|div)[^>]*>)/', "\\1\n\\2", $content);
         $content = preg_replace('/(?<!\s)[ \t]{2,}(?=\S)/', ' ', $content);
         $content = preg_replace('/<script[^>]*>(?=\S)/', "\\0\n", $content);
