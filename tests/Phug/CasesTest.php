@@ -28,6 +28,7 @@ class CasesTest extends AbstractRendererTest
         $render = $this->renderer->render($actual);
         if (strpos($render, 'Dynamic mixin names not yet supported.') !== false) {
             self::markTestSkipped('Not yet implemented.');
+
             return;
         }
         self::assertSameLines(file_get_contents($expected), $render, $message);
