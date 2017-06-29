@@ -15,7 +15,6 @@ if (!preg_match('/^Tests: (\d+)((, [^,]+)*)\.$/m', $phpunit, $match)) {
 }
 
 $text = $match[0];
-$sum = intval($match[1]);
 $parts = explode(',', trim($match[2], ' ,'));
 $data = [];
 foreach ($parts as $part) {
