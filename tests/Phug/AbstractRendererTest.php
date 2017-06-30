@@ -2,8 +2,8 @@
 
 namespace Phug\Test;
 
+use cebe\markdown\GithubMarkdown;
 use JsPhpize\JsPhpizePhug;
-use Kaoken\MarkdownIt\MarkdownIt;
 use NodejsPhpFallback\CoffeeScript;
 use NodejsPhpFallback\Less;
 use NodejsPhpFallback\Stylus;
@@ -28,9 +28,9 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             return "\n".$engine->getResult()."\n";
         };
         $markdown = function ($contents) {
-            $engine = new MarkdownIt();
+            $engine = new GithubMarkdown();
 
-            return $engine->render($contents);
+            return $engine->parse($contents);
         };
         $coffee = function ($contents, $options) use ($uglify) {
             $engine = new CoffeeScript($contents, false);
