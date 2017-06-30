@@ -123,12 +123,12 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     public static function standardLines($content)
     {
         $content = str_replace(
-            ["\r\n", '/><', ' />', '> /<'],
-            ["\n", "/>\n<", '/>', '>/<'],
+            ["\r\n", '/><', ' />', '> /<', ';"'],
+            ["\n", "/>\n<", '/>', '>/<', '"'],
             trim($content)
         );
         // Tags used in tests where inside end whitespaces does not matter
-        foreach (['p', 'foo', 'form', 'audio'] as $tag) {
+        foreach (['p', 'foo', 'form', 'audio', 'style'] as $tag) {
             $content = preg_replace(
                 '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
                 '$1$2$3',
