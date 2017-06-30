@@ -124,7 +124,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         $content = str_replace(["\r\n", '/><', ' />'], ["\n", "/>\n<", '/>'], trim($content));
         // Tags used in tests where inside end whitespaces does not matter
-        foreach (['p', 'foo', 'form'] as $tag) {
+        foreach (['p', 'foo', 'form', 'audio'] as $tag) {
             $content = preg_replace(
                 '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
                 '$1$2$3',
