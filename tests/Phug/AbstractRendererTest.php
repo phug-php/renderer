@@ -128,7 +128,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             trim($content)
         );
         // Tags used in tests where inside end whitespaces does not matter
-        foreach (['p', 'foo', 'form', 'audio', 'style'] as $tag) {
+        foreach (['p', 'foo', 'form', 'audio', 'style', 'li'] as $tag) {
             $content = preg_replace(
                 '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
                 '$1$2$3',
@@ -141,7 +141,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         // Comment squeeze
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);
 
-        $content = preg_replace('/\s(class|id)\s*=\s*(""|\'\')/', '', $content);
+        $content = preg_replace('/\s(class|id|src)\s*=\s*(""|\'\')/', '', $content);
         $content = preg_replace_callback('/class=([\'"])\s*(([^\'"\s]+)(\s+[^\'"\s]+)+)\s*\\1/U', function ($match) {
             $classes = preg_split('/\s+/', $match[2]);
             sort($classes);
