@@ -6,9 +6,9 @@ use Phug\Renderer\AbstractAdapter;
 
 class EvalAdapter extends AbstractAdapter
 {
-    public function display($php, array $parameters)
+    public function display($__pug_php, array $__pug_parameters)
     {
-        extract($parameters);
-        eval('?>'.$php);
+        extract($__pug_parameters);
+        eval('?>'.$__pug_php);
     }
 }

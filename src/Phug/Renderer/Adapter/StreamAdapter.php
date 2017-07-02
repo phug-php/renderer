@@ -17,14 +17,14 @@ class StreamAdapter extends AbstractAdapter
         parent::__construct($options);
     }
 
-    public function display($php, array $parameters)
+    public function display($__pug_php, array $__pug_parameters)
     {
         $stream = $this->getOption('stream_name').
             $this->getOption('stream_suffix');
         if (!in_array($stream, stream_get_wrappers())) {
             stream_register_wrapper($stream, Template::class);
         }
-        extract($parameters);
-        include $stream.'://data;'.$php;
+        extract($__pug_parameters);
+        include $stream.'://data;'.$__pug_php;
     }
 }

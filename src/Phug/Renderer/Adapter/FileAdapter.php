@@ -34,9 +34,9 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         return $file;
     }
 
-    public function display($php, array $parameters)
+    public function display($__pug_php, array $__pug_parameters)
     {
-        extract($parameters);
-        include $this->getCompiledFile($php);
+        extract($__pug_parameters);
+        include $this->getCompiledFile($__pug_php);
     }
 }
