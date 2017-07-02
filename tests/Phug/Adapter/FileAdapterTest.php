@@ -7,8 +7,8 @@ use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Test\AbstractRendererTest;
 
 /**
-* @coversDefaultClass \Phug\Renderer\Adapter\FileAdapter
-*/
+ * @coversDefaultClass \Phug\Renderer\Adapter\FileAdapter
+ */
 class FileAdapterTest extends AbstractRendererTest
 {
     /**

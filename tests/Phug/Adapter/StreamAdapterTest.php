@@ -8,8 +8,8 @@ use Phug\Renderer\Adapter\StreamAdapter;
 use Phug\Test\AbstractRendererTest;
 
 /**
-* @coversDefaultClass \Phug\Renderer\Adapter\StreamAdapter
-*/
+ * @coversDefaultClass \Phug\Renderer\Adapter\StreamAdapter
+ */
 class StreamAdapterTest extends AbstractRendererTest
 {
     /**
