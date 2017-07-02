@@ -3,6 +3,7 @@
 namespace Phug\Renderer\Adapter;
 
 use Phug\Renderer\AbstractAdapter;
+use Phug\Renderer\Adapter\Stream\Template;
 
 class StreamAdapter extends AbstractAdapter
 {
@@ -18,10 +19,12 @@ class StreamAdapter extends AbstractAdapter
 
     public function display($php, array $parameters)
     {
+        $stream = $this->getOption('stream_name').
+            $this->getOption('stream_suffix');
+        if (!in_array($stream, stream_get_wrappers())) {
+            stream_register_wrapper($stream, Template::class);
+        }
         extract($parameters);
-        include $this->getOption('stream_name').
-            $this->getOption('stream_suffix').
-            '://data;'.
-            $php;
+        include $stream.'://data;'.$php;
     }
 }

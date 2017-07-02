@@ -3,6 +3,7 @@
 namespace Phug\Renderer;
 
 use Phug\Util\Partial\OptionTrait;
+use Throwable;
 
 abstract class AbstractAdapter implements AdapterInterface
 {
@@ -15,10 +16,19 @@ abstract class AbstractAdapter implements AdapterInterface
 
     public function render($php, array $parameters)
     {
+        $throwable = null;
         ob_start();
-        $this->display($php, $parameters);
+        try {
+            $this->display($php, $parameters);
+        } catch(Throwable $e) {
+            $throwable = $e;
+        }
         $html = ob_get_contents();
         ob_end_clean();
+
+        if ($throwable) {
+            throw $throwable;
+        }
 
         return $html;
     }

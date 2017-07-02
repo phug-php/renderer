@@ -15,6 +15,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     use ModuleTrait;
     use OptionTrait;
 
+    protected $modulesOptionsPaths = [
+        CompilerModuleInterface::class  => [],
+        FormatterModuleInterface::class => ['formatter_options'],
+        ParserModuleInterface::class    => ['parser_options'],
+        LexerModuleInterface::class     => ['parser_options', 'lexer_options'],
+    ];
+
     public function __construct(array $options = [])
     {
         $this->setOptionsRecursive([
@@ -40,23 +47,10 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         ], $options);
 
         $modules = $this->getOption('modules');
-        $optionsPaths = [
-            CompilerModuleInterface::class  => ['compiler_options'],
-            FormatterModuleInterface::class => ['compiler_options', 'formatter_options'],
-            ParserModuleInterface::class    => ['compiler_options', 'parser_options'],
-            LexerModuleInterface::class     => ['compiler_options', 'parser_options', 'lexer_options'],
-        ];
 
         foreach ($modules as &$module) {
-            foreach ($optionsPaths as $interface => $optionPath) {
+            foreach ($this->modulesOptionsPaths as $interface => $optionPath) {
                 if (is_subclass_of($module, $interface)) {
-                    $list = $this->getOption($optionPath);
-                    $list = is_array($list) && isset($list['modules']) && is_array($list['modules'])
-                        ? $list['modules']
-                        : [];
-                    $list[] = $module;
-                    $optionPath[] = 'modules';
-                    $this->setOption($optionPath, $list);
                     $module = false;
 
                     break;
@@ -68,11 +62,29 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $this->addModules(array_filter($modules));
     }
 
+    protected function mergeOptions(&$options, array $input, $optionName)
+    {
+        if (
+            isset($options[$optionName]) &&
+            is_array($options[$optionName]) &&
+            is_array($input[$optionName])
+        ) {
+            $options[$optionName] = array_merge(
+                $options[$optionName],
+                $input[$optionName]
+            );
+
+            return;
+        }
+
+        $options[$optionName] = $input[$optionName];
+    }
+
     protected function getCompilerOptions()
     {
         $options = $this->getOptions();
 
-        $compilerOptions = $options['compiler_options'];
+        $compilerOptions = &$options['compiler_options'];
 
         foreach ([
             'dependencies_storage',
@@ -87,7 +99,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             'pretty',
         ] as $optionName) {
             if (isset($options[$optionName])) {
-                $compilerOptions['formatter_options'][$optionName] = $options[$optionName];
+                $this->mergeOptions(
+                    $compilerOptions['formatter_options'],
+                    $options,
+                    $optionName
+                );
             }
         }
 
@@ -106,12 +122,41 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             'node_compilers',
         ] as $optionName) {
             if (isset($options[$optionName])) {
-                $compilerOptions[$optionName] = $options[$optionName];
+                $this->mergeOptions(
+                    $compilerOptions,
+                    $options,
+                    $optionName
+                );
             }
         }
 
         if (isset($options['lexer_options'])) {
-            $compilerOptions['parser_options']['lexer_options'] = $options['lexer_options'];
+            $compilerOptions['parser_options']['lexer_options'] =  array_merge(
+                $compilerOptions['parser_options']['lexer_options'],
+                $options['lexer_options']
+            );
+        }
+
+        $modules = $this->getOption('modules');
+
+        foreach ($modules as &$module) {
+            foreach ($this->modulesOptionsPaths as $interface => $optionPath) {
+                if (is_subclass_of($module, $interface)) {
+                    $optionPath[] = 'modules';
+                    $base = &$compilerOptions;
+                    foreach ($optionPath as $key) {
+                        if (!isset($base[$key])) {
+                            $base[$key] = [];
+                        }
+
+                        $base = &$base[$key];
+                    }
+
+                    $base[] = $module;
+
+                    break;
+                }
+            }
         }
 
         return $compilerOptions;

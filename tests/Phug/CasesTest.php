@@ -16,7 +16,7 @@ class CasesTest extends AbstractRendererTest
             $pugFile = substr($file, 0, -5).'.pug';
 
             return [$file, $pugFile, basename($pugFile).' should render '.basename($file)];
-        }, glob(__DIR__.'/../cases/*.html'));
+        }, glob(__DIR__.'/../cases/html.html'));
     }
 
     /**
@@ -25,13 +25,11 @@ class CasesTest extends AbstractRendererTest
      */
     public function testRender($expected, $actual, $message)
     {
-        $render = $this->renderer->render($actual);
-        if (strpos($render, 'Dynamic mixin names not yet supported.') !== false) {
-            self::markTestSkipped('Not yet implemented.');
-
-            return;
-        }
-        self::assertSameLines(file_get_contents($expected), $render, $message);
+        self::assertSameLines(
+            file_get_contents($expected),
+            $this->renderer->render($actual),
+            $message
+        );
     }
 
     /**
