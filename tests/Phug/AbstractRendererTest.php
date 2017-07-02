@@ -21,6 +21,8 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         include_once __DIR__.'/Date.php';
+        include_once __DIR__.'/XmlHhvmFormat.php';
+
         $lastCompiler = null;
         $uglify = function ($contents) {
             $engine = new Uglify($contents);
