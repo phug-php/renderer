@@ -45,11 +45,12 @@ class CasesTest extends AbstractRendererTest
                 ],
             ],
         ]);
-        $json = json_decode(file_get_contents(
+        $json = file_get_contents(
             'https://api.github.com/repos/pugjs/pug/commits?path=packages/pug/test/cases',
             false,
             $context
-        ));
+        );
+        $json = is_string($json) ? json_decode($json) : $json;
         $lastCommit = new DateTimeImmutable($json[0]->commit->author->date);
         $upToDate = new DateTimeImmutable('@'.filemtime(glob(__DIR__.'/../cases/*.pug')[0]));
 

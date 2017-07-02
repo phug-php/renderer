@@ -186,7 +186,10 @@ class RendererTest extends AbstractRendererTest
         $renderer->render($path);
 
         self::assertContains(
-            'implode(): Invalid arguments passed on line 3',
+            defined('HHVM_VERSION')
+                ? 'Invalid operand type was used: implode() '.
+                    'expects a container as one of the arguments on line 3'
+                : 'implode(): Invalid arguments passed on line 3',
             $message
         );
 

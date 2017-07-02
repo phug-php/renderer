@@ -61,10 +61,13 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             return $contents;
         };
         $this->renderer = new Renderer([
-            'basedir'          => __DIR__.'/../cases',
-            'pretty'           => true,
-            'modules'          => [JsPhpizePhug::class],
-            'compiler_options' => [
+            'basedir'           => __DIR__.'/../cases',
+            'pretty'            => true,
+            'modules'           => [JsPhpizePhug::class],
+            'formatter_options' => [
+                'xml' => XmlHhvmFormat::class,
+            ],
+            'compiler_options'  => [
                 'filters' => [
                     'custom'        => $custom,
                     'coffee-script' => $coffee,
