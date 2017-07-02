@@ -65,7 +65,9 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             'pretty'            => true,
             'modules'           => [JsPhpizePhug::class],
             'formatter_options' => [
-                'xml' => XmlHhvmFormat::class,
+                'formats' => [
+                    'xml' => XmlHhvmFormat::class,
+                ],
             ],
             'compiler_options'  => [
                 'filters' => [
