@@ -100,7 +100,8 @@ class RendererTest extends AbstractRendererTest
             '',
             trim($this->renderer->renderString('section: div Hello'))
         );
-        self::assertSame("<section>\n".
+        self::assertSame(
+            "<section>\n".
             "  <div>Hello</div>\n".
             "</section>",
             $actual
@@ -113,7 +114,8 @@ class RendererTest extends AbstractRendererTest
             '',
             trim($this->renderer->renderString('section: div Hello'))
         );
-        self::assertSame('<section>'.
+        self::assertSame(
+            '<section>'.
             '<div>Hello</div>'.
             '</section>',
             $actual

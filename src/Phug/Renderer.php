@@ -64,8 +64,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
     protected function mergeOptions(&$options, array $input, $optionName)
     {
-        if (
-            isset($options[$optionName]) &&
+        if (isset($options[$optionName]) &&
             is_array($options[$optionName]) &&
             is_array($input[$optionName])
         ) {
@@ -131,7 +130,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         }
 
         if (isset($options['lexer_options'])) {
-            $compilerOptions['parser_options']['lexer_options'] =  array_merge(
+            $compilerOptions['parser_options']['lexer_options'] = array_merge(
                 $compilerOptions['parser_options']['lexer_options'],
                 $options['lexer_options']
             );

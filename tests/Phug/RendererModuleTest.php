@@ -32,7 +32,6 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @group i
      * @covers ::<public>
      * @covers \Phug\Renderer::mergeOptions
      * @covers \Phug\Renderer::__construct

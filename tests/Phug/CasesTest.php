@@ -16,7 +16,7 @@ class CasesTest extends AbstractRendererTest
             $pugFile = substr($file, 0, -5).'.pug';
 
             return [$file, $pugFile, basename($pugFile).' should render '.basename($file)];
-        }, glob(__DIR__.'/../cases/html.html'));
+        }, glob(__DIR__.'/../cases/*.html'));
     }
 
     /**

@@ -20,7 +20,7 @@ abstract class AbstractAdapter implements AdapterInterface
         ob_start();
         try {
             $this->display($php, $parameters);
-        } catch(Throwable $e) {
+        } catch (Throwable $e) {
             $throwable = $e;
         }
         $html = ob_get_contents();
