@@ -55,7 +55,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         });
 
         $renderer = new Renderer([
-            'modules' => [$compilerModule, $parserModule1],
+            'modules'        => [$compilerModule, $parserModule1],
             'parser_options' => [
                 'modules' => [$parserModule2],
             ],

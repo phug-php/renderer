@@ -7,8 +7,8 @@ use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Test\AbstractRendererTest;
 
 /**
-* @coversDefaultClass \Phug\Renderer\Adapter\EvalAdapter
-*/
+ * @coversDefaultClass \Phug\Renderer\Adapter\EvalAdapter
+ */
 class EvalAdapterTest extends AbstractRendererTest
 {
     /**

@@ -103,7 +103,7 @@ class RendererTest extends AbstractRendererTest
         self::assertSame(
             "<section>\n".
             "  <div>Hello</div>\n".
-            "</section>",
+            '</section>',
             $actual
         );
 
@@ -172,7 +172,6 @@ class RendererTest extends AbstractRendererTest
         );
 
         self::assertSame('', $contents);
-
 
         $message = null;
         $renderer = new Renderer([
