@@ -2,6 +2,7 @@
 
 namespace Phug;
 
+use Exception;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Util\ModulesContainerInterface;
@@ -191,8 +192,9 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return new Compiler($this->getCompilerOptions());
     }
 
-    public function handleError(Throwable $error, $code, $path, $source)
+    public function handleError($error, $code, $path, $source)
     {
+        /* @var Throwable $error */
         $source = explode("\n", rtrim($source));
         $message = get_class($error);
         if ($path) {
@@ -232,6 +234,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             );
         } catch (Throwable $error) {
             $this->handleError($error, 1, $path, $source);
+        } catch (Exception $error) {
+            $this->handleError($error, 2, $path, $source);
         }
     }
 

@@ -6,7 +6,6 @@ use Phug\LexerException;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\RendererException;
-use Throwable;
 
 /**
  * @coversDefaultClass \Phug\Renderer
@@ -179,7 +178,7 @@ class RendererTest extends AbstractRendererTest
         $message = null;
         $renderer = new Renderer([
             'pretty'        => true,
-            'error_handler' => function (Throwable $error) use (&$message) {
+            'error_handler' => function ($error) use (&$message) {
                 $message = $error->getMessage();
             },
         ]);
