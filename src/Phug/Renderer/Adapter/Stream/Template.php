@@ -6,6 +6,7 @@ namespace Phug\Renderer\Adapter\Stream;
  * Creates a wrapper in order to allow the Zend PhpRenderer
  * to include the compiled file.
  */
+// @codingStandardsIgnoreStart
 class Template
 {
     /**
@@ -76,3 +77,4 @@ class Template
         return [0, 0, 0, 0, 0, 0, 0, strlen($this->data), 0, 0, 0, 0];
     }
 }
+// @codingStandardsIgnoreEnd
