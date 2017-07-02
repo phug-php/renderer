@@ -4,6 +4,7 @@ namespace Phug\Test;
 
 use Phug\LexerException;
 use Phug\Renderer;
+use Phug\Renderer\Adapter\FileAdapter;
 use Phug\RendererException;
 use Throwable;
 
@@ -126,7 +127,8 @@ class RendererTest extends AbstractRendererTest
         self::assertSame('<p><i></i><b></b></p>', $actual);
 
         $this->renderer->setOptionsRecursive([
-            'lexer_options' => [
+            'renderer_adapter' => FileAdapter::class,
+            'lexer_options'    => [
                 'allow_mixed_indent' => false,
             ],
         ]);
@@ -146,11 +148,12 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
-     * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer\Adapter\EvalAdapter::display
      */
     public function testHandleError()
     {
+        $this->renderer->setOptions([
+            'renderer_adapter' => FileAdapter::class,
+        ]);
         ob_start();
         $message = null;
         try {
