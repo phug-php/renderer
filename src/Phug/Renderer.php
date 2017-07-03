@@ -5,6 +5,8 @@ namespace Phug;
 use Exception;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
+use Phug\Renderer\AdapterInterface;
+use Phug\Renderer\CacheInterface;
 use Phug\Util\ModulesContainerInterface;
 use Phug\Util\OptionInterface;
 use Phug\Util\Partial\ModuleTrait;
@@ -27,6 +29,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     {
         $this->setOptionsRecursive([
             'cache'            => null,
+            'up_to_date_check' => true,
+            'keep_base_name'   => false,
             'error_handler'    => null,
             'renderer_adapter' => isset($options['cache'])
                 ? FileAdapter::class
@@ -167,6 +171,12 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return array_merge($this->getOption('shared_variables'), $parameters);
     }
 
+    /**
+     * @param array|string $variables
+     * @param mixed        $value
+     *
+     * @return $this
+     */
     public function share($variables, $value = null)
     {
         if (func_num_args() === 2) {
@@ -175,18 +185,24 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             $variables[$key] = $value;
         }
 
-        $this->setOptionsRecursive([
+        return $this->setOptionsRecursive([
             'shared_variables' => $variables,
         ]);
     }
 
+    /**
+     * @return AdapterInterface
+     */
     public function getAdapter()
     {
         $adapterClass = $this->getOption('renderer_adapter');
 
-        return new $adapterClass($this->getOption('renderer_options'));
+        return new $adapterClass($this->getOption('renderer_options'), $this);
     }
 
+    /**
+     * @return Compiler
+     */
     public function getCompiler()
     {
         return new Compiler($this->getCompilerOptions());
@@ -225,10 +241,30 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $handler($exception);
     }
 
-    public function callAdapter($method, $path, $source, array $parameters)
+    public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
+        $adapter = $this->getAdapter();
+        if ($this->getOption('cache')) {
+            if (!($adapter instanceof CacheInterface)) {
+                throw new RendererException(
+                    'You cannot use "cache" option with '.get_class($adapter).
+                    ' because this adapter does not implement '.CacheInterface::class
+                );
+            }
+
+            $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
+                $adapter->displayCached($path, $input, $getSource, $parameters);
+            };
+
+            return in_array($method, ['display', 'displayString'])
+                ? $display()
+                : $adapter->captureBuffer($display);
+        }
+
+        $source = $getSource();
+
         try {
-            return $this->getAdapter()->$method(
+            return $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
@@ -244,17 +280,23 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->callAdapter(
             'render',
             $path,
-            $this->getCompiler()->compileFile($path),
+            null,
+            function () use ($path) {
+                return $this->getCompiler()->compileFile($path);
+            },
             $parameters
         );
     }
 
-    public function renderString($path, array $parameters = [], $filename = null)
+    public function renderString($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
             'render',
             null,
-            $this->getCompiler()->compile($path, $filename),
+            $string,
+            function () use ($string, $filename) {
+                return $this->getCompiler()->compile($string, $filename);
+            },
             $parameters
         );
     }
@@ -264,18 +306,37 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->callAdapter(
             'display',
             $path,
-            $this->getCompiler()->compileFile($path),
+            null,
+            function () use ($path) {
+                return $this->getCompiler()->compileFile($path);
+            },
             $parameters
         );
     }
 
-    public function displayString($path, array $parameters = [], $filename = null)
+    public function displayString($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
             'display',
             null,
-            $this->getCompiler()->compile($path, $filename),
+            $string,
+            function () use ($string, $filename) {
+                return $this->getCompiler()->compile($string, $filename);
+            },
             $parameters
         );
+    }
+
+    public function cacheDirectory($directory)
+    {
+        $adapter = $this->getAdapter();
+        if (!($adapter instanceof CacheInterface)) {
+            throw new RendererException(
+                'You cannot cache a directory with '.get_class($adapter).
+                ' because this adapter does not implement '.CacheInterface::class
+            );
+        }
+
+        return $adapter->cacheDirectory($directory);
     }
 }

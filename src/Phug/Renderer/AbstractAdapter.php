@@ -15,12 +15,12 @@ abstract class AbstractAdapter implements AdapterInterface
         $this->setOptions($options);
     }
 
-    public function render($php, array $parameters)
+    public function captureBuffer(callable $display)
     {
         $throwable = null;
         ob_start();
         try {
-            $this->display($php, $parameters);
+            $display();
         } catch (Throwable $e) { // PHP 7
             $throwable = $e;
         } catch (Exception $e) { // PHP 5
@@ -34,5 +34,12 @@ abstract class AbstractAdapter implements AdapterInterface
         }
 
         return $html;
+    }
+
+    public function render($php, array $parameters)
+    {
+        return $this->captureBuffer(function () use ($php, $parameters) {
+            $this->display($php, $parameters);
+        });
     }
 }

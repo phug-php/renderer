@@ -56,6 +56,19 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::__construct
+     */
+    public function testFilter()
+    {
+        $actual = str_replace(
+            "\r",
+            '',
+            trim($this->renderer->renderString('script: :cdata foo'))
+        );
+        self::assertSame('<script><![CDATA[foo]]></script>', $actual);
+    }
+
+    /**
      * @covers ::share
      * @covers ::mergeWithSharedVariables
      */
@@ -147,6 +160,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
+     * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleError()
     {

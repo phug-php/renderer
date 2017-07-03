@@ -2,17 +2,23 @@
 
 namespace Phug\Renderer\Adapter;
 
+use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
+use Phug\Renderer\Adapter\Partial\CacheTrait;
 use Phug\Renderer\CacheInterface;
 
 class FileAdapter extends AbstractAdapter implements CacheInterface
 {
-    public function __construct(array $options)
+    use CacheTrait;
+
+    public function __construct(array $options, Renderer $renderer = null)
     {
-        $this->setOptions([
-            'tmp_dir' => sys_get_temp_dir(),
-            'tempnam' => 'tempnam',
-        ]);
+        $this
+            ->setRenderer($renderer)
+            ->setOptions([
+                'tmp_dir' => sys_get_temp_dir(),
+                'tempnam' => 'tempnam',
+            ]);
 
         parent::__construct($options);
     }
