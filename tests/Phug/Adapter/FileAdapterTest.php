@@ -32,8 +32,15 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers ::<public>
-     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::<public>
-     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::<protected>
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::getRenderer
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::setRenderer
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::getCachePath
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::hashPrint
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::getCacheDirectory
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::displayCached
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer::callAdapter
      */
