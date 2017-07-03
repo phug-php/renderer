@@ -42,7 +42,7 @@ class FileAdapterTest extends AbstractRendererTest
         $renderer = new Renderer([
             'cache' => sys_get_temp_dir(),
         ]);
-        $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'test.pug';
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
         file_put_contents($path, 'p=$message');
 
         self::assertSame('<p>Hi</p>', $renderer->render($path, [
@@ -118,7 +118,7 @@ class FileAdapterTest extends AbstractRendererTest
         }
         foreach (scandir($dir) as $file) {
             if ($file !== '.' && $file !== '..') {
-                $path = $dir . '/' . $file;
+                $path = $dir.'/'.$file;
                 if (is_dir($path)) {
                     $this->emptyDirectory($path);
                 } else {
@@ -140,7 +140,7 @@ class FileAdapterTest extends AbstractRendererTest
         $renderer = new Renderer([
             'cache' => '///cannot/be/created',
         ]);
-        $renderer->render(__DIR__ . '/../../cases/attrs.pug');
+        $renderer->render(__DIR__.'/../../cases/attrs.pug');
     }
 
     /**
@@ -153,8 +153,8 @@ class FileAdapterTest extends AbstractRendererTest
     public function testReadOnlyDirectory()
     {
         $dir = __DIR__;
-        while (is_writeable($dir)) {
-            $parent = realpath($dir . '/..');
+        while (is_writable($dir)) {
+            $parent = realpath($dir.'/..');
             if ($parent === $dir) {
                 $dir = 'C:';
                 if (!file_exists($dir) || is_writable($dir)) {
@@ -169,7 +169,7 @@ class FileAdapterTest extends AbstractRendererTest
         $renderer = new Renderer([
             'cache' => $dir,
         ]);
-        $renderer->render(__DIR__ . '/../../cases/attrs.pug');
+        $renderer->render(__DIR__.'/../../cases/attrs.pug');
     }
 
     /**
@@ -179,15 +179,15 @@ class FileAdapterTest extends AbstractRendererTest
      */
     public function testCacheDirectory()
     {
-        $cacheDirectory = sys_get_temp_dir() . '/pug-test';
+        $cacheDirectory = sys_get_temp_dir().'/pug-test';
         $this->emptyDirectory($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);
         }
-        $templatesDirectory = __DIR__ . '/../../utils';
+        $templatesDirectory = __DIR__.'/../../utils';
         $renderer = new Renderer([
             'basedir' => $templatesDirectory,
-            'cache' => $cacheDirectory,
+            'cache'   => $cacheDirectory,
         ]);
         list($success, $errors) = $renderer->cacheDirectory($templatesDirectory);
         $filesCount = count(array_filter(scandir($cacheDirectory), function ($file) {
@@ -195,8 +195,8 @@ class FileAdapterTest extends AbstractRendererTest
         }));
         $expectedCount = count(array_filter(array_merge(
             scandir($templatesDirectory),
-            scandir($templatesDirectory . '/subdirectory'),
-            scandir($templatesDirectory . '/subdirectory/subsubdirectory')
+            scandir($templatesDirectory.'/subdirectory'),
+            scandir($templatesDirectory.'/subdirectory/subsubdirectory')
         ), function ($file) {
             return pathinfo($file, PATHINFO_EXTENSION) === 'pug';
         }));

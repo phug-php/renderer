@@ -44,7 +44,7 @@ trait CacheTrait
      */
     protected function getCachePath($name)
     {
-        return str_replace('//', '/', $this->getRenderer()->getOption('cache') . '/' . $name) . '.php';
+        return str_replace('//', '/', $this->getRenderer()->getOption('cache').'/'.$name).'.php';
     }
 
     /**
@@ -96,7 +96,7 @@ trait CacheTrait
         if (!$input) {
             $input = realpath($path);
             $path = $this->getCachePath(
-                ($this->getRenderer()->getOption('keep_base_name') ? basename($input) : '') .
+                ($this->getRenderer()->getOption('keep_base_name') ? basename($input) : '').
                 $this->hashPrint($input)
             );
 
@@ -116,9 +116,9 @@ trait CacheTrait
 
         if (!is_dir($cacheFolder) && !@mkdir($cacheFolder, 0777, true)) {
             throw new RuntimeException(
-                $cacheFolder . ': Cache directory seem\'s to not exists' . "\n" .
-                'Create it with:' . "\n" .
-                'mkdir -p ' . escapeshellarg(realpath($cacheFolder)) . "\n" .
+                $cacheFolder.': Cache directory seem\'s to not exists'."\n".
+                'Create it with:'."\n".
+                'mkdir -p '.escapeshellarg(realpath($cacheFolder))."\n".
                 'Or replace your cache setting with a valid writable folder path.',
                 5
             );
@@ -143,7 +143,7 @@ trait CacheTrait
      * Else, render the input, cache it in a file and return it.
      *
      * @param string   $input     pug input
-     * @param string   $input    pug input
+     * @param string   $input     pug input
      * @param callable $rendered  method to compile the source into PHP
      * @param array    $variables local variables
      * @param bool     $success
@@ -192,7 +192,7 @@ trait CacheTrait
             if ($object === '.' || $object === '..') {
                 continue;
             }
-            $inputFile = $directory . DIRECTORY_SEPARATOR . $object;
+            $inputFile = $directory.DIRECTORY_SEPARATOR.$object;
             if (is_dir($inputFile)) {
                 list($subSuccess, $subErrors) = $this->cacheDirectory($inputFile);
                 $success += $subSuccess;
