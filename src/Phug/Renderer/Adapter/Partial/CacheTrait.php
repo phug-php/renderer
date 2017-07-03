@@ -101,7 +101,8 @@ trait CacheTrait
             );
 
             // Do not re-parse file if original is older
-            return (!$this->getRenderer()->getOption('up_to_date_check')) || (file_exists($path) && filemtime($input) < filemtime($path));
+            return !$this->getRenderer()->getOption('up_to_date_check') ||
+                (file_exists($path) && filemtime($input) < filemtime($path));
         }
 
         $path = $this->getCachePath($this->hashPrint($input));
