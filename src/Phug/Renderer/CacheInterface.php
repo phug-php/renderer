@@ -19,9 +19,9 @@ interface CacheInterface
     public function setRenderer(Renderer $renderer);
 
     /**
-     * @param string   $path     path to pug file
-     * @param string   $input    pug input
-     * @param callable $rendered method to compile the source into PHP
+     * @param string   $path      path to pug file
+     * @param string   $input     pug input
+     * @param callable $rendered  method to compile the source into PHP
      * @param array    $variables local variables
      * @param bool     $success
      *
