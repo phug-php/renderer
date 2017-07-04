@@ -21,8 +21,8 @@ Usage
 
 ```php
 
-$compiler = new Phug\Renderer($options);
-$html = $compiler->compile($pugInput);
+$renderer = new Phug\Renderer($options);
+$html = $renderer->render($pugInput);
 
 //$html is now a string of HTML or any other markup according to the formatter you choose (XML, xHTML, etc.)
 ```
