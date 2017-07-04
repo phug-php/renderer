@@ -19,6 +19,21 @@ interface CacheInterface
     public function setRenderer(Renderer $renderer);
 
     /**
+     * Return the cached file path after cache optional process.
+     *
+     * @param string   $input     pug input
+     * @param string   $input     pug input
+     * @param callable $rendered  method to compile the source into PHP
+     * @param bool     $success
+     *
+     * @throws \InvalidArgumentException
+     * @throws \Exception
+     *
+     * @return string
+     */
+    public function cache($path, $input, callable $rendered, &$success = null);
+
+    /**
      * @param string   $path      path to pug file
      * @param string   $input     pug input
      * @param callable $rendered  method to compile the source into PHP
@@ -27,8 +42,6 @@ interface CacheInterface
      *
      * @throws \InvalidArgumentException
      * @throws \Exception
-     *
-     * @return string
      */
     public function displayCached($path, $input, callable $rendered, array $variables, &$success = null);
 

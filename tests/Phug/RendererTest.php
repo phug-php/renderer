@@ -13,6 +13,7 @@ use Phug\RendererException;
 class RendererTest extends AbstractRendererTest
 {
     /**
+     * @covers ::compile
      * @covers ::renderString
      */
     public function testRenderString()

@@ -140,13 +140,11 @@ trait CacheTrait
     }
 
     /**
-     * Get cached input/file a matching cache file exists.
-     * Else, render the input, cache it in a file and return it.
+     * Return the cached file path after cache optional process.
      *
      * @param string   $input     pug input
      * @param string   $input     pug input
      * @param callable $rendered  method to compile the source into PHP
-     * @param array    $variables local variables
      * @param bool     $success
      *
      * @throws \InvalidArgumentException
@@ -154,7 +152,7 @@ trait CacheTrait
      *
      * @return string
      */
-    public function displayCached($path, $input, callable $rendered, array $variables, &$success = null)
+    public function cache($path, $input, callable $rendered, &$success = null)
     {
         $cacheFolder = $this->getCacheDirectory();
 
@@ -166,8 +164,25 @@ trait CacheTrait
             $success = file_put_contents($path, $rendered($input));
         }
 
+        return $path;
+    }
+
+    /**
+     * Display rendered template after optional cache process.
+     *
+     * @param string   $input     pug input
+     * @param string   $input     pug input
+     * @param callable $rendered  method to compile the source into PHP
+     * @param array    $variables local variables
+     * @param bool     $success
+     *
+     * @throws \InvalidArgumentException
+     * @throws \Exception
+     */
+    public function displayCached($path, $input, callable $rendered, array $variables, &$success = null)
+    {
         $__pug_parameters = $variables;
-        $__pug_path = $path;
+        $__pug_path = $this->cache($path, $input, $rendered, $success);
 
         call_user_func(function () use ($__pug_path, $__pug_parameters) {
             extract($__pug_parameters);

@@ -275,6 +275,16 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         }
     }
 
+    public function compile($string, $filename)
+    {
+        return $this->getCompiler()->compile($string, $filename);
+    }
+
+    public function compileFile($path)
+    {
+        return $this->getCompiler()->compileFile($path);
+    }
+
     public function render($path, array $parameters = [])
     {
         return $this->callAdapter(
@@ -282,7 +292,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             $path,
             null,
             function () use ($path) {
-                return $this->getCompiler()->compileFile($path);
+                return $this->compileFile($path);
             },
             $parameters
         );
@@ -295,7 +305,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             null,
             $string,
             function () use ($string, $filename) {
-                return $this->getCompiler()->compile($string, $filename);
+                return $this->compile($string, $filename);
             },
             $parameters
         );
@@ -308,7 +318,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             $path,
             null,
             function () use ($path) {
-                return $this->getCompiler()->compileFile($path);
+                return $this->compileFile($path);
             },
             $parameters
         );
@@ -321,7 +331,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             null,
             $string,
             function () use ($string, $filename) {
-                return $this->getCompiler()->compile($string, $filename);
+                return $this->compile($string, $filename);
             },
             $parameters
         );

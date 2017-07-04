@@ -39,6 +39,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::isCacheUpToDate
      * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::getCacheDirectory
      * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::cache
      * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::displayCached
      * @covers \Phug\Renderer\Adapter\Partial\CacheTrait::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -153,6 +154,7 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\Partial\CacheTrait::cacheDirectory
+     * @covers                \Phug\Renderer\Adapter\Partial\CacheTrait::cache
      * @covers                \Phug\Renderer\Adapter\Partial\CacheTrait::displayCached
      * @expectedException     \RuntimeException
      * @expectedExceptionCode 6

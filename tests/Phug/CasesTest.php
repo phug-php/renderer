@@ -21,6 +21,7 @@ class CasesTest extends AbstractRendererTest
 
     /**
      * @dataProvider caseProvider
+     * @covers ::compileFile
      * @covers ::render
      */
     public function testRender($expected, $actual, $message)
