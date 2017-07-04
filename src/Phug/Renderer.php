@@ -273,9 +273,18 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         } catch (Exception $error) {
             $this->handleError($error, 2, $path, $source);
         }
+
+        return false;
     }
 
-    public function compile($string, $filename)
+    public function compile($path)
+    {
+        $method = file_exists($path) ? 'compileFile' : 'compileString';
+
+        return call_user_func_array([$this, $method], func_get_args());
+    }
+
+    public function compileString($string, $filename)
     {
         return $this->getCompiler()->compile($string, $filename);
     }
@@ -285,7 +294,14 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->getCompiler()->compileFile($path);
     }
 
-    public function render($path, array $parameters = [])
+    public function render($path)
+    {
+        $method = file_exists($path) ? 'renderFile' : 'renderString';
+
+        return call_user_func_array([$this, $method], func_get_args());
+    }
+
+    public function renderFile($path, array $parameters = [])
     {
         return $this->callAdapter(
             'render',
@@ -311,7 +327,14 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         );
     }
 
-    public function display($path, array $parameters = [])
+    public function display($path)
+    {
+        $method = file_exists($path) ? 'displayFile' : 'displayString';
+
+        return call_user_func_array([$this, $method], func_get_args());
+    }
+
+    public function displayFile($path, array $parameters = [])
     {
         return $this->callAdapter(
             'display',
