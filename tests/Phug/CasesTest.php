@@ -51,13 +51,24 @@ class CasesTest extends AbstractRendererTest
                 ],
             ],
         ]);
-        $json = json_decode(file_get_contents(
+        $pugJs = @file_get_contents(
             'https://api.github.com/repos/pugjs/pug/commits?path=packages/pug/test/cases',
             false,
             $context
-        ));
+        );
+        $pugPhp = @file_get_contents(
+            'https://api.github.com/repos/phug-php/renderer/commits?path=tests/cases',
+            false,
+            $context
+        );
+        if (!$pugJs || !$pugPhp) {
+            self::markTestSkipped('Test case update skipped because api.github.com was not available.');
+        }
+
+        $json = json_decode($pugJs);
         $lastCommit = new DateTimeImmutable($json[0]->commit->author->date);
-        $upToDate = new DateTimeImmutable('@'.filemtime(glob(__DIR__.'/../cases/*.pug')[0]));
+        $json = json_decode($pugPhp);
+        $upToDate = new DateTimeImmutable($json[0]->commit->author->date);
 
         self::assertTrue(
             $lastCommit <= $upToDate,
