@@ -191,6 +191,14 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     }
 
     /**
+     * Remove all previously set shared variables.
+     */
+    public function resetSharedVariables()
+    {
+        return $this->setOption('shared_variables', []);
+    }
+
+    /**
      * @return AdapterInterface
      */
     public function getAdapter()
