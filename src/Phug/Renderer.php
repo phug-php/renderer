@@ -91,6 +91,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $compilerOptions = &$options['compiler_options'];
 
         foreach ([
+            'debug',
             'dependencies_storage',
             'default_format',
             'formats',
@@ -113,6 +114,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
         foreach ([
             'basedir',
+            'debug',
             'extensions',
             'default_tag',
             'pre_compile',
