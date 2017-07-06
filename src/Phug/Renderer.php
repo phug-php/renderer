@@ -351,6 +351,17 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $handler($exception);
     }
 
+    /**
+     * @param string   $method
+     * @param string   $path
+     * @param string   $input
+     * @param callable $getSource
+     * @param array    $parameters
+     *
+     * @return bool|string|null
+     *
+     * @throws RendererException
+     */
     public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
         $adapter = $this->getAdapter();
@@ -372,21 +383,29 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         }
 
         $source = $getSource();
+        $render = false;
 
         try {
-            return $adapter->$method(
+            $render = $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
+
         } catch (Throwable $error) {
             $this->handleError($error, 1, $path, $source);
         } catch (Exception $error) {
             $this->handleError($error, 2, $path, $source);
         }
 
-        return false;
+        return $render;
     }
 
+    /**
+     * @param string $string   input string or path
+     * @param string $filename
+     *
+     * @return string
+     */
     public function compile($path)
     {
         $method = file_exists($path) ? 'compileFile' : 'compileString';
@@ -394,6 +413,12 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return call_user_func_array([$this, $method], func_get_args());
     }
 
+    /**
+     * @param string $string
+     * @param string $filename
+     *
+     * @return string
+     */
     public function compileString($string, $filename)
     {
         $this->lastString = $string;
@@ -402,6 +427,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->getCompiler()->compile($string, $filename);
     }
 
+    /**
+     * @param string $path
+     *
+     * @return string
+     */
     public function compileFile($path)
     {
         $this->lastFile = $path;
@@ -409,6 +439,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->getCompiler()->compileFile($path);
     }
 
+    /**
+     * @param string       $string     input string or path
+     * @param string|array $parameters parameters or file name
+     * @param string       $filename
+     *
+     * @return string
+     */
     public function render($path)
     {
         $method = file_exists($path) ? 'renderFile' : 'renderString';
@@ -416,6 +453,12 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return call_user_func_array([$this, $method], func_get_args());
     }
 
+    /**
+     * @param string       $path
+     * @param string|array $parameters parameters or file name
+     *
+     * @return string
+     */
     public function renderFile($path, array $parameters = [])
     {
         return $this->callAdapter(
@@ -429,6 +472,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         );
     }
 
+    /**
+     * @param string $string     input string or path
+     * @param array  $parameters parameters or file name
+     * @param string $filename
+     *
+     * @return string
+     */
     public function renderString($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
@@ -442,6 +492,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         );
     }
 
+    /**
+     * @param string       $string     input string or path
+     * @param string|array $parameters parameters or file name
+     * @param string       $filename
+     */
     public function display($path)
     {
         $method = file_exists($path) ? 'displayFile' : 'displayString';
@@ -449,6 +504,10 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return call_user_func_array([$this, $method], func_get_args());
     }
 
+    /**
+     * @param string $path
+     * @param array  $parameters
+     */
     public function displayFile($path, array $parameters = [])
     {
         return $this->callAdapter(
@@ -462,6 +521,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         );
     }
 
+    /**
+     * @param string $string     input string or path
+     * @param array  $parameters parameters or file name
+     * @param string $filename
+     */
     public function displayString($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
@@ -475,6 +539,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         );
     }
 
+    /**
+     * @param $directory
+     *
+     * @throws RendererException
+     *
+     * @return array
+     */
     public function cacheDirectory($directory)
     {
         $adapter = $this->getAdapter();

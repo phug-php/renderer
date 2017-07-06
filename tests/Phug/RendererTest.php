@@ -169,7 +169,7 @@ class RendererTest extends AbstractRendererTest
     public function testHandleError()
     {
         $renderer = new Renderer([
-            'debug'            => false,
+            'debug' => false,
             'renderer_adapter' => FileAdapter::class,
         ]);
         ob_start();
@@ -196,8 +196,8 @@ class RendererTest extends AbstractRendererTest
 
         $message = null;
         $renderer = new Renderer([
-            'debug'         => false,
-            'pretty'        => true,
+            'debug' => false,
+            'pretty' => true,
             'error_handler' => function ($error) use (&$message) {
                 $message = $error->getMessage();
             },
@@ -207,8 +207,8 @@ class RendererTest extends AbstractRendererTest
 
         self::assertContains(
             defined('HHVM_VERSION')
-                ? 'Invalid operand type was used: implode() '.
-                    'expects a container as one of the arguments on line 3'
+                ? 'Invalid operand type was used: implode() ' .
+                'expects a container as one of the arguments on line 3'
                 : 'implode(): Invalid arguments passed on line 3',
             $message
         );
@@ -222,6 +222,21 @@ class RendererTest extends AbstractRendererTest
             "implode('','')",
             $message
         );
+    }
+
+    /**
+     * @covers ::handleError
+     * @covers ::callAdapter
+     * @covers ::getCliErrorMessage
+     * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
+     */
+    public function testHandleParseError()
+    {
+        if (version_compare(PHP_VERSION, '7.0.0') < 0) {
+            self::markTestSkipped('Parse error can only be caught since PHP 7.');
+
+            return;
+        }
 
         $renderer = new Renderer([
             'debug'            => true,
@@ -251,7 +266,7 @@ class RendererTest extends AbstractRendererTest
                 "    So\n".
                 "    Boring\n".
                 "    Comments\n".
-                "  // To far to be visible error context"
+                '  // Too far to be visible error context'
             );
         } catch (RendererException $error) {
             $message = $error->getMessage();
@@ -260,6 +275,6 @@ class RendererTest extends AbstractRendererTest
         self::assertContains('ParseError:', $message);
         self::assertContains(' on line 12, offset 14', $message);
         self::assertContains('title Foo', $message);
-        self::assertNotContains('To far to be visible error context', $message);
+        self::assertNotContains('Too far to be visible error context', $message);
     }
 }
