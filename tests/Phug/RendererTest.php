@@ -122,6 +122,7 @@ class RendererTest extends AbstractRendererTest
         );
 
         $this->renderer->setOption('pretty', false);
+        $this->renderer->initializeCompiler();
 
         $actual = str_replace(
             "\r",
@@ -145,6 +146,7 @@ class RendererTest extends AbstractRendererTest
                 'allow_mixed_indent' => false,
             ],
         ]);
+        $this->renderer->initializeCompiler();
         $message = '';
         try {
             $this->renderer->renderString($template);
@@ -161,17 +163,19 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
+     * @covers ::getCliErrorMessage
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleError()
     {
-        $this->renderer->setOptions([
+        $renderer = new Renderer([
+            'debug'            => false,
             'renderer_adapter' => FileAdapter::class,
         ]);
         ob_start();
         $message = null;
         try {
-            $this->renderer->renderString('div: p=12/0');
+            $renderer->renderString('div: p=12/0');
         } catch (RendererException $error) {
             $message = $error->getMessage();
         }
@@ -179,7 +183,7 @@ class RendererTest extends AbstractRendererTest
         ob_end_clean();
 
         self::assertContains(
-            'Division by zero on line 2',
+            'Division by zero on line 1',
             $message
         );
 
@@ -192,6 +196,7 @@ class RendererTest extends AbstractRendererTest
 
         $message = null;
         $renderer = new Renderer([
+            'debug'         => false,
             'pretty'        => true,
             'error_handler' => function ($error) use (&$message) {
                 $message = $error->getMessage();
@@ -217,5 +222,44 @@ class RendererTest extends AbstractRendererTest
             "implode('','')",
             $message
         );
+
+        $renderer = new Renderer([
+            'debug'            => true,
+            'renderer_adapter' => FileAdapter::class,
+        ]);
+
+        $message = null;
+        try {
+            $renderer->renderString(
+                "doctype html\n".
+                "html\n".
+                "  //-\n".
+                "    Many\n".
+                "    Boring\n".
+                "    So\n".
+                "    Boring\n".
+                "    Comments\n".
+                "  head\n".
+                "    title Foo\n".
+                "  body\n".
+                "    section= MyClass:::error()\n".
+                "    footer\n".
+                "      | End\n".
+                "  //-\n".
+                "    Many\n".
+                "    Boring\n".
+                "    So\n".
+                "    Boring\n".
+                "    Comments\n".
+                "  // To far to be visible error context"
+            );
+        } catch (RendererException $error) {
+            $message = $error->getMessage();
+        }
+
+        self::assertContains('ParseError:', $message);
+        self::assertContains(' on line 12, offset 14', $message);
+        self::assertContains('title Foo', $message);
+        self::assertNotContains('To far to be visible error context', $message);
     }
 }

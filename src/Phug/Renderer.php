@@ -18,6 +18,24 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     use ModuleTrait;
     use OptionTrait;
 
+    /**
+     * @var Compiler
+     */
+    protected $compiler;
+
+    /**
+     * @var string
+     */
+    protected $lastString;
+
+    /**
+     * @var string
+     */
+    protected $lastFile;
+
+    /**
+     * @var array
+     */
     protected $modulesOptionsPaths = [
         CompilerModuleInterface::class  => [],
         FormatterModuleInterface::class => ['formatter_options'],
@@ -28,17 +46,20 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     public function __construct(array $options = [])
     {
         $this->setOptionsRecursive([
-            'cache'            => null,
-            'up_to_date_check' => true,
-            'keep_base_name'   => false,
-            'error_handler'    => null,
-            'renderer_adapter' => isset($options['cache'])
+            'debug'               => true,
+            'cache'               => null,
+            'up_to_date_check'    => true,
+            'keep_base_name'      => false,
+            'error_handler'       => null,
+            'html_error'          => php_sapi_name() !== 'cli',
+            'error_context_lines' => 7,
+            'renderer_adapter'    => isset($options['cache'])
                 ? FileAdapter::class
                 : EvalAdapter::class,
-            'renderer_options' => [],
-            'shared_variables' => [],
-            'modules'          => [],
-            'compiler_options' => [
+            'renderer_options'    => [],
+            'shared_variables'    => [],
+            'modules'             => [],
+            'compiler_options'    => [
                 'formatter_options' => [],
                 'parser_options'    => [
                     'lexer_options' => [],
@@ -65,6 +86,12 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
         $this->setExpectedModuleType(RendererModuleInterface::class);
         $this->addModules(array_filter($modules));
+        $this->initializeCompiler();
+    }
+
+    public function initializeCompiler()
+    {
+        $this->compiler = new Compiler($this->getCompilerOptions());
     }
 
     protected function mergeOptions(&$options, array $input, $optionName)
@@ -215,34 +242,107 @@ class Renderer implements ModulesContainerInterface, OptionInterface
      */
     public function getCompiler()
     {
-        return new Compiler($this->getCompilerOptions());
+        return $this->compiler;
     }
 
-    public function handleError($error, $code, $path, $source)
+    protected function getCliErrorMessage($error, $line, $offset, $source, $path, $colored)
     {
-        /* @var Throwable $error */
         $source = explode("\n", rtrim($source));
-        $message = get_class($error);
+        $errorType = get_class($error);
+        $message = $errorType;
         if ($path) {
             $message .= ' in '.$path;
         }
-        $message .= ":\n".$error->getMessage().' on line '.$error->getLine()."\n\n";
-        foreach ($source as $index => $line) {
+        $message .= ":\n".$error->getMessage().' on line '.$line.
+            (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
+        $contextLines = $this->getOption('error_context_lines');
+        foreach ($source as $index => $lineText) {
+            if (abs($index + 1 - $line) > $contextLines) {
+                continue;
+            }
             $number = strval($index + 1);
-            $markLine = $error->getLine() - 1 === $index;
-            $line = ($markLine ? '>' : ' ').
+            $markLine = $line - 1 === $index;
+            $lineText = ($markLine ? '>' : ' ').
                 str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
-                $line;
+                $lineText;
             if (!$markLine) {
-                $message .= $line."\n";
+                $message .= $lineText."\n";
 
                 continue;
             }
-            $message .= "\033[43;30m".$line."\e[0m\n";
+            $message .= ($colored ? "\033[43;30m" : '').
+                (is_null($offset)
+                    ? $lineText
+                    : mb_substr($lineText, 0, $offset + 7).
+                    ($colored ? "\033[43;31m" : '').
+                    mb_substr($lineText, $offset + 7, 1).
+                    ($colored ? "\033[43;30m" : '').
+                    mb_substr($lineText, $offset + 8)
+                ).
+                ($colored ? "\e[0m" : '')."\n";
+            if (!is_null($offset)) {
+                $message .= str_repeat('-', $offset + 7)."^\n";
+            }
         }
 
-        $exception = new RendererException($message, $code, $error);
+        return $message;
+    }
+
+    /**
+     * Handle error occurred in compiled PHP.
+     *
+     * @param \Throwable $error
+     * @param int        $code
+     * @param string     $path
+     * @param string     $source
+     *
+     * @throws RendererException
+     */
+    public function handleError($error, $code, $path, $source)
+    {
+        /* @var Throwable $error */
+        $line = $error->getLine();
+        $offset = null;
+        $sourcePath = $path;
+        if ($this->getOption('debug')) {
+            $pugError = $this->getCompiler()->getFormatter()->getDebugError($error, $source);
+            $line = $pugError->getPugLine();
+            $offset = $pugError->getPugOffset();
+            $sourcePath = $pugError->getPugFile();
+            $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
+        }
+
         $handler = $this->getOption('error_handler');
+        if (!$handler && $this->getOption('html_error')) {
+            echo '<pre>'.
+                $this->getCliErrorMessage(
+                    $error,
+                    $line,
+                    $offset,
+                    $source,
+                    $sourcePath,
+                    false
+                ).
+                '</pre>';
+            exit(1);
+        }
+
+        $colorSupport = DIRECTORY_SEPARATOR === '\\'
+            ? false !== getenv('ANSICON') ||
+                'ON' === getenv('ConEmuANSI') ||
+                false !== getenv('BABUN_HOME')
+            : (false !== getenv('BABUN_HOME')) ||
+                function_exists('posix_isatty') &&
+                @posix_isatty(STDOUT);
+        $message = $this->getCliErrorMessage(
+            $error,
+            $line,
+            $offset,
+            $source,
+            $sourcePath,
+            $colorSupport
+        );
+        $exception = new RendererException($message, $code, $error);
 
         if (!$handler) {
             throw $exception;
@@ -296,11 +396,16 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
     public function compileString($string, $filename)
     {
+        $this->lastString = $string;
+        $this->lastFile = $filename;
+
         return $this->getCompiler()->compile($string, $filename);
     }
 
     public function compileFile($path)
     {
+        $this->lastFile = $path;
+
         return $this->getCompiler()->compileFile($path);
     }
 
