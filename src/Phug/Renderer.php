@@ -358,9 +358,9 @@ class Renderer implements ModulesContainerInterface, OptionInterface
      * @param callable $getSource
      * @param array    $parameters
      *
-     * @return bool|string|null
-     *
      * @throws RendererException
+     *
+     * @return bool|string|null
      */
     public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
@@ -390,7 +390,6 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
-
         } catch (Throwable $error) {
             $this->handleError($error, 1, $path, $source);
         } catch (Exception $error) {

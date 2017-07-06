@@ -169,7 +169,7 @@ class RendererTest extends AbstractRendererTest
     public function testHandleError()
     {
         $renderer = new Renderer([
-            'debug' => false,
+            'debug'            => false,
             'renderer_adapter' => FileAdapter::class,
         ]);
         ob_start();
@@ -196,8 +196,8 @@ class RendererTest extends AbstractRendererTest
 
         $message = null;
         $renderer = new Renderer([
-            'debug' => false,
-            'pretty' => true,
+            'debug'         => false,
+            'pretty'        => true,
             'error_handler' => function ($error) use (&$message) {
                 $message = $error->getMessage();
             },
@@ -207,7 +207,7 @@ class RendererTest extends AbstractRendererTest
 
         self::assertContains(
             defined('HHVM_VERSION')
-                ? 'Invalid operand type was used: implode() ' .
+                ? 'Invalid operand type was used: implode() '.
                 'expects a container as one of the arguments on line 3'
                 : 'implode(): Invalid arguments passed on line 3',
             $message
