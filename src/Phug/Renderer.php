@@ -11,6 +11,7 @@ use Phug\Util\ModulesContainerInterface;
 use Phug\Util\OptionInterface;
 use Phug\Util\Partial\ModuleTrait;
 use Phug\Util\Partial\OptionTrait;
+use Phug\Util\PugFileLocationInterface;
 use Throwable;
 
 class Renderer implements ModulesContainerInterface, OptionInterface
@@ -276,7 +277,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             "\e[0m\n";
     }
 
-    protected function getCliErrorMessage($error, $line, $offset, $source, $path, $colored)
+    protected function getErrorMessage($error, $line, $offset, $source, $path, $colored)
     {
         $source = explode("\n", rtrim($source));
         $errorType = get_class($error);
@@ -288,34 +289,51 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
         $contextLines = $this->getOption('error_context_lines');
         $code = '';
+        $htmlError = $this->getOption('html_error');
+        $start = null;
         foreach ($source as $index => $lineText) {
             if (abs($index + 1 - $line) > $contextLines) {
                 continue;
             }
+            if (is_null($start)) {
+                $start = $index + 1;
+            }
             $number = strval($index + 1);
             $markLine = $line - 1 === $index;
-            $lineText = ($markLine ? '>' : ' ').
-                str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
-                $lineText;
+            if (!$htmlError) {
+                $lineText = ($markLine ? '>' : ' ').
+                    str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
+                    $lineText;
+            }
             if (!$markLine) {
                 $code .= $lineText."\n";
 
                 continue;
             }
             $code .= $this->highlightLine($lineText, $colored, $offset);
-            if (!is_null($offset)) {
+            if (!$htmlError && !is_null($offset)) {
                 $code .= str_repeat('-', $offset + 7)."^\n";
             }
         }
-        if ($this->getOption('html_error')) {
+        if ($htmlError) {
             while (count(ob_list_handlers())) {
                 ob_end_clean();
             }
             try {
-                (new static(['debug' => false]))->displayFile(__DIR__.'/../debug/index.pug', [
+                (new static([
+                    'debug'   => false,
+                    'filters' => [
+                        'no-php' => function ($text) {
+                            return str_replace('<?', '<<?= "?" ?>', $text);
+                        },
+                    ],
+                ]))->displayFile(__DIR__.'/../debug/index.pug', [
                     'title'   => $error->getMessage(),
-                    'error'   => $error,
-                    'message' => $message,
+                    'trace'   => $error->getTraceAsString(),
+                    'start'   => $start,
+                    'line'    => $line,
+                    'offset'  => $offset,
+                    'message' => trim($message),
                     'code'    => $code,
                 ]);
             } catch (\Throwable $exception) {
@@ -341,36 +359,36 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     public function handleError($error, $code, $path, $source)
     {
         /* @var Throwable $error */
-        $line = $error->getLine();
         $offset = null;
-        $sourcePath = $path;
+        $exception = $error;
         if ($this->getOption('debug')) {
-            $pugError = $this->getCompiler()->getFormatter()->getDebugError($error, $source);
+            $pugError = $error instanceof PugFileLocationInterface
+                ? $error
+                : $this->getCompiler()->getFormatter()->getDebugError($error, $source);
             $line = $pugError->getPugLine();
             $offset = $pugError->getPugOffset();
-            $sourcePath = $pugError->getPugFile();
+            $sourcePath = $pugError->getPugFile() ?: $path;
             $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
+            $colorSupport = DIRECTORY_SEPARATOR === '\\'
+                ? false !== getenv('ANSICON') ||
+                'ON' === getenv('ConEmuANSI') ||
+                false !== getenv('BABUN_HOME')
+                : (false !== getenv('BABUN_HOME')) ||
+                function_exists('posix_isatty') &&
+                @posix_isatty(STDOUT);
+            $isPugError = $error instanceof PugFileLocationInterface;
+            $message = $this->getErrorMessage(
+                $error,
+                $isPugError ? $error->getPugLine() : $line,
+                $isPugError ? $error->getPugOffset() : $offset,
+                $isPugError ? file_get_contents($error->getPugFile()) : $source,
+                $isPugError ? $error->getPugFile() : $sourcePath,
+                $colorSupport
+            );
+            $exception = new RendererException($message, $code, $error);
         }
 
         $handler = $this->getOption('error_handler');
-
-        $colorSupport = DIRECTORY_SEPARATOR === '\\'
-            ? false !== getenv('ANSICON') ||
-                'ON' === getenv('ConEmuANSI') ||
-                false !== getenv('BABUN_HOME')
-            : (false !== getenv('BABUN_HOME')) ||
-                function_exists('posix_isatty') &&
-                @posix_isatty(STDOUT);
-        $message = $this->getCliErrorMessage(
-            $error,
-            $line,
-            $offset,
-            $source,
-            $sourcePath,
-            $colorSupport
-        );
-        $exception = new RendererException($message, $code, $error);
-
         if (!$handler) {
             throw $exception;
         }

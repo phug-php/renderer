@@ -206,3 +206,14 @@ pre.line-numbers > code {
 			padding-right: 0.8em;
 			text-align: right;
 		}
+
+/* Custom PUG */
+.line-highlight {
+	background: rgba(255, 255, 255, 0.3);
+}
+pre {
+	line-height: 24px;
+}
+.offset-highlight {
+	border: 1px solid #ff5c41;
+}
