@@ -1,0 +1,12 @@
+doctype html
+html
+    head
+        meta(charset="utf-8")
+        title= $title
+        style
+            include ./prism.css
+        script
+            include ./prism.js
+    body
+        pre= $message
+        pre: code.language-jade!= $code

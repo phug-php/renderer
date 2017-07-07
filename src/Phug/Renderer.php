@@ -245,6 +245,37 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->compiler;
     }
 
+    protected function highlightLine($lineText, $colored, $offset)
+    {
+        if ($this->getOption('html_error')) {
+            return '<span class="error-line">'.
+                (is_null($offset)
+                    ? $lineText
+                    : mb_substr($lineText, 0, $offset + 7).
+                    '<span class="error-offset">'.
+                    mb_substr($lineText, $offset + 7, 1).
+                    '</span>'.
+                    mb_substr($lineText, $offset + 8)
+                ).
+                "</span>\n";
+        }
+
+        if (!$colored) {
+            return "$lineText\n";
+        }
+
+        return "\033[43;30m".
+            (is_null($offset)
+                ? $lineText
+                : mb_substr($lineText, 0, $offset + 7).
+                "\033[43;31m".
+                mb_substr($lineText, $offset + 7, 1).
+                "\033[43;30m".
+                mb_substr($lineText, $offset + 8)
+            ).
+            "\e[0m\n";
+    }
+
     protected function getCliErrorMessage($error, $line, $offset, $source, $path, $colored)
     {
         $source = explode("\n", rtrim($source));
@@ -256,6 +287,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $message .= ":\n".$error->getMessage().' on line '.$line.
             (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
         $contextLines = $this->getOption('error_context_lines');
+        $code = '';
         foreach ($source as $index => $lineText) {
             if (abs($index + 1 - $line) > $contextLines) {
                 continue;
@@ -266,26 +298,34 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
                 $lineText;
             if (!$markLine) {
-                $message .= $lineText."\n";
+                $code .= $lineText."\n";
 
                 continue;
             }
-            $message .= ($colored ? "\033[43;30m" : '').
-                (is_null($offset)
-                    ? $lineText
-                    : mb_substr($lineText, 0, $offset + 7).
-                    ($colored ? "\033[43;31m" : '').
-                    mb_substr($lineText, $offset + 7, 1).
-                    ($colored ? "\033[43;30m" : '').
-                    mb_substr($lineText, $offset + 8)
-                ).
-                ($colored ? "\e[0m" : '')."\n";
+            $code .= $this->highlightLine($lineText, $colored, $offset);
             if (!is_null($offset)) {
-                $message .= str_repeat('-', $offset + 7)."^\n";
+                $code .= str_repeat('-', $offset + 7)."^\n";
             }
         }
+        if ($this->getOption('html_error')) {
+            while (count(ob_list_handlers())) {
+                ob_end_clean();
+            }
+            try {
+                (new static(['debug' => false]))->displayFile(__DIR__.'/../debug/index.pug', [
+                    'title'   => $error->getMessage(),
+                    'error'   => $error,
+                    'message' => $message,
+                    'code'    => $code,
+                ]);
+            } catch (\Throwable $exception) {
+                echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
+            }
 
-        return $message;
+            exit(1);
+        }
+
+        return $message.$code;
     }
 
     /**
@@ -313,19 +353,6 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         }
 
         $handler = $this->getOption('error_handler');
-        if (!$handler && $this->getOption('html_error')) {
-            echo '<pre>'.
-                $this->getCliErrorMessage(
-                    $error,
-                    $line,
-                    $offset,
-                    $source,
-                    $sourcePath,
-                    false
-                ).
-                '</pre>';
-            exit(1);
-        }
 
         $colorSupport = DIRECTORY_SEPARATOR === '\\'
             ? false !== getenv('ANSICON') ||

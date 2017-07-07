@@ -155,7 +155,11 @@ class RendererTest extends AbstractRendererTest
         }
 
         self::assertSame(
-            'Invalid indentation, you can use tabs or spaces but not both',
+            'Failed to lex: Invalid indentation, you can use tabs or spaces but not both'."\n".
+            'Near: b'."\n\n".
+            'Line: 3'."\n".
+            'Offset: 2'."\n".
+            'Position: 9'."\n",
             $message
         );
     }
