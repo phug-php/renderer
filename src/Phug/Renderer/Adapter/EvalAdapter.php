@@ -11,4 +11,9 @@ class EvalAdapter extends AbstractAdapter
         extract($__pug_parameters);
         eval('?>'.$__pug_php);
     }
+
+    public function getRenderingFile()
+    {
+        return __FILE__;
+    }
 }

@@ -12,8 +12,16 @@ Prism.languages.insertBefore("php","variable",{"this":/\$this\b/,global:/\$(?:_(
 Prism.hooks.add('after-highlight', function (data) {
     var code = data.element;
     var pre = code.parentNode;
-    var offset = pre.getAttribute('data-highlight-offset');
-    if (offset) {
-        // @TODO highlight offset
+    var offset = parseInt(pre.getAttribute('data-highlight-offset') + '');
+    var untilOffset = pre.getAttribute('data-until-offset') || '';
+    if (!isNaN(offset) && untilOffset) {
+        setTimeout(function () {
+            line = pre.getElementsByClassName('line-highlight')[0];
+            line.style.paddingLeft = window.getComputedStyle(pre).paddingLeft;
+            var char = untilOffset.substr(-1);
+            untilOffset = untilOffset.substr(0, untilOffset.length - 1);
+            line.innerHTML = '<span class="until-offset-highlight">' + untilOffset + '</span>' +
+                '<span class="offset-highlight">' + char + '</span>';
+        }, 100);
     }
 });

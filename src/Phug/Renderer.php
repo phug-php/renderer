@@ -277,7 +277,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             "\e[0m\n";
     }
 
-    protected function getErrorMessage($error, $line, $offset, $source, $path, $colored)
+    protected function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
     {
         $source = explode("\n", rtrim($source));
         $errorType = get_class($error);
@@ -289,6 +289,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
         $contextLines = $this->getOption('error_context_lines');
         $code = '';
+        $untilOffset = mb_substr($source[$line - 1], 0, $offset ?: 0) ?: '';
         $htmlError = $this->getOption('html_error');
         $start = null;
         foreach ($source as $index => $lineText) {
@@ -320,6 +321,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 ob_end_clean();
             }
             try {
+                $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
                 (new static([
                     'debug'   => false,
                     'filters' => [
@@ -328,13 +330,15 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                         },
                     ],
                 ]))->displayFile(__DIR__.'/../debug/index.pug', [
-                    'title'   => $error->getMessage(),
-                    'trace'   => $error->getTraceAsString(),
-                    'start'   => $start,
-                    'line'    => $line,
-                    'offset'  => $offset,
-                    'message' => trim($message),
-                    'code'    => $code,
+                    'title'       => $error->getMessage(),
+                    'trace'       => $trace,
+                    'start'       => $start,
+                    'untilOffset' => htmlspecialchars($untilOffset),
+                    'line'        => $line,
+                    'offset'      => $offset,
+                    'message'     => trim($message),
+                    'code'        => $code,
+                    'parameters'  => $parameters ? print_r($parameters, true) : ''
                 ]);
             } catch (\Throwable $exception) {
                 echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
@@ -353,10 +357,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
      * @param int        $code
      * @param string     $path
      * @param string     $source
+     * @param array      $parameters
      *
      * @throws RendererException
      */
-    public function handleError($error, $code, $path, $source)
+    public function handleError($error, $code, $path, $source, $parameters = null)
     {
         /* @var Throwable $error */
         $offset = null;
@@ -364,7 +369,11 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         if ($this->getOption('debug')) {
             $pugError = $error instanceof PugFileLocationInterface
                 ? $error
-                : $this->getCompiler()->getFormatter()->getDebugError($error, $source);
+                : $this->getCompiler()->getFormatter()->getDebugError(
+                    $error,
+                    $source,
+                    $this->getAdapter()->getRenderingFile()
+                );
             $line = $pugError->getPugLine();
             $offset = $pugError->getPugOffset();
             $sourcePath = $pugError->getPugFile() ?: $path;
@@ -383,7 +392,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
                 $isPugError ? $error->getPugOffset() : $offset,
                 $isPugError ? file_get_contents($error->getPugFile()) : $source,
                 $isPugError ? $error->getPugFile() : $sourcePath,
-                $colorSupport
+                $colorSupport,
+                $parameters
             );
             $exception = new RendererException($message, $code, $error);
         }
@@ -409,36 +419,43 @@ class Renderer implements ModulesContainerInterface, OptionInterface
      */
     public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
-        $adapter = $this->getAdapter();
-        if ($this->getOption('cache')) {
-            if (!($adapter instanceof CacheInterface)) {
-                throw new RendererException(
-                    'You cannot use "cache" option with '.get_class($adapter).
-                    ' because this adapter does not implement '.CacheInterface::class
-                );
-            }
-
-            $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
-                $adapter->displayCached($path, $input, $getSource, $parameters);
-            };
-
-            return in_array($method, ['display', 'displayString'])
-                ? $display()
-                : $adapter->captureBuffer($display);
+        if ($this->getOption('debug')) {
+            ob_start();
         }
-
-        $source = $getSource();
         $render = false;
+        $source = '';
 
         try {
+            $adapter = $this->getAdapter();
+            $source = $getSource();
+            if ($this->getOption('cache')) {
+                if (!($adapter instanceof CacheInterface)) {
+                    throw new RendererException(
+                        'You cannot use "cache" option with '.get_class($adapter).
+                        ' because this adapter does not implement '.CacheInterface::class
+                    );
+                }
+
+                $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
+                    $adapter->displayCached($path, $input, $getSource, $parameters);
+                };
+
+                return in_array($method, ['display', 'displayString'])
+                    ? $display()
+                    : $adapter->captureBuffer($display);
+            }
+
             $render = $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
         } catch (Throwable $error) {
-            $this->handleError($error, 1, $path, $source);
+            $this->handleError($error, 1, $path, $source, $parameters);
         } catch (Exception $error) {
-            $this->handleError($error, 2, $path, $source);
+            $this->handleError($error, 2, $path, $source, $parameters);
+        }
+        if ($this->getOption('debug')) {
+            ob_end_flush();
         }
 
         return $render;

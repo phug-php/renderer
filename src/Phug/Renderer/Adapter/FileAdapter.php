@@ -9,6 +9,8 @@ use Phug\Renderer\CacheInterface;
 
 class FileAdapter extends AbstractAdapter implements CacheInterface
 {
+    private $renderingFile;
+
     use CacheTrait;
 
     public function __construct(array $options, Renderer $renderer = null)
@@ -34,15 +36,20 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
 
     protected function getCompiledFile($php)
     {
-        $file = $this->createTemporaryFile();
-        file_put_contents($file, $php);
+        $this->renderingFile = $this->createTemporaryFile();
+        file_put_contents($this->renderingFile, $php);
 
-        return $file;
+        return $this->renderingFile;
     }
 
     public function display($__pug_php, array $__pug_parameters)
     {
         extract($__pug_parameters);
         include $this->getCompiledFile($__pug_php);
+    }
+
+    public function getRenderingFile()
+    {
+        return $this->renderingFile;
     }
 }

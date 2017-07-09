@@ -214,6 +214,12 @@ pre.line-numbers > code {
 pre {
 	line-height: 24px;
 }
+.until-offset-highlight {
+	color: transparent;
+}
 .offset-highlight {
-	border: 1px solid #ff5c41;
+	border: 1px solid rgba(255, 92, 65, 0.65);
+	background: #ffff33;
+	color: #ff5c41;
+	opacity: 0.8;
 }

@@ -6,7 +6,17 @@ html
         style: include:no-php ./prism.css
     body
         pre=$message
-        pre.line-numbers(data-line=$line data-line-offset=$start - 1 data-highlight-offset=$offset data-start=$start)
+        pre.line-numbers(
+            data-line=$line
+            data-line-offset=$start - 1
+            data-highlight-offset=$offset
+            data-start=$start
+            data-until-offset=$untilOffset
+        )
             code.language-jade!=$code
         pre=$trace
+        if $parameters
+            pre: code.language-php
+                ='$parameters = '
+                !=$parameters
         script: include:no-php ./prism.js
