@@ -317,9 +317,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             }
         }
         if ($htmlError) {
-            while (count(ob_list_handlers())) {
-                ob_end_clean();
-            }
+            static::cleanBuffers();
             try {
                 $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
                 (new static([
@@ -367,7 +365,12 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $offset = null;
         $exception = $error;
         if ($this->getOption('debug')) {
-            $pugError = $error instanceof PugFileLocationInterface
+            $isLocatedError = $error instanceof PugFileLocationInterface;
+            if ($isLocatedError && is_null($error->getPugLine())) {
+                static::cleanBuffers();
+                throw $error;
+            }
+            $pugError = $isLocatedError
                 ? $error
                 : $this->getCompiler()->getFormatter()->getDebugError(
                     $error,
@@ -400,10 +403,18 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
         $handler = $this->getOption('error_handler');
         if (!$handler) {
+            static::cleanBuffers();
             throw $exception;
         }
 
         $handler($exception);
+    }
+
+    protected static function cleanBuffers()
+    {
+        while (count(ob_list_handlers())) {
+            ob_end_clean();
+        }
     }
 
     /**
@@ -430,6 +441,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             $source = $getSource();
             if ($this->getOption('cache')) {
                 if (!($adapter instanceof CacheInterface)) {
+                    static::cleanBuffers();
                     throw new RendererException(
                         'You cannot use "cache" option with '.get_class($adapter).
                         ' because this adapter does not implement '.CacheInterface::class
