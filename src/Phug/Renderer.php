@@ -7,117 +7,143 @@ use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
-use Phug\Util\ModulesContainerInterface;
-use Phug\Util\OptionInterface;
-use Phug\Util\Partial\ModuleTrait;
-use Phug\Util\Partial\OptionTrait;
+use Phug\Util\ModuleContainerInterface;
+use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\PugFileLocationInterface;
 use Throwable;
 
-class Renderer implements ModulesContainerInterface, OptionInterface
+class Renderer implements ModuleContainerInterface
 {
-    use ModuleTrait;
-    use OptionTrait;
+    use ModuleContainerTrait;
 
     /**
      * @var Compiler
      */
-    protected $compiler;
+    private $compiler;
+
+    /**
+     * @var AdapterInterface
+     */
+    private $adapter;
 
     /**
      * @var string
      */
-    protected $lastString;
+    private $lastString;
 
     /**
      * @var string
      */
-    protected $lastFile;
+    private $lastFile;
 
-    /**
-     * @var array
-     */
-    protected $modulesOptionsPaths = [
-        CompilerModuleInterface::class  => [],
-        FormatterModuleInterface::class => ['formatter_options'],
-        ParserModuleInterface::class    => ['parser_options'],
-        LexerModuleInterface::class     => ['parser_options', 'lexer_options'],
-    ];
-
-    public function __construct(array $options = [])
+    public function __construct(array $options = null)
     {
         $this->setOptionsRecursive([
             'debug'               => true,
-            'cache'               => null,
-            'up_to_date_check'    => true,
-            'keep_base_name'      => false,
             'error_handler'       => null,
             'html_error'          => php_sapi_name() !== 'cli',
             'error_context_lines' => 7,
-            'renderer_adapter'    => isset($options['cache'])
+            'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
                 ? FileAdapter::class
                 : EvalAdapter::class,
-            'renderer_options'    => [],
+            'adapter_options'    => [],
             'shared_variables'    => [],
             'modules'             => [],
+            'compiler_class_name' => Compiler::class,
             'compiler_options'    => [
-                'formatter_options' => [],
-                'parser_options'    => [
-                    'lexer_options' => [],
-                ],
                 'filters' => [
                     'cdata' => function ($contents) {
                         return '<![CDATA['.trim($contents).']]>';
                     },
                 ],
             ],
-        ], $options);
+        ]);
+        $this->setOptionsRecursive($options ?: []);
+        $this->forwardOptions();
 
-        $modules = $this->getOption('modules');
+        $compilerClassName = $this->getOption('compiler_class_name');
 
-        foreach ($modules as &$module) {
-            foreach ($this->modulesOptionsPaths as $interface => $optionPath) {
-                if (is_subclass_of($module, $interface)) {
-                    $module = false;
+        if ($compilerClassName !== Compiler::class && !is_a($compilerClassName, Compiler::class, true)) {
+            throw new RendererException(
+                "Passed compiler class $compilerClassName is ".
+                'not a valid '.Compiler::class
+            );
+        }
 
-                    break;
-                }
+        $this->compiler = new $compilerClassName($this->getOption('compiler_options'));
+
+        $adapterClassName = $this->getOption('adapter_class_name');
+
+        if (!is_a($adapterClassName, AdapterInterface::class, true)) {
+            throw new RendererException(
+                "Passed adapter class $adapterClassName is ".
+                'not a valid '.AdapterInterface::class
+            );
+        }
+        $this->adapter = new $adapterClassName($this, $this->getOption('adapter_options'));
+
+        $this->addModules($this->getOption('modules'));
+    }
+
+    /**
+     * @return AdapterInterface
+     */
+    public function getAdapter()
+    {
+
+        return $this->adapter;
+    }
+
+    /**
+     * @return Compiler
+     */
+    public function getCompiler()
+    {
+        return $this->compiler;
+    }
+
+    private function forwardOptions()
+    {
+
+        $options = $this->getOptions();
+
+        //Check for top-level options that are forwarded to specific children
+        $forwardedOptions = [
+            'compiler_options' => [
+                'formatter_options' => [],
+                'parser_options' => [
+                    'lexer_options' => []
+                ]
+            ]
+        ];
+
+        //Compiler
+        foreach ([
+            'basedir',
+            'base_dir',
+            'debug',
+            'extensions',
+            'default_tag',
+            'filters',
+            'parser_class_name',
+            'parser_options',
+            'formatter_class_name',
+            'formatter_options',
+            'mixins_storage_mode',
+            'node_compilers',
+         ] as $optionName) {
+            if (isset($options[$optionName])) {
+
+                $forwardedOptions['compiler_options'][$optionName] = $options[$optionName];
             }
         }
 
-        $this->setExpectedModuleType(RendererModuleInterface::class);
-        $this->addModules(array_filter($modules));
-        $this->initializeCompiler();
-    }
+        if (isset($optionName['compiler_modules'])) {
 
-    public function initializeCompiler()
-    {
-        $this->compiler = new Compiler($this->getCompilerOptions());
-    }
-
-    protected function mergeOptions(&$options, array $input, $optionName)
-    {
-        if (isset($options[$optionName]) &&
-            is_array($options[$optionName]) &&
-            is_array($input[$optionName])
-        ) {
-            $options[$optionName] = array_merge(
-                $options[$optionName],
-                $input[$optionName]
-            );
-
-            return;
+            $forwardedOptions['compiler_options']['modules'] = $optionName['compiler_modules'];
         }
 
-        $options[$optionName] = $input[$optionName];
-    }
-
-    protected function getCompilerOptions()
-    {
-        $options = $this->getOptions();
-
-        $compilerOptions = &$options['compiler_options'];
-
+        //Formatter
         foreach ([
             'debug',
             'dependencies_storage',
@@ -132,71 +158,74 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             'pretty',
         ] as $optionName) {
             if (isset($options[$optionName])) {
-                $this->mergeOptions(
-                    $compilerOptions['formatter_options'],
-                    $options,
-                    $optionName
-                );
+
+                $forwardedOptions['compiler_options']['formatter_options'][$optionName] = $options[$optionName];
             }
         }
 
-        foreach ([
-            'basedir',
-            'debug',
-            'extensions',
-            'default_tag',
-            'pre_compile',
-            'post_compile',
-            'filters',
-            'parser_class_name',
-            'parser_options',
-            'formatter_class_name',
-            'formatter_options',
-            'mixins_storage_mode',
-            'node_compilers',
-        ] as $optionName) {
-            if (isset($options[$optionName])) {
-                $this->mergeOptions(
-                    $compilerOptions,
-                    $options,
-                    $optionName
-                );
-            }
+        if (isset($optionName['formatter_modules'])) {
+
+            $forwardedOptions['compiler_options']['formatter_options']['modules'] = $optionName['formatter_modules'];
         }
 
-        if (isset($options['lexer_options'])) {
-            $compilerOptions['parser_options']['lexer_options'] = array_merge(
-                $compilerOptions['parser_options']['lexer_options'],
-                $options['lexer_options']
+        if (isset($optionName['formatter_options'])) {
+
+            $forwardedOptions['compiler_options']['formatter_options'] = array_replace_recursive(
+                $forwardedOptions['compiler_options']['formatter_options'],
+                $optionName['formatter_options']
             );
         }
 
-        $modules = $this->getOption('modules');
+        //Parser
+        if (isset($optionName['parser_modules'])) {
 
-        foreach ($modules as &$module) {
-            foreach ($this->modulesOptionsPaths as $interface => $optionPath) {
-                if (is_subclass_of($module, $interface)) {
-                    $optionPath[] = 'modules';
-                    $base = &$compilerOptions;
-                    foreach ($optionPath as $key) {
-                        if (!isset($base[$key])) {
-                            $base[$key] = [];
-                        }
+            $forwardedOptions['compiler_options']['parser_options']['modules'] = $optionName['parser_modules'];
+        }
 
-                        $base = &$base[$key];
-                    }
+        if (isset($optionName['parser_options'])) {
 
-                    $base[] = $module;
+            $forwardedOptions['compiler_options']['parser_options'] = array_replace_recursive(
+                $forwardedOptions['compiler_options']['parser_options'],
+                $optionName['parser_options']
+            );
+        }
 
-                    break;
+        //Lexer
+        $parserOptions = &$forwardedOptions['compiler_options']['parser_options'];
+        if (isset($optionName['lexer_modules'])) {
+
+            $parserOptions['lexer_options']['modules'] = $optionName['lexer_modules'];
+        }
+
+        if (isset($optionName['lexer_options'])) {
+
+            $parserOptions['lexer_options'] = array_replace_recursive(
+                $parserOptions['lexer_options'],
+                $optionName['lexer_options']
+            );
+        }
+
+        //Adapters
+        if (is_a($this->getOption('adapter_class_name'), FileAdapter::class, true)) {
+            foreach ([
+                'cache_dir',
+                'tmp_dir',
+                'tmp_dir_function',
+                'keep_base_name',
+                'modified_check'
+            ] as $optionName) {
+                if (isset($options[$optionName])) {
+
+                    $forwardedOptions['adapter_options'][$optionName] = $options[$optionName];
                 }
             }
         }
 
-        return $compilerOptions;
+        $this->setOptionsRecursive($forwardedOptions);
     }
 
-    protected function mergeWithSharedVariables(array $parameters)
+
+    private function mergeWithSharedVariables(array $parameters)
     {
         return array_merge($this->getOption('shared_variables'), $parameters);
     }
@@ -228,25 +257,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         return $this->setOption('shared_variables', []);
     }
 
-    /**
-     * @return AdapterInterface
-     */
-    public function getAdapter()
-    {
-        $adapterClass = $this->getOption('renderer_adapter');
-
-        return new $adapterClass($this->getOption('renderer_options'), $this);
-    }
-
-    /**
-     * @return Compiler
-     */
-    public function getCompiler()
-    {
-        return $this->compiler;
-    }
-
-    protected function highlightLine($lineText, $colored, $offset)
+    private function highlightLine($lineText, $colored, $offset)
     {
         if ($this->getOption('html_error')) {
             return '<span class="error-line">'.
@@ -277,7 +288,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
             "\e[0m\n";
     }
 
-    protected function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
+    private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
     {
         $source = explode("\n", rtrim($source));
         $errorType = get_class($error);
@@ -354,12 +365,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
      * Handle error occurred in compiled PHP.
      *
      * @param \Throwable $error
-     * @param int        $code
-     * @param string     $path
-     * @param string     $source
-     * @param array      $parameters
+     * @param int $code
+     * @param string $path
+     * @param string $source
+     * @param array $parameters
      *
      * @throws RendererException
+     * @throws Throwable
      */
     public function handleError($error, $code, $path, $source, $parameters = null)
     {
@@ -428,13 +440,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         try {
             $adapter = $this->getAdapter();
             $source = $getSource();
-            if ($this->getOption('cache')) {
-                if (!($adapter instanceof CacheInterface)) {
-                    throw new RendererException(
-                        'You cannot use "cache" option with '.get_class($adapter).
-                        ' because this adapter does not implement '.CacheInterface::class
-                    );
-                }
+            if ($adapter instanceof CacheInterface) {
 
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     $adapter->displayCached($path, $input, $getSource, $parameters);
@@ -462,10 +468,9 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     }
 
     /**
-     * @param string $string   input string or path
-     * @param string $filename
-     *
+     * @param $path
      * @return string
+     *
      */
     public function compile($path)
     {
@@ -485,7 +490,7 @@ class Renderer implements ModulesContainerInterface, OptionInterface
         $this->lastString = $string;
         $this->lastFile = $filename;
 
-        return $this->getCompiler()->compile($string, $filename);
+        return $this->compiler->compile($string, $filename);
     }
 
     /**
@@ -497,15 +502,13 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     {
         $this->lastFile = $path;
 
-        return $this->getCompiler()->compileFile($path);
+        return $this->compiler->compileFile($path);
     }
 
     /**
-     * @param string       $string     input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
-     *
+     * @param $path
      * @return string
+     *
      */
     public function render($path)
     {
@@ -554,9 +557,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     }
 
     /**
-     * @param string       $string     input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
+     * @param $path
+     * @return mixed
      */
     public function display($path)
     {
@@ -567,7 +569,8 @@ class Renderer implements ModulesContainerInterface, OptionInterface
 
     /**
      * @param string $path
-     * @param array  $parameters
+     * @param array $parameters
+     * @return bool|null|string
      */
     public function displayFile($path, array $parameters = [])
     {
@@ -583,9 +586,10 @@ class Renderer implements ModulesContainerInterface, OptionInterface
     }
 
     /**
-     * @param string $string     input string or path
-     * @param array  $parameters parameters or file name
+     * @param string $string input string or path
+     * @param array $parameters parameters or file name
      * @param string $filename
+     * @return bool|null|string
      */
     public function displayString($string, array $parameters = [], $filename = null)
     {

@@ -3,6 +3,7 @@
 namespace Phug\Renderer;
 
 use Exception;
+use Phug\Renderer;
 use Phug\Util\Partial\OptionTrait;
 use Throwable;
 
@@ -10,9 +11,20 @@ abstract class AbstractAdapter implements AdapterInterface
 {
     use OptionTrait;
 
-    public function __construct(array $options)
+    private $renderer;
+
+    public function __construct(Renderer $renderer, array $options)
     {
+
+        $this->renderer = $renderer;
+
         $this->setOptions($options);
+    }
+
+    public function getRenderer()
+    {
+
+        return $this->renderer;
     }
 
     public function captureBuffer(callable $display)

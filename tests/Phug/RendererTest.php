@@ -141,7 +141,7 @@ class RendererTest extends AbstractRendererTest
         self::assertSame('<p><i></i><b></b></p>', $actual);
 
         $this->renderer->setOptionsRecursive([
-            'renderer_adapter' => FileAdapter::class,
+            'adapter_class_name' => FileAdapter::class,
             'lexer_options'    => [
                 'allow_mixed_indent' => false,
             ],
@@ -174,7 +174,7 @@ class RendererTest extends AbstractRendererTest
     {
         $renderer = new Renderer([
             'debug'            => false,
-            'renderer_adapter' => FileAdapter::class,
+            'adapter_class_name' => FileAdapter::class,
         ]);
         ob_start();
         $message = null;
@@ -244,7 +244,7 @@ class RendererTest extends AbstractRendererTest
 
         $renderer = new Renderer([
             'debug'            => true,
-            'renderer_adapter' => FileAdapter::class,
+            'adapter_class_name' => FileAdapter::class,
         ]);
 
         $message = null;

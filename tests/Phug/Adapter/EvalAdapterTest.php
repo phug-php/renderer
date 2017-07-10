@@ -17,7 +17,7 @@ class EvalAdapterTest extends AbstractRendererTest
     public function testRender()
     {
         $renderer = new Renderer([
-            'renderer_adapter' => EvalAdapter::class,
+            'adapter_class_name' => EvalAdapter::class,
         ]);
 
         self::assertSame('<p>Hello</p>', $renderer->renderString('p Hello'));

@@ -2,20 +2,18 @@
 
 namespace Phug\Renderer;
 
-interface AdapterInterface
+use Phug\Renderer;
+use Phug\Util\OptionInterface;
+
+interface AdapterInterface extends OptionInterface
 {
     /**
      * @param array $options
      */
-    public function __construct(array $options);
+    public function __construct(Renderer $renderer, array $options);
 
-    /**
-     * Return output buffered by the given method.
-     *
-     * @param callable $display method that output text
-     *
-     * @return string
-     */
+    public function getRenderer();
+
     public function captureBuffer(callable $display);
 
     /**
