@@ -21,13 +21,13 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=5.5.0",
-        "phug/compiler": "^0.2.0",
-        "phug/util": "^0.2.0"
+        "phug/compiler": "^0.3.0",
+        "phug/util": "^0.3.5"
     },
     "require-dev": {
         "phug/dev-tool": "^0.1.0",
         "js-phpize/js-phpize": "^1.4",
-        "js-phpize/js-phpize-phug": "^1.0.8",
+        "js-phpize/js-phpize-phug": "^1.1.0",
         "nodejs-php-fallback/coffeescript": "^1.0",
         "nodejs-php-fallback/less": "^1.0",
         "nodejs-php-fallback/uglify": "^1.0",

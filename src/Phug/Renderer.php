@@ -7,9 +7,9 @@ use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
+use Phug\Util\Exception\LocatedException;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
-use Phug\Util\PugFileLocationInterface;
 use Throwable;
 
 class Renderer implements ModuleContainerInterface
@@ -379,16 +379,16 @@ class Renderer implements ModuleContainerInterface
         $offset = null;
         $exception = $error;
         if ($this->getOption('debug')) {
-            $pugError = $error instanceof PugFileLocationInterface
+            $pugError = $error instanceof LocatedException
                 ? $error
                 : $this->getCompiler()->getFormatter()->getDebugError(
                     $error,
                     $source,
                     $this->getAdapter()->getRenderingFile()
                 );
-            $line = $pugError->getPugLine();
-            $offset = $pugError->getPugOffset();
-            $sourcePath = $pugError->getPugFile() ?: $path;
+            $line = $pugError->getLocation()->getLine();
+            $offset = $pugError->getLocation()->getOffset();
+            $sourcePath = $pugError->getLocation()->getPath() ?: $path;
             $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
             $colorSupport = DIRECTORY_SEPARATOR === '\\'
                 ? false !== getenv('ANSICON') ||
@@ -397,13 +397,13 @@ class Renderer implements ModuleContainerInterface
                 : (false !== getenv('BABUN_HOME')) ||
                 function_exists('posix_isatty') &&
                 @posix_isatty(STDOUT);
-            $isPugError = $error instanceof PugFileLocationInterface;
+            $isPugError = $error instanceof LocatedException;
             $message = $this->getErrorMessage(
                 $error,
-                $isPugError ? $error->getPugLine() : $line,
-                $isPugError ? $error->getPugOffset() : $offset,
-                $isPugError ? file_get_contents($error->getPugFile()) : $source,
-                $isPugError ? $error->getPugFile() : $sourcePath,
+                $isPugError ? $error->getLocation()->getLine() : $line,
+                $isPugError ? $error->getLocation()->getOffset() : $offset,
+                $isPugError ? file_get_contents($error->getLocation()->getPath()) : $source,
+                $isPugError ? $error->getLocation()->getPath() : $sourcePath,
                 $colorSupport,
                 $parameters
             );
