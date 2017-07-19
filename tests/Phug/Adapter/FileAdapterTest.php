@@ -93,7 +93,7 @@ class FileAdapterTest extends AbstractRendererTest
         $message = null;
         $renderer = new Renderer([
             'adapter_class_name' => StreamAdapter::class,
-            'cache_dir'            => sys_get_temp_dir(),
+            'cache_dir'          => sys_get_temp_dir(),
         ]);
         try {
             $renderer->render('foo');
@@ -195,8 +195,8 @@ class FileAdapterTest extends AbstractRendererTest
         }
         $templatesDirectory = __DIR__.'/../../utils';
         $renderer = new Renderer([
-            'basedir' => $templatesDirectory,
-            'cache_dir'   => $cacheDirectory,
+            'basedir'   => $templatesDirectory,
+            'cache_dir' => $cacheDirectory,
         ]);
         list($success, $errors) = $renderer->cacheDirectory($templatesDirectory);
         $filesCount = count(array_filter(scandir($cacheDirectory), function ($file) {

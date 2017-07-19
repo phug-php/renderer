@@ -107,7 +107,7 @@ class RendererTest extends AbstractRendererTest
      */
     public function testOptions()
     {
-        $this->renderer->setOption('pretty', true);
+        $this->renderer->setOption(['compiler_options', 'formatter_options', 'pretty'], true);
 
         $actual = str_replace(
             "\r",
@@ -121,8 +121,7 @@ class RendererTest extends AbstractRendererTest
             $actual
         );
 
-        $this->renderer->setOption('pretty', false);
-        $this->renderer->initializeCompiler();
+        $this->renderer->setOption(['compiler_options', 'formatter_options', 'pretty'], false);
 
         $actual = str_replace(
             "\r",

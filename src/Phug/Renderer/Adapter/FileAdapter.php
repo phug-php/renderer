@@ -19,7 +19,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         parent::__construct($renderer, [
             'cache_dir' => null,
             'tmp_dir' => sys_get_temp_dir(),
-            'tmp_dir_function' => 'tempnam',
+            'tmp_name_function' => 'tempnam',
             'modified_check'    => true,
             'keep_base_name'      => false,
         ]);
@@ -117,7 +117,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     protected function createTemporaryFile()
     {
         return call_user_func(
-            $this->getOption('tmp_dir_function'),
+            $this->getOption('tmp_name_function'),
             $this->getOption('tmp_dir'),
             'pug'
         );
