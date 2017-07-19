@@ -2,6 +2,7 @@
 
 namespace Phug\Renderer\Adapter;
 
+use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
 use Phug\Renderer\Adapter\Stream\Template;
 
@@ -9,14 +10,12 @@ class StreamAdapter extends AbstractAdapter
 {
     private $renderingFile;
 
-    public function __construct(array $options)
+    public function __construct(Renderer $renderer, array $options)
     {
-        $this->setOptions([
+        parent::__construct($renderer, [
             'stream_name'   => 'pug',
             'stream_suffix' => '.stream',
         ]);
-
-        parent::__construct($options);
     }
 
     protected function setRenderingFile($__pug_php)

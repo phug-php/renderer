@@ -66,7 +66,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             'debug'             => false,
             'basedir'           => __DIR__.'/../cases',
             'pretty'            => true,
-            'modules'           => [JsPhpizePhug::class],
+            'compiler_modules'  => [JsPhpizePhug::class],
             'formatter_options' => [
                 'formats' => [
                     'xml' => XmlHhvmFormat::class,

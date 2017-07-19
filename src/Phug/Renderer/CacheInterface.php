@@ -2,32 +2,16 @@
 
 namespace Phug\Renderer;
 
-use Phug\Renderer;
-
 interface CacheInterface
 {
-    /**
-     * @return Renderer
-     */
-    public function getRenderer();
-
-    /**
-     * @param Renderer $renderer
-     *
-     * @return $this
-     */
-    public function setRenderer(Renderer $renderer);
 
     /**
      * Return the cached file path after cache optional process.
      *
-     * @param string   $input    pug input
-     * @param string   $input    pug input
+     * @param $path
+     * @param string $input pug input
      * @param callable $rendered method to compile the source into PHP
-     * @param bool     $success
-     *
-     * @throws \InvalidArgumentException
-     * @throws \Exception
+     * @param bool $success
      *
      * @return string
      */

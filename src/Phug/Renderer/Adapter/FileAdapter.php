@@ -2,33 +2,122 @@
 
 namespace Phug\Renderer\Adapter;
 
+use Exception;
 use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
 use Phug\Renderer\Adapter\Partial\CacheTrait;
 use Phug\Renderer\CacheInterface;
+use RuntimeException;
+use Throwable;
 
 class FileAdapter extends AbstractAdapter implements CacheInterface
 {
     private $renderingFile;
 
-    use CacheTrait;
-
-    public function __construct(array $options, Renderer $renderer = null)
+    public function __construct(Renderer $renderer, array $options)
     {
-        $this
-            ->setRenderer($renderer)
-            ->setOptions([
-                'tmp_dir' => sys_get_temp_dir(),
-                'tempnam' => 'tempnam',
-            ]);
+        parent::__construct($renderer, [
+            'cache_dir' => null,
+            'tmp_dir' => sys_get_temp_dir(),
+            'tmp_dir_function' => 'tempnam',
+            'modified_check'    => true,
+            'keep_base_name'      => false,
+        ]);
 
-        parent::__construct($options);
+        $this->setOptions($options);
+    }
+
+    /**
+     * Return the cached file path after cache optional process.
+     *
+     * @param $path
+     * @param string $input pug input
+     * @param callable $rendered method to compile the source into PHP
+     * @param bool $success
+     * @return string
+     */
+    public function cache($path, $input, callable $rendered, &$success = null)
+    {
+        $cacheFolder = $this->getCacheDirectory();
+
+        if (!$this->isCacheUpToDate($path, $input)) {
+            if (!is_writable($cacheFolder)) {
+                throw new RuntimeException(sprintf('Cache directory must be writable. "%s" is not.', $cacheFolder), 6);
+            }
+
+            $success = file_put_contents($path, $rendered($input));
+        }
+
+        return $path;
+    }
+
+    /**
+     * Display rendered template after optional cache process.
+     *
+     * @param $path
+     * @param string $input pug input
+     * @param callable $rendered method to compile the source into PHP
+     * @param array $variables local variables
+     * @param bool $success
+     *
+     */
+    public function displayCached($path, $input, callable $rendered, array $variables, &$success = null)
+    {
+        $__pug_parameters = $variables;
+        $__pug_path = $this->cache($path, $input, $rendered, $success);
+
+        call_user_func(function () use ($__pug_path, $__pug_parameters) {
+            extract($__pug_parameters);
+            include $__pug_path;
+        });
+    }
+
+    /**
+     * Scan a directory recursively, compile them and save them into the cache directory.
+     *
+     * @param string $directory the directory to search in pug templates
+     *
+     * @return array count of cached files and error count
+     */
+    public function cacheDirectory($directory)
+    {
+        $success = 0;
+        $errors = 0;
+
+        $extensions = $this->getRenderer()->getCompiler()->getOption('extensions');
+
+        foreach (scandir($directory) as $object) {
+            if ($object === '.' || $object === '..') {
+                continue;
+            }
+            $inputFile = $directory.DIRECTORY_SEPARATOR.$object;
+            if (is_dir($inputFile)) {
+                list($subSuccess, $subErrors) = $this->cacheDirectory($inputFile);
+                $success += $subSuccess;
+                $errors += $subErrors;
+                continue;
+            }
+            if ($this->fileMatchExtensions($object, $extensions)) {
+                $path = $inputFile;
+                $this->isCacheUpToDate($path);
+                try {
+                    file_put_contents($path, $this->getRenderer()->getCompiler()->compileFile($inputFile));
+                    $success++;
+                } catch (Throwable $e) { // PHP 7
+                    $errors++;
+                } catch (Exception $e) { // PHP 5
+                    $errors++;
+                }
+            }
+        }
+
+        return [$success, $errors];
     }
 
     protected function createTemporaryFile()
     {
         return call_user_func(
-            $this->getOption('tempnam'),
+            $this->getOption('tmp_dir_function'),
             $this->getOption('tmp_dir'),
             'pug'
         );
@@ -51,5 +140,110 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     public function getRenderingFile()
     {
         return $this->renderingFile;
+    }
+
+    /**
+     * Return a file path in the cache for a given name.
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    private function getCachePath($name)
+    {
+        return str_replace('//', '/', $this->getRenderer()->getOption('cache_dir').'/'.$name).'.php';
+    }
+
+
+    /**
+     * Return a hashed print from input file or content.
+     *
+     * @param string $input
+     *
+     * @return string
+     */
+    private function hashPrint($input)
+    {
+        // Get the stronger hashing algorithm available to minimize collision risks
+        $algorithms = hash_algos();
+        $algorithm = $algorithms[0];
+        $number = 0;
+        foreach ($algorithms as $hashAlgorithm) {
+            if (strpos($hashAlgorithm, 'md') === 0) {
+                $hashNumber = substr($hashAlgorithm, 2);
+                if ($hashNumber > $number) {
+                    $number = $hashNumber;
+                    $algorithm = $hashAlgorithm;
+                }
+                continue;
+            }
+            if (strpos($hashAlgorithm, 'sha') === 0) {
+                $hashNumber = substr($hashAlgorithm, 3);
+                if ($hashNumber > $number) {
+                    $number = $hashNumber;
+                    $algorithm = $hashAlgorithm;
+                }
+                continue;
+            }
+        }
+
+        return rtrim(strtr(base64_encode(hash($algorithm, $input, true)), '+/', '-_'), '=');
+    }
+
+    /**
+     * Return true if the file or content is up to date in the cache folder,
+     * false else.
+     *
+     * @param &string $path  to be filled
+     *
+     * @param string $input file or pug code
+     * @return bool
+     */
+    private function isCacheUpToDate(&$path, $input = null)
+    {
+        if (!$input) {
+            $input = realpath($path);
+            $path = $this->getCachePath(
+                ($this->getOption('keep_base_name') ? basename($input) : '').
+                $this->hashPrint($input)
+            );
+
+            // Do not re-parse file if original is older
+            return !$this->getOption('modified_check') ||
+                (file_exists($path) && filemtime($input) < filemtime($path));
+        }
+
+        $path = $this->getCachePath($this->hashPrint($input));
+
+        // Do not re-parse file if the same hash exists
+        return file_exists($path);
+    }
+
+    private function getCacheDirectory()
+    {
+        $cacheFolder = $this->getOption('cache_dir');
+
+        if (!is_dir($cacheFolder) && !@mkdir($cacheFolder, 0777, true)) {
+            throw new RuntimeException(
+                $cacheFolder.': Cache directory doesn\'t exist.'."\n".
+                'Create it with:'."\n".
+                'mkdir -p '.escapeshellarg(realpath($cacheFolder))."\n".
+                'Or replace your cache setting with a valid writable folder path.',
+                5
+            );
+        }
+
+        return $cacheFolder;
+    }
+
+    private function fileMatchExtensions($path, $extensions)
+    {
+        foreach ($extensions as $extension) {
+            if (mb_substr($path, -mb_strlen($extension)) === $extension) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

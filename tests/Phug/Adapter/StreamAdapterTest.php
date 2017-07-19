@@ -19,7 +19,7 @@ class StreamAdapterTest extends AbstractRendererTest
     public function testRender()
     {
         $renderer = new Renderer([
-            'renderer_adapter' => StreamAdapter::class,
+            'adapter_class_name' => StreamAdapter::class,
         ]);
 
         self::assertSame('<p>Hello</p>', $renderer->renderString('p=$message', [
