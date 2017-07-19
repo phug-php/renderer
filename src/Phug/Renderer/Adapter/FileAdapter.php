@@ -5,7 +5,6 @@ namespace Phug\Renderer\Adapter;
 use Exception;
 use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
-use Phug\Renderer\Adapter\Partial\CacheTrait;
 use Phug\Renderer\CacheInterface;
 use RuntimeException;
 use Throwable;
@@ -17,10 +16,10 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     public function __construct(Renderer $renderer, array $options)
     {
         parent::__construct($renderer, [
-            'cache_dir' => null,
-            'tmp_dir' => sys_get_temp_dir(),
-            'tmp_name_function' => 'tempnam',
-            'modified_check'    => true,
+            'cache_dir'           => null,
+            'tmp_dir'             => sys_get_temp_dir(),
+            'tmp_name_function'   => 'tempnam',
+            'modified_check'      => true,
             'keep_base_name'      => false,
         ]);
 
@@ -31,9 +30,10 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
      * Return the cached file path after cache optional process.
      *
      * @param $path
-     * @param string $input pug input
+     * @param string   $input    pug input
      * @param callable $rendered method to compile the source into PHP
-     * @param bool $success
+     * @param bool     $success
+     *
      * @return string
      */
     public function cache($path, $input, callable $rendered, &$success = null)
@@ -55,11 +55,10 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
      * Display rendered template after optional cache process.
      *
      * @param $path
-     * @param string $input pug input
-     * @param callable $rendered method to compile the source into PHP
-     * @param array $variables local variables
-     * @param bool $success
-     *
+     * @param string   $input     pug input
+     * @param callable $rendered  method to compile the source into PHP
+     * @param array    $variables local variables
+     * @param bool     $success
      */
     public function displayCached($path, $input, callable $rendered, array $variables, &$success = null)
     {
@@ -154,7 +153,6 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         return str_replace('//', '/', $this->getRenderer()->getOption('cache_dir').'/'.$name).'.php';
     }
 
-
     /**
      * Return a hashed print from input file or content.
      *
@@ -195,8 +193,8 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
      * false else.
      *
      * @param &string $path  to be filled
+     * @param string  $input file or pug code
      *
-     * @param string $input file or pug code
      * @return bool
      */
     private function isCacheUpToDate(&$path, $input = null)
