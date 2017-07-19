@@ -39,16 +39,16 @@ class Renderer implements ModuleContainerInterface
     public function __construct(array $options = null)
     {
         $this->setOptionsRecursive([
-            'debug'               => true,
-            'up_to_date_check'    => true,
-            'keep_base_name'      => false,
-            'error_handler'       => null,
-            'html_error'          => php_sapi_name() !== 'cli',
-            'error_context_lines' => 7,
+            'debug'                 => true,
+            'up_to_date_check'      => true,
+            'keep_base_name'        => false,
+            'error_handler'         => null,
+            'html_error'            => php_sapi_name() !== 'cli',
+            'error_context_lines'   => 7,
             'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
                 ? FileAdapter::class
                 : EvalAdapter::class,
-            'adapter_options'    => [],
+            'adapter_options'     => [],
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
@@ -115,10 +115,10 @@ class Renderer implements ModuleContainerInterface
         $forwardedOptions = [
             'compiler_options' => [
                 'formatter_options' => [],
-                'parser_options' => [
-                    'lexer_options' => []
-                ]
-            ]
+                'parser_options'    => [
+                    'lexer_options' => [],
+                ],
+            ],
         ];
 
         //Compiler
@@ -218,7 +218,7 @@ class Renderer implements ModuleContainerInterface
                 'tmp_dir',
                 'tmp_name_function',
                 'keep_base_name',
-                'modified_check'
+                'modified_check',
             ] as $optionName) {
                 if (isset($options[$optionName])) {
                     $forwardedOptions['adapter_options'][$optionName] = $options[$optionName];
@@ -228,7 +228,6 @@ class Renderer implements ModuleContainerInterface
 
         $this->setOptionsRecursive($forwardedOptions);
     }
-
 
     private function mergeWithSharedVariables(array $parameters)
     {
@@ -352,7 +351,7 @@ class Renderer implements ModuleContainerInterface
                     'offset'      => $offset,
                     'message'     => trim($message),
                     'code'        => $code,
-                    'parameters'  => $parameters ? print_r($parameters, true) : ''
+                    'parameters'  => $parameters ? print_r($parameters, true) : '',
                 ]);
             } catch (\Throwable $exception) {
                 echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
@@ -374,7 +373,6 @@ class Renderer implements ModuleContainerInterface
      * @param array      $parameters
      *
      * @throws RendererException
-     *
      * @throws Throwable
      */
     public function handleError($error, $code, $path, $source, $parameters = null)
@@ -479,6 +477,7 @@ class Renderer implements ModuleContainerInterface
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     $adapter->displayCached($path, $input, $getSource, $parameters);
                 };
+
                 return in_array($method, ['display', 'displayString'])
                     ? $display()
                     : $adapter->captureBuffer($display);
@@ -501,7 +500,7 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $path   input string or path
+     * @param string $path input string or path
      *
      * @return string
      */

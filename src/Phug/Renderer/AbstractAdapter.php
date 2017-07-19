@@ -15,7 +15,6 @@ abstract class AbstractAdapter implements AdapterInterface
 
     public function __construct(Renderer $renderer, array $options)
     {
-
         $this->renderer = $renderer;
 
         $this->setOptions($options);
@@ -23,7 +22,6 @@ abstract class AbstractAdapter implements AdapterInterface
 
     public function getRenderer()
     {
-
         return $this->renderer;
     }
 

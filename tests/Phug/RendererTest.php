@@ -141,7 +141,7 @@ class RendererTest extends AbstractRendererTest
 
         $this->renderer->setOptionsRecursive([
             'adapter_class_name' => FileAdapter::class,
-            'lexer_options'    => [
+            'lexer_options'      => [
                 'allow_mixed_indent' => false,
             ],
         ]);
@@ -172,7 +172,7 @@ class RendererTest extends AbstractRendererTest
     public function testHandleError()
     {
         $renderer = new Renderer([
-            'debug'            => false,
+            'debug'              => false,
             'adapter_class_name' => FileAdapter::class,
         ]);
         ob_start();
@@ -242,7 +242,7 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
-            'debug'            => true,
+            'debug'              => true,
             'adapter_class_name' => FileAdapter::class,
         ]);
 
