@@ -69,6 +69,29 @@ class FileAdapterTest extends AbstractRendererTest
         self::assertSame('<div>Hi</div>', $renderer->render($path, [
             'message' => 'Hi',
         ]));
+    }
+    /**
+     * @covers ::<public>
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
+     * @covers \Phug\Renderer\Adapter\FileAdapter::setRenderer
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
+     * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
+     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
+     * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
+     * @covers \Phug\Renderer\AbstractAdapter::<public>
+     * @covers \Phug\Renderer::callAdapter
+     */
+    public function testCacheWithDisplay()
+    {
+        $renderer = new Renderer([
+            'cache_dir' => sys_get_temp_dir(),
+        ]);
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
+        file_put_contents($path, 'p=$message');
 
         ob_start();
         $renderer->displayString('section=$message', [

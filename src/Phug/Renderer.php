@@ -215,7 +215,6 @@ class Renderer implements ModuleContainerInterface
             }
         }
         if ($htmlError) {
-            static::cleanBuffers();
             try {
                 $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
                 (new static([
@@ -316,18 +315,10 @@ class Renderer implements ModuleContainerInterface
 
         $handler = $this->getOption('error_handler');
         if (!$handler) {
-            static::cleanBuffers();
             throw $exception;
         }
 
         $handler($exception);
-    }
-
-    protected static function cleanBuffers()
-    {
-        if (count(ob_list_handlers())) {
-            ob_end_clean();
-        }
     }
 
     private function expectCacheAdapter($adapter)
@@ -340,23 +331,8 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
-    /**
-     * @param string   $method
-     * @param string   $path
-     * @param string   $input
-     * @param callable $getSource
-     * @param array    $parameters
-     *
-     * @throws RendererException
-     *
-     * @return bool|string|null
-     */
-    public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
+    private function handleCache($method, $path, $input, callable $getSource, array $parameters)
     {
-        if ($this->getOption('debug')) {
-            ob_start();
-        }
-        $render = false;
         $source = '';
 
         try {
@@ -377,7 +353,7 @@ class Renderer implements ModuleContainerInterface
                     : $adapter->captureBuffer($display);
             }
 
-            $render = $adapter->$method(
+            return $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
@@ -386,8 +362,33 @@ class Renderer implements ModuleContainerInterface
         } catch (Exception $error) {
             $this->handleError($error, 2, $path, $source, $parameters);
         }
-        if ($this->getOption('debug')) {
-            ob_end_clean();
+    }
+
+    /**
+     * @param string   $method
+     * @param string   $path
+     * @param string   $input
+     * @param callable $getSource
+     * @param array    $parameters
+     *
+     * @throws RendererException
+     *
+     * @return bool|string|null
+     */
+    public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
+    {
+        $render = false;
+        $exception = null;
+
+        try {
+            $render = $this->handleCache($method, $path, $input, $getSource, $parameters);
+        } catch (Throwable $error) {
+            $exception = $error;
+        } catch (Exception $error) {
+            $exception = $error;
+        }
+        if ($exception) {
+            throw $exception;
         }
 
         return $render;
