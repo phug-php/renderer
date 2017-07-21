@@ -36,9 +36,9 @@ class Renderer implements ModuleContainerInterface
      */
     private $lastFile;
 
-    public function __construct(array $options = null)
+    public function __construct($options = null)
     {
-        $this->setOptionsRecursive([
+        $this->setOptionsDefaults($options ?: [], [
             'debug'                 => true,
             'up_to_date_check'      => true,
             'keep_base_name'        => false,
@@ -48,24 +48,29 @@ class Renderer implements ModuleContainerInterface
             'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
                 ? FileAdapter::class
                 : EvalAdapter::class,
-            'adapter_options'     => [],
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
-            'compiler_options'    => [
-                'formatter_options' => [],
-                'parser_options'    => [
-                    'lexer_options' => [],
-                ],
-                'filters' => [
-                    'cdata' => function ($contents) {
-                        return '<![CDATA['.trim($contents).']]>';
-                    },
-                ],
+            'filters' => [
+                'cdata' => function ($contents) {
+                    return '<![CDATA['.trim($contents).']]>';
+                },
             ],
         ]);
-        $this->setOptionsRecursive($options ?: []);
-        $this->forwardOptions();
+
+        if ($this->hasOption('basedir')) {
+            $basedir = $this->getOption('basedir');
+            $this->setOption('paths', array_merge(
+                $this->hasOption('paths')
+                    ? (array) $this->getOption('paths')
+                    : [],
+                is_array($basedir)
+                    ? $basedir
+                    : [$basedir]
+            ));
+        }
+
+        $options = $this->getOptions();
 
         $compilerClassName = $this->getOption('compiler_class_name');
 
@@ -76,7 +81,7 @@ class Renderer implements ModuleContainerInterface
             );
         }
 
-        $this->compiler = new $compilerClassName($this->getOption('compiler_options'));
+        $this->compiler = new $compilerClassName($options);
 
         $adapterClassName = $this->getOption('adapter_class_name');
 
@@ -86,7 +91,7 @@ class Renderer implements ModuleContainerInterface
                 'not a valid '.AdapterInterface::class
             );
         }
-        $this->adapter = new $adapterClassName($this, $this->getOption('adapter_options'));
+        $this->adapter = new $adapterClassName($this, $options);
 
         $this->addModules($this->getOption('modules'));
     }
@@ -105,128 +110,6 @@ class Renderer implements ModuleContainerInterface
     public function getCompiler()
     {
         return $this->compiler;
-    }
-
-    private function forwardOptions()
-    {
-        $options = $this->getOptions();
-
-        //Check for top-level options that are forwarded to specific children
-        $forwardedOptions = [
-            'compiler_options' => [
-                'formatter_options' => [],
-                'parser_options'    => [
-                    'lexer_options' => [],
-                ],
-            ],
-        ];
-
-        //Compiler
-        foreach ([
-            'basedir',
-            'paths',
-            'debug',
-            'extensions',
-            'default_tag',
-            'filters',
-            'parser_class_name',
-            'parser_options',
-            'formatter_class_name',
-            'formatter_options',
-            'mixins_storage_mode',
-            'node_compilers',
-        ] as $optionName) {
-            if (isset($options[$optionName])) {
-                $forwardedOptions['compiler_options'][$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($options['compiler_modules'])) {
-            $forwardedOptions['compiler_options']['modules'] = $options['compiler_modules'];
-        }
-
-        if (isset($forwardedOptions['compiler_options']['basedir'])) {
-            $forwardedOptions['compiler_options']['paths'] = array_merge(
-                isset($forwardedOptions['compiler_options']['paths'])
-                    ? (array) $forwardedOptions['compiler_options']['paths']
-                    : [],
-                is_array($forwardedOptions['compiler_options']['basedir'])
-                    ? $forwardedOptions['compiler_options']['basedir']
-                    : [$forwardedOptions['compiler_options']['basedir']]
-            );
-        }
-
-        //Formatter
-        foreach ([
-            'debug',
-            'dependencies_storage',
-            'default_format',
-            'formats',
-            'inline_tags',
-            'self_closing_tags',
-            'pattern',
-            'patterns',
-            'attribute_assignments',
-            'assignment_handlers',
-            'pretty',
-        ] as $optionName) {
-            if (isset($options[$optionName])) {
-                $forwardedOptions['compiler_options']['formatter_options'][$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($options['formatter_modules'])) {
-            $forwardedOptions['compiler_options']['formatter_options']['modules'] = $options['formatter_modules'];
-        }
-
-        if (isset($options['formatter_options'])) {
-            $forwardedOptions['compiler_options']['formatter_options'] = array_replace_recursive(
-                $forwardedOptions['compiler_options']['formatter_options'],
-                $options['formatter_options']
-            );
-        }
-
-        //Parser
-        if (isset($options['parser_modules'])) {
-            $forwardedOptions['compiler_options']['parser_options']['modules'] = $options['parser_modules'];
-        }
-
-        if (isset($options['parser_options'])) {
-            $forwardedOptions['compiler_options']['parser_options'] = array_replace_recursive(
-                $forwardedOptions['compiler_options']['parser_options'],
-                $options['parser_options']
-            );
-        }
-
-        //Lexer
-        $parserOptions = &$forwardedOptions['compiler_options']['parser_options'];
-        if (isset($options['lexer_modules'])) {
-            $parserOptions['lexer_options']['modules'] = $options['lexer_modules'];
-        }
-
-        if (isset($options['lexer_options'])) {
-            $parserOptions['lexer_options'] = array_replace_recursive(
-                $parserOptions['lexer_options'],
-                $options['lexer_options']
-            );
-        }
-
-        //Adapters
-        if (is_a($this->getOption('adapter_class_name'), FileAdapter::class, true)) {
-            foreach ([
-                'cache_dir',
-                'tmp_dir',
-                'tmp_name_function',
-                'keep_base_name',
-                'modified_check',
-            ] as $optionName) {
-                if (isset($options[$optionName])) {
-                    $forwardedOptions['adapter_options'][$optionName] = $options[$optionName];
-                }
-            }
-        }
-
-        $this->setOptionsRecursive($forwardedOptions);
     }
 
     private function mergeWithSharedVariables(array $parameters)
@@ -363,6 +246,54 @@ class Renderer implements ModuleContainerInterface
         return $message.$code;
     }
 
+    private function getDebuggedException($error, $code, $source, $path, $parameters)
+    {
+        $isLocatedError = $error instanceof LocatedException;
+
+        if ($isLocatedError && is_null($error->getLine())) {
+            return $error;
+        }
+
+        $pugError = $isLocatedError
+            ? $error
+            : $this->getCompiler()->getFormatter()->getDebugError(
+                $error,
+                $source,
+                $path
+            );
+
+        if (!($pugError instanceof LocatedException)) {
+            return $pugError;
+        }
+
+        $line = $pugError->getLocation()->getLine();
+        $offset = $pugError->getLocation()->getOffset();
+        $sourcePath = $pugError->getLocation()->getPath() ?: $path;
+        $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
+        $colorSupport = DIRECTORY_SEPARATOR === '\\'
+            ? false !== getenv('ANSICON') ||
+            'ON' === getenv('ConEmuANSI') ||
+            false !== getenv('BABUN_HOME')
+            : (false !== getenv('BABUN_HOME')) ||
+            function_exists('posix_isatty') &&
+            @posix_isatty(STDOUT);
+
+        $isPugError = $error instanceof LocatedException;
+        $message = $this->getErrorMessage(
+            $error,
+            $isPugError ? $error->getLocation()->getLine() : $line,
+            $isPugError ? $error->getLocation()->getOffset() : $offset,
+            $isPugError && ($path = $error->getLocation()->getPath())
+                ? file_get_contents($path)
+                : $source,
+            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
+            $colorSupport,
+            $parameters
+        );
+
+        return new RendererException($message, $code, $error);
+    }
+
     /**
      * Handle error occurred in compiled PHP.
      *
@@ -379,47 +310,9 @@ class Renderer implements ModuleContainerInterface
     {
         /* @var Throwable $error */
         $offset = null;
-        $exception = $error;
-        if ($this->getOption('debug')) {
-            $isLocatedError = $error instanceof LocatedException;
-            if ($isLocatedError && is_null($error->getLine())) {
-                static::cleanBuffers();
-                throw $error;
-            }
-            $pugError = $isLocatedError
-                ? $error
-                : $this->getCompiler()->getFormatter()->getDebugError(
-                    $error,
-                    $source,
-                    $this->getAdapter()->getRenderingFile()
-                );
-            if (!($pugError instanceof LocatedException)) {
-                static::cleanBuffers();
-                throw $pugError;
-            }
-            $line = $pugError->getLocation()->getLine();
-            $offset = $pugError->getLocation()->getOffset();
-            $sourcePath = $pugError->getLocation()->getPath() ?: $path;
-            $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
-            $colorSupport = DIRECTORY_SEPARATOR === '\\'
-                ? false !== getenv('ANSICON') ||
-                'ON' === getenv('ConEmuANSI') ||
-                false !== getenv('BABUN_HOME')
-                : (false !== getenv('BABUN_HOME')) ||
-                function_exists('posix_isatty') &&
-                @posix_isatty(STDOUT);
-            $isPugError = $error instanceof LocatedException;
-            $message = $this->getErrorMessage(
-                $error,
-                $isPugError ? $error->getLocation()->getLine() : $line,
-                $isPugError ? $error->getLocation()->getOffset() : $offset,
-                $isPugError ? file_get_contents($error->getLocation()->getPath()) : $source,
-                $isPugError ? $error->getLocation()->getPath() : $sourcePath,
-                $colorSupport,
-                $parameters
-            );
-            $exception = new RendererException($message, $code, $error);
-        }
+        $exception = $this->getOption('debug')
+            ? $this->getDebuggedException($error, $code, $source, $path, $parameters)
+            : $error;
 
         $handler = $this->getOption('error_handler');
         if (!$handler) {
@@ -432,7 +325,7 @@ class Renderer implements ModuleContainerInterface
 
     protected static function cleanBuffers()
     {
-        while (count(ob_list_handlers())) {
+        if (count(ob_list_handlers())) {
             ob_end_clean();
         }
     }
@@ -473,6 +366,7 @@ class Renderer implements ModuleContainerInterface
                 $this->expectCacheAdapter($adapter);
             }
             if ($adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir')) {
+                /** @var CacheInterface $adapter */
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     $adapter->displayCached($path, $input, $getSource, $parameters);
@@ -493,7 +387,7 @@ class Renderer implements ModuleContainerInterface
             $this->handleError($error, 2, $path, $source, $parameters);
         }
         if ($this->getOption('debug')) {
-            ob_end_flush();
+            ob_end_clean();
         }
 
         return $render;

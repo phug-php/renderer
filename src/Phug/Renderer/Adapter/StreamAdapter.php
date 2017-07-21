@@ -10,7 +10,7 @@ class StreamAdapter extends AbstractAdapter
 {
     private $renderingFile;
 
-    public function __construct(Renderer $renderer, array $options)
+    public function __construct(Renderer $renderer, $options)
     {
         parent::__construct($renderer, [
             'stream_name'   => 'pug',

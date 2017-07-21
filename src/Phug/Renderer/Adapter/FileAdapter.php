@@ -13,7 +13,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
 {
     private $renderingFile;
 
-    public function __construct(Renderer $renderer, array $options)
+    public function __construct(Renderer $renderer, $options)
     {
         parent::__construct($renderer, [
             'cache_dir'           => null,

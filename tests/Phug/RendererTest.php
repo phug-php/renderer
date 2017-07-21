@@ -4,7 +4,9 @@ namespace Phug\Test;
 
 use Phug\LexerException;
 use Phug\Renderer;
+use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
+use Phug\Renderer\Adapter\StreamAdapter;
 use Phug\RendererException;
 
 /**
@@ -107,7 +109,7 @@ class RendererTest extends AbstractRendererTest
      */
     public function testOptions()
     {
-        $this->renderer->setOption(['compiler_options', 'formatter_options', 'pretty'], true);
+        $this->renderer->setOption('pretty', true);
 
         $actual = str_replace(
             "\r",
@@ -121,7 +123,7 @@ class RendererTest extends AbstractRendererTest
             $actual
         );
 
-        $this->renderer->setOption(['compiler_options', 'formatter_options', 'pretty'], false);
+        $this->renderer->setOption('pretty', false);
 
         $actual = str_replace(
             "\r",
@@ -141,11 +143,8 @@ class RendererTest extends AbstractRendererTest
 
         $this->renderer->setOptionsRecursive([
             'adapter_class_name' => FileAdapter::class,
-            'lexer_options'      => [
-                'allow_mixed_indent' => false,
-            ],
+            'allow_mixed_indent' => false,
         ]);
-        $this->renderer->initializeCompiler();
         $message = '';
         try {
             $this->renderer->renderString($template);
@@ -155,11 +154,10 @@ class RendererTest extends AbstractRendererTest
 
         self::assertSame(
             'Failed to lex: Invalid indentation, you can use tabs or spaces but not both'."\n".
-            'Near: b'."\n\n".
+            'Near: b'."\n".
             'Line: 3'."\n".
-            'Offset: 2'."\n".
-            'Position: 9'."\n",
-            $message
+            'Offset: 2',
+            trim(preg_replace('/\s*\n\s*/', "\n", $message))
         );
     }
 
@@ -171,31 +169,50 @@ class RendererTest extends AbstractRendererTest
      */
     public function testHandleError()
     {
-        $renderer = new Renderer([
-            'debug'              => false,
-            'adapter_class_name' => FileAdapter::class,
-        ]);
-        ob_start();
-        $message = null;
-        try {
-            $renderer->renderString('div: p=12/0');
-        } catch (RendererException $error) {
-            $message = $error->getMessage();
+        foreach ([
+            FileAdapter::class,
+            EvalAdapter::class,
+            StreamAdapter::class,
+        ] as $adapter) {
+            $renderer = new Renderer([
+                'debug'              => false,
+                'adapter_class_name' => $adapter,
+            ]);
+            $message = null;
+            try {
+                $renderer->renderString('div: p=12/0');
+            } catch (\Exception $error) {
+                $message = $error->getMessage();
+            }
+
+            self::assertContains(
+                'Division by zero',
+                $message
+            );
+
+            self::assertNotContains(
+                '12/0',
+                str_replace(' ', '', $message)
+            );
+
+            $message = null;
+            $renderer->setOption('debug', true);
+            try {
+                $renderer->renderString('div: p=12/0');
+            } catch (RendererException $error) {
+                $message = $error->getMessage();
+            }
+
+            self::assertContains(
+                'Division by zero on line 1',
+                $message
+            );
+
+            self::assertContains(
+                '12/0',
+                str_replace(' ', '', $message)
+            );
         }
-        $contents = ob_get_contents();
-        ob_end_clean();
-
-        self::assertContains(
-            'Division by zero on line 1',
-            $message
-        );
-
-        self::assertContains(
-            '12/0',
-            str_replace(' ', '', $message)
-        );
-
-        self::assertSame('', $contents);
 
         $message = null;
         $renderer = new Renderer([
@@ -206,6 +223,28 @@ class RendererTest extends AbstractRendererTest
             },
         ]);
         $path = realpath(__DIR__.'/../utils/error.pug');
+        $renderer->render($path);
+
+        self::assertContains(
+            defined('HHVM_VERSION')
+                ? 'Invalid operand type was used: implode() '.
+                'expects a container as one of the arguments'
+                : 'implode(): Invalid arguments passed',
+            $message
+        );
+
+        self::assertNotContains(
+            'on line 3',
+            $message
+        );
+
+        self::assertNotContains(
+            $path,
+            $message
+        );
+
+        $message = null;
+        $renderer->setOption('debug', true);
         $renderer->render($path);
 
         self::assertContains(

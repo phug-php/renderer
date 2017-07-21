@@ -20,6 +20,7 @@ class CasesTest extends AbstractRendererTest
     }
 
     /**
+     * @group cases
      * @dataProvider caseProvider
      * @covers ::compileFile
      * @covers ::render

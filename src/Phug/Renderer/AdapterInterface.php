@@ -8,9 +8,9 @@ use Phug\Util\OptionInterface;
 interface AdapterInterface extends OptionInterface
 {
     /**
-     * @param array $options
+     * @param array|\ArrayObject $options
      */
-    public function __construct(Renderer $renderer, array $options);
+    public function __construct(Renderer $renderer, $options);
 
     public function getRenderer();
 
