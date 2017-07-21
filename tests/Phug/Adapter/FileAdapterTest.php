@@ -70,6 +70,7 @@ class FileAdapterTest extends AbstractRendererTest
             'message' => 'Hi',
         ]));
     }
+
     /**
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
