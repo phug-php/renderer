@@ -51,7 +51,7 @@ class Renderer implements ModuleContainerInterface
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
-            'filters' => [
+            'filters'             => [
                 'cdata' => function ($contents) {
                     return '<![CDATA['.trim($contents).']]>';
                 },
@@ -366,7 +366,7 @@ class Renderer implements ModuleContainerInterface
                 $this->expectCacheAdapter($adapter);
             }
             if ($adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir')) {
-                /** @var CacheInterface $adapter */
+                /* @var CacheInterface $adapter */
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     $adapter->displayCached($path, $input, $getSource, $parameters);
