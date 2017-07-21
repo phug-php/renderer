@@ -267,6 +267,7 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @group error
      * @covers ::handleError
      * @covers ::callAdapter
      * @covers ::getCliErrorMessage
@@ -315,7 +316,7 @@ class RendererTest extends AbstractRendererTest
         }
 
         self::assertContains('ParseError:', $message);
-        self::assertContains(' on line 12, offset 14', $message);
+        self::assertContains(' on line 12, offset 12', $message);
         self::assertContains('title Foo', $message);
         self::assertNotContains('Too far to be visible error context', $message);
     }
