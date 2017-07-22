@@ -21,8 +21,8 @@
     "minimum-stability": "stable",
     "require": {
         "php": ">=5.5.0",
-        "phug/compiler": "^0.3.0",
-        "phug/util": "^0.3.5"
+        "phug/compiler": "^0.4.0",
+        "phug/util": "^0.4.4"
     },
     "require-dev": {
         "phug/dev-tool": "^0.1.0",

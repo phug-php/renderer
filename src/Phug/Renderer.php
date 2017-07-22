@@ -182,7 +182,7 @@ class Renderer implements ModuleContainerInterface
 
     private function outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
     {
-        /** @var Throwable $error */
+        /* @var Throwable $error */
         try {
             $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
             (new static([
