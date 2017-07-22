@@ -58,17 +58,7 @@ class Renderer implements ModuleContainerInterface
             ],
         ]);
 
-        if ($this->hasOption('basedir')) {
-            $basedir = $this->getOption('basedir');
-            $this->setOption('paths', array_merge(
-                $this->hasOption('paths')
-                    ? (array) $this->getOption('paths')
-                    : [],
-                is_array($basedir)
-                    ? $basedir
-                    : [$basedir]
-            ));
-        }
+        $this->handleOptionAliases();
 
         $options = $this->getOptions();
 
@@ -94,6 +84,21 @@ class Renderer implements ModuleContainerInterface
         $this->adapter = new $adapterClassName($this, $options);
 
         $this->addModules($this->getOption('modules'));
+    }
+
+    private function handleOptionAliases()
+    {
+        if ($this->hasOption('basedir')) {
+            $basedir = $this->getOption('basedir');
+            $this->setOption('paths', array_merge(
+                $this->hasOption('paths')
+                    ? (array) $this->getOption('paths')
+                    : [],
+                is_array($basedir)
+                    ? $basedir
+                    : [$basedir]
+            ));
+        }
     }
 
     /**
@@ -175,6 +180,36 @@ class Renderer implements ModuleContainerInterface
             "\e[0m\n";
     }
 
+    private function outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
+    {
+        /** @var Throwable $error */
+        try {
+            $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
+            (new static([
+                'debug'   => false,
+                'filters' => [
+                    'no-php' => function ($text) {
+                        return str_replace('<?', '<<?= "?" ?>', $text);
+                    },
+                ],
+            ]))->displayFile(__DIR__.'/../debug/index.pug', [
+                'title'       => $error->getMessage(),
+                'trace'       => $trace,
+                'start'       => $start,
+                'untilOffset' => htmlspecialchars($untilOffset),
+                'line'        => $line,
+                'offset'      => $offset,
+                'message'     => trim($message),
+                'code'        => $code,
+                'parameters'  => $parameters ? print_r($parameters, true) : '',
+            ]);
+        } catch (\Throwable $exception) {
+            echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
+        }
+
+        exit(1);
+    }
+
     private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
     {
         $source = explode("\n", rtrim($source));
@@ -215,31 +250,7 @@ class Renderer implements ModuleContainerInterface
             }
         }
         if ($htmlError) {
-            try {
-                $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
-                (new static([
-                    'debug'   => false,
-                    'filters' => [
-                        'no-php' => function ($text) {
-                            return str_replace('<?', '<<?= "?" ?>', $text);
-                        },
-                    ],
-                ]))->displayFile(__DIR__.'/../debug/index.pug', [
-                    'title'       => $error->getMessage(),
-                    'trace'       => $trace,
-                    'start'       => $start,
-                    'untilOffset' => htmlspecialchars($untilOffset),
-                    'line'        => $line,
-                    'offset'      => $offset,
-                    'message'     => trim($message),
-                    'code'        => $code,
-                    'parameters'  => $parameters ? print_r($parameters, true) : '',
-                ]);
-            } catch (\Throwable $exception) {
-                echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
-            }
-
-            exit(1);
+            $this->outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
         }
 
         return $message.$code;
@@ -308,7 +319,6 @@ class Renderer implements ModuleContainerInterface
     public function handleError($error, $code, $path, $source, $parameters = null)
     {
         /* @var Throwable $error */
-        $offset = null;
         $exception = $this->getOption('debug')
             ? $this->getDebuggedException($error, $code, $source, $path, $parameters)
             : $error;
