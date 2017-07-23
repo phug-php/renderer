@@ -33,7 +33,6 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
-     * @covers \Phug\Renderer\Adapter\FileAdapter::setRenderer
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
      * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
@@ -74,7 +73,6 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
-     * @covers \Phug\Renderer\Adapter\FileAdapter::setRenderer
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
      * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
