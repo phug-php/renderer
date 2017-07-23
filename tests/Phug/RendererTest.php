@@ -101,7 +101,6 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::getAdapter
      * @covers ::getCompiler
-     * @covers ::getCompilerOptions
      * @covers ::callAdapter
      * @covers ::mergeOptions
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -164,7 +163,6 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
-     * @covers ::getCliErrorMessage
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleError()
@@ -270,7 +268,6 @@ class RendererTest extends AbstractRendererTest
      * @group error
      * @covers ::handleError
      * @covers ::callAdapter
-     * @covers ::getCliErrorMessage
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleParseError()

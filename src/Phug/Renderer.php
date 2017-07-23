@@ -256,8 +256,38 @@ class Renderer implements ModuleContainerInterface
         return $message.$code;
     }
 
+    private function getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters)
+    {
+        $colorSupport = $this->hasColorSupport();
+        $isPugError = $error instanceof LocatedException;
+
+        return new RendererException($this->getErrorMessage(
+            $error,
+            $isPugError ? $error->getLocation()->getLine() : $line,
+            $isPugError ? $error->getLocation()->getOffset() : $offset,
+            $isPugError && ($path = $error->getLocation()->getPath())
+                ? file_get_contents($path)
+                : $source,
+            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
+            $colorSupport,
+            $parameters
+        ), $code, $error);
+    }
+
+    private function hasColorSupport()
+    {
+        return DIRECTORY_SEPARATOR === '\\'
+            ? false !== getenv('ANSICON') ||
+            'ON' === getenv('ConEmuANSI') ||
+            false !== getenv('BABUN_HOME')
+            : (false !== getenv('BABUN_HOME')) ||
+            function_exists('posix_isatty') &&
+            @posix_isatty(STDOUT);
+    }
+
     private function getDebuggedException($error, $code, $source, $path, $parameters)
     {
+        /* @var Throwable $error */
         $isLocatedError = $error instanceof LocatedException;
 
         if ($isLocatedError && is_null($error->getLine())) {
@@ -280,28 +310,8 @@ class Renderer implements ModuleContainerInterface
         $offset = $pugError->getLocation()->getOffset();
         $sourcePath = $pugError->getLocation()->getPath() ?: $path;
         $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
-        $colorSupport = DIRECTORY_SEPARATOR === '\\'
-            ? false !== getenv('ANSICON') ||
-            'ON' === getenv('ConEmuANSI') ||
-            false !== getenv('BABUN_HOME')
-            : (false !== getenv('BABUN_HOME')) ||
-            function_exists('posix_isatty') &&
-            @posix_isatty(STDOUT);
 
-        $isPugError = $error instanceof LocatedException;
-        $message = $this->getErrorMessage(
-            $error,
-            $isPugError ? $error->getLocation()->getLine() : $line,
-            $isPugError ? $error->getLocation()->getOffset() : $offset,
-            $isPugError && ($path = $error->getLocation()->getPath())
-                ? file_get_contents($path)
-                : $source,
-            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
-            $colorSupport,
-            $parameters
-        );
-
-        return new RendererException($message, $code, $error);
+        return $this->getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters);
     }
 
     /**
