@@ -3,7 +3,6 @@
 namespace Phug\Test;
 
 use JsPhpize\JsPhpizePhug;
-use Phug\CompilerException;
 use Phug\LexerException;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\EvalAdapter;
@@ -245,7 +244,25 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::__construct
+     * @covers ::getCompiler
+     * @covers ::handleOptionAliases
+     */
+    public function testBasedir()
+    {
+        $renderer = new Renderer([
+            'basedir' => ['a'],
+            'paths'   => ['b'],
+        ]);
+        $paths = $renderer->getCompiler()->getOption('paths');
+        self::assertCount(2, $paths);
+        self::assertContains('a', $paths);
+        self::assertContains('b', $paths);
+    }
+
+    /**
      * @covers ::share
+     * @covers ::resetSharedVariables
      * @covers ::mergeWithSharedVariables
      */
     public function testShare()
@@ -269,6 +286,14 @@ class RendererTest extends AbstractRendererTest
             trim($this->renderer->renderString('=foo - bar'))
         );
         self::assertSame('2', $actual);
+
+        $this->renderer->resetSharedVariables();
+        $actual = str_replace(
+            "\r",
+            '',
+            trim($this->renderer->renderString('=foo || bar ? "ok" : "ko"'))
+        );
+        self::assertSame('ko', $actual);
     }
 
     /**
@@ -440,6 +465,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @group error
      * @covers ::getErrorMessage
+     * @covers ::highlightLine
      * @covers ::getRendererException
      * @covers ::hasColorSupport
      * @covers ::getDebuggedException

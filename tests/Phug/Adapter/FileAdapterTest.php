@@ -18,6 +18,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::<public>
      * @covers ::createTemporaryFile
      * @covers ::getCompiledFile
+     * @covers \Phug\Renderer::handleCache
      */
     public function testRender()
     {
@@ -84,7 +85,6 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer::callAdapter
      * @covers \Phug\Renderer::handleCache
-     *
      */
     public function testCacheWithDisplay()
     {
