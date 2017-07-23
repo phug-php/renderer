@@ -2,6 +2,8 @@
 
 namespace Phug\Test;
 
+use JsPhpize\JsPhpizePhug;
+use Phug\CompilerException;
 use Phug\LexerException;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\EvalAdapter;
@@ -15,13 +17,184 @@ use Phug\RendererException;
 class RendererTest extends AbstractRendererTest
 {
     /**
-     * @covers ::compile
+     * @covers ::compileString
      * @covers ::renderString
      */
     public function testRenderString()
     {
         $actual = trim($this->renderer->renderString('#{"p"}.foo Hello'));
         self::assertSame('<p class="foo">Hello</p>', $actual);
+    }
+
+    /**
+     * @covers ::useFileMethod
+     * @covers ::renderFile
+     * @covers ::renderString
+     * @covers ::render
+     */
+    public function testRender()
+    {
+        foreach ([true, false] as $fileAutoDetect) {
+            $renderer = new Renderer([
+                'file_auto_detect' => $fileAutoDetect,
+            ]);
+            $actual = trim($renderer->render('#{"p"}.foo Hello'));
+
+            self::assertSame('<p class="foo">Hello</p>', $actual);
+        }
+
+        $renderer = new Renderer([
+            'file_auto_detect' => true,
+            'compiler_modules' => [JsPhpizePhug::class],
+        ]);
+
+        $actual = str_replace(
+            ["\r", "\n"],
+            '',
+            trim($renderer->render(__DIR__.'/../cases/code.pug'))
+        );
+        $expected = str_replace(
+            ["\r", "\n"],
+            '',
+            trim(file_get_contents(__DIR__.'/../cases/code.html'))
+        );
+
+        self::assertSame($expected, $actual);
+
+        $renderer->setOption('file_auto_detect', false);
+        $actual = str_replace(
+            ["\r", "\n"],
+            '',
+            trim($renderer->render(__DIR__.'/../cases/code.pug'))
+        );
+        $expected = str_replace(
+            ["\r", "\n"],
+            '',
+            trim($renderer->renderString(__DIR__.'/../cases/code.pug'))
+        );
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @covers ::useFileMethod
+     * @covers ::displayFile
+     * @covers ::displayString
+     * @covers ::display
+     */
+    public function testDisplay()
+    {
+        foreach ([true, false] as $fileAutoDetect) {
+            $renderer = new Renderer([
+                'file_auto_detect' => $fileAutoDetect,
+            ]);
+            ob_start();
+            $renderer->display('#{"p"}.foo Hello');
+            $actual = str_replace(
+                "\r",
+                '',
+                trim(ob_get_contents())
+            );
+            ob_end_clean();
+
+            self::assertSame('<p class="foo">Hello</p>', $actual);
+        }
+
+        $renderer = new Renderer([
+            'file_auto_detect' => true,
+            'compiler_modules' => [JsPhpizePhug::class],
+        ]);
+
+        ob_start();
+        $renderer->display(__DIR__.'/../cases/code.pug');
+        $actual = str_replace(
+            ["\r", "\n"],
+            '',
+            trim(ob_get_contents())
+        );
+        ob_end_clean();
+        $expected = str_replace(
+            ["\r", "\n"],
+            '',
+            trim(file_get_contents(__DIR__.'/../cases/code.html'))
+        );
+
+        self::assertSame($expected, $actual);
+
+        $renderer->setOption('file_auto_detect', false);
+
+        ob_start();
+        $renderer->display(__DIR__.'/../cases/code.pug');
+        $actual = str_replace(
+            ["\r", "\n"],
+            '',
+            trim(ob_get_contents())
+        );
+        ob_end_clean();
+        ob_start();
+        $renderer->displayString(__DIR__.'/../cases/code.pug');
+        $expected = str_replace(
+            ["\r", "\n"],
+            '',
+            trim(ob_get_contents())
+        );
+        ob_end_clean();
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
+     * @covers ::useFileMethod
+     * @covers ::compileFile
+     * @covers ::compileString
+     * @covers ::compile
+     */
+    public function testCompile()
+    {
+        foreach ([true, false] as $fileAutoDetect) {
+            $renderer = new Renderer([
+                'debug'            => false,
+                'file_auto_detect' => $fileAutoDetect,
+            ]);
+            $actual = trim($renderer->compile('p Hello'));
+
+            self::assertSame('<p>Hello</p>', $actual);
+        }
+
+        $renderer = new Renderer([
+            'pretty'           => true,
+            'debug'            => false,
+            'file_auto_detect' => true,
+        ]);
+
+        $actual = $renderer->compile(__DIR__.'/../cases/basic.pug');
+        $actual = str_replace(
+            "\r",
+            '',
+            trim($actual)
+        );
+        $expected = str_replace(
+            "\r",
+            '',
+            trim(file_get_contents(__DIR__.'/../cases/basic.html'))
+        );
+
+        self::assertSame($expected, $actual);
+
+        $renderer->setOption('file_auto_detect', false);
+        $actual = $renderer->compile(__DIR__.'/../cases/basic.pug');
+        $actual = str_replace(
+            "\r",
+            '',
+            trim($actual)
+        );
+        $expected = str_replace(
+            "\r",
+            '',
+            trim($renderer->compileString(__DIR__.'/../cases/basic.pug'))
+        );
+
+        self::assertSame($expected, $actual);
     }
 
     /**
@@ -37,12 +210,12 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @covers ::display
+     * @covers ::displayFile
      */
-    public function testDisplay()
+    public function testDisplayFile()
     {
         ob_start();
-        $this->renderer->display(__DIR__.'/../cases/code.pug');
+        $this->renderer->displayFile(__DIR__.'/../cases/code.pug');
         $actual = str_replace(
             "\r",
             '',
@@ -102,7 +275,6 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getAdapter
      * @covers ::getCompiler
      * @covers ::callAdapter
-     * @covers ::mergeOptions
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Adapter\EvalAdapter::display
      */
@@ -217,11 +389,12 @@ class RendererTest extends AbstractRendererTest
             'debug'         => false,
             'pretty'        => true,
             'error_handler' => function ($error) use (&$message) {
+                /* @var \Throwable $error */
                 $message = $error->getMessage();
             },
         ]);
         $path = realpath(__DIR__.'/../utils/error.pug');
-        $renderer->render($path);
+        $renderer->renderFile($path);
 
         self::assertContains(
             defined('HHVM_VERSION')
@@ -243,7 +416,7 @@ class RendererTest extends AbstractRendererTest
 
         $message = null;
         $renderer->setOption('debug', true);
-        $renderer->render($path);
+        $renderer->renderFile($path);
 
         self::assertContains(
             defined('HHVM_VERSION')
@@ -266,6 +439,10 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @group error
+     * @covers ::getErrorMessage
+     * @covers ::getRendererException
+     * @covers ::hasColorSupport
+     * @covers ::getDebuggedException
      * @covers ::handleError
      * @covers ::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer

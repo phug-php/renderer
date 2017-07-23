@@ -2,10 +2,9 @@
 
 namespace Phug\Renderer;
 
-use Exception;
 use Phug\Renderer;
 use Phug\Util\Partial\OptionTrait;
-use Throwable;
+use Phug\Util\SandBox;
 
 abstract class AbstractAdapter implements AdapterInterface
 {
@@ -29,17 +28,11 @@ abstract class AbstractAdapter implements AdapterInterface
     {
         $throwable = null;
         ob_start();
-        try {
-            $display();
-        } catch (Throwable $e) { // PHP 7
-            $throwable = $e;
-        } catch (Exception $e) { // PHP 5
-            $throwable = $e;
-        }
+        $sandBox = new SandBox($display);
         $html = ob_get_contents();
         ob_end_clean();
 
-        if ($throwable) {
+        if ($throwable = $sandBox->getThrowable()) {
             throw $throwable;
         }
 

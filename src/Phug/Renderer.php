@@ -2,7 +2,6 @@
 
 namespace Phug;
 
-use Exception;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
@@ -10,7 +9,7 @@ use Phug\Renderer\CacheInterface;
 use Phug\Util\Exception\LocatedException;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
-use Throwable;
+use Phug\Util\SandBox;
 
 class Renderer implements ModuleContainerInterface
 {
@@ -40,6 +39,7 @@ class Renderer implements ModuleContainerInterface
     {
         $this->setOptionsDefaults($options ?: [], [
             'debug'                 => true,
+            'file_auto_detect'      => false,
             'up_to_date_check'      => true,
             'keep_base_name'        => false,
             'error_handler'         => null,
@@ -182,8 +182,10 @@ class Renderer implements ModuleContainerInterface
 
     private function outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
     {
-        /* @var Throwable $error */
-        try {
+        $sandBox = new SandBox(function () use (
+            $error, $start, $message, $code, $parameters, $line, $offset, $untilOffset
+        ) {
+            /* @var \Throwable $error */
             $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
             (new static([
                 'debug'   => false,
@@ -203,8 +205,10 @@ class Renderer implements ModuleContainerInterface
                 'code'        => $code,
                 'parameters'  => $parameters ? print_r($parameters, true) : '',
             ]);
-        } catch (\Throwable $exception) {
-            echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
+        });
+
+        if ($throwable = $sandBox->getThrowable()) {
+            echo '<pre>'.$throwable->getMessage()."\n\n".$throwable->getTraceAsString().'</pre>';
         }
 
         exit(1);
@@ -287,7 +291,7 @@ class Renderer implements ModuleContainerInterface
 
     private function getDebuggedException($error, $code, $source, $path, $parameters)
     {
-        /* @var Throwable $error */
+        /* @var \Throwable $error */
         $isLocatedError = $error instanceof LocatedException;
 
         if ($isLocatedError && is_null($error->getLine())) {
@@ -309,6 +313,11 @@ class Renderer implements ModuleContainerInterface
         $line = $pugError->getLocation()->getLine();
         $offset = $pugError->getLocation()->getOffset();
         $sourcePath = $pugError->getLocation()->getPath() ?: $path;
+
+        if ($sourcePath && !file_exists($sourcePath)) {
+            return $error;
+        }
+
         $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
 
         return $this->getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters);
@@ -324,11 +333,11 @@ class Renderer implements ModuleContainerInterface
      * @param array      $parameters
      *
      * @throws RendererException
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function handleError($error, $code, $path, $source, $parameters = null)
     {
-        /* @var Throwable $error */
+        /* @var \Throwable $error */
         $exception = $this->getOption('debug')
             ? $this->getDebuggedException($error, $code, $source, $path, $parameters)
             : $error;
@@ -355,7 +364,7 @@ class Renderer implements ModuleContainerInterface
     {
         $source = '';
 
-        try {
+        $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
             $source = $getSource();
             if ($this->hasOption('cache_dir') && $this->getOption('cache_dir')) {
@@ -377,11 +386,13 @@ class Renderer implements ModuleContainerInterface
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
-        } catch (Throwable $error) {
+        });
+
+        if ($error = $sandBox->getThrowable()) {
             $this->handleError($error, 1, $path, $source, $parameters);
-        } catch (Exception $error) {
-            $this->handleError($error, 2, $path, $source, $parameters);
         }
+
+        return $sandBox->getResult();
     }
 
     /**
@@ -397,21 +408,20 @@ class Renderer implements ModuleContainerInterface
      */
     public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
-        $render = false;
-        $exception = null;
+        $sandBox = new SandBox(function () use ($method, $path, $input, $getSource, $parameters) {
+            return $this->handleCache($method, $path, $input, $getSource, $parameters);
+        });
 
-        try {
-            $render = $this->handleCache($method, $path, $input, $getSource, $parameters);
-        } catch (Throwable $error) {
-            $exception = $error;
-        } catch (Exception $error) {
-            $exception = $error;
-        }
-        if ($exception) {
-            throw $exception;
+        if ($throwable = $sandBox->getThrowable()) {
+            throw $throwable;
         }
 
-        return $render;
+        return $sandBox->getResult();
+    }
+
+    private function useFileMethod($path)
+    {
+        return $this->getOption('file_auto_detect') && file_exists($path);
     }
 
     /**
@@ -421,7 +431,7 @@ class Renderer implements ModuleContainerInterface
      */
     public function compile($path)
     {
-        $method = file_exists($path) ? 'compileFile' : 'compileString';
+        $method = $this->useFileMethod($path) ? 'compileFile' : 'compileString';
 
         return call_user_func_array([$this, $method], func_get_args());
     }
@@ -432,7 +442,7 @@ class Renderer implements ModuleContainerInterface
      *
      * @return string
      */
-    public function compileString($string, $filename)
+    public function compileString($string, $filename = null)
     {
         $this->lastString = $string;
         $this->lastFile = $filename;
@@ -461,7 +471,7 @@ class Renderer implements ModuleContainerInterface
      */
     public function render($path)
     {
-        $method = file_exists($path) ? 'renderFile' : 'renderString';
+        $method = $this->useFileMethod($path) ? 'renderFile' : 'renderString';
 
         return call_user_func_array([$this, $method], func_get_args());
     }
@@ -499,7 +509,7 @@ class Renderer implements ModuleContainerInterface
             null,
             $string,
             function () use ($string, $filename) {
-                return $this->compile($string, $filename);
+                return $this->compileString($string, $filename);
             },
             $parameters
         );
@@ -512,7 +522,7 @@ class Renderer implements ModuleContainerInterface
      */
     public function display($path)
     {
-        $method = file_exists($path) ? 'displayFile' : 'displayString';
+        $method = $this->useFileMethod($path) ? 'displayFile' : 'displayString';
 
         return call_user_func_array([$this, $method], func_get_args());
     }
@@ -546,7 +556,7 @@ class Renderer implements ModuleContainerInterface
             null,
             $string,
             function () use ($string, $filename) {
-                return $this->compile($string, $filename);
+                return $this->compileString($string, $filename);
             },
             $parameters
         );

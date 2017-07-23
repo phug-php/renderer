@@ -52,20 +52,20 @@ class FileAdapterTest extends AbstractRendererTest
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
         file_put_contents($path, 'p=$message');
 
-        self::assertSame('<p>Hi</p>', $renderer->render($path, [
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
 
         $renderer->getAdapter()->setOption('modified_check', false);
         file_put_contents($path, 'div=$message');
 
-        self::assertSame('<p>Hi</p>', $renderer->render($path, [
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
 
         $renderer->getAdapter()->setOption('modified_check', true);
 
-        self::assertSame('<div>Hi</div>', $renderer->render($path, [
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
     }
@@ -83,6 +83,8 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer::callAdapter
+     * @covers \Phug\Renderer::handleCache
+     *
      */
     public function testCacheWithDisplay()
     {
@@ -107,6 +109,8 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers \Phug\Renderer::handleCache
+     * @covers \Phug\Renderer::expectCacheAdapter
      * @covers \Phug\Renderer::callAdapter
      * @covers \Phug\Renderer::cacheDirectory
      */
@@ -204,6 +208,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions

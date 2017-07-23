@@ -2,12 +2,11 @@
 
 namespace Phug\Renderer\Adapter;
 
-use Exception;
 use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
 use Phug\Renderer\CacheInterface;
+use Phug\Util\SandBox;
 use RuntimeException;
-use Throwable;
 
 class FileAdapter extends AbstractAdapter implements CacheInterface
 {
@@ -99,12 +98,12 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             if ($this->fileMatchExtensions($object, $extensions)) {
                 $path = $inputFile;
                 $this->isCacheUpToDate($path);
-                try {
+                $sandBox = new SandBox(function () use (&$success, $path, $inputFile) {
                     file_put_contents($path, $this->getRenderer()->getCompiler()->compileFile($inputFile));
                     $success++;
-                } catch (Throwable $e) { // PHP 7
-                    $errors++;
-                } catch (Exception $e) { // PHP 5
+                });
+
+                if ($sandBox->getThrowable()) {
                     $errors++;
                 }
             }
