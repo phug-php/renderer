@@ -20,6 +20,6 @@ class EvalAdapterTest extends AbstractRendererTest
             'adapter_class_name' => EvalAdapter::class,
         ]);
 
-        self::assertSame('<p>Hello</p>', $renderer->renderString('p Hello'));
+        self::assertSame('<p>Hello</p>', $renderer->render('p Hello'));
     }
 }

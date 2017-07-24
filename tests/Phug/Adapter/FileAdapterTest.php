@@ -26,7 +26,7 @@ class FileAdapterTest extends AbstractRendererTest
             'adapter_class_name' => FileAdapter::class,
         ]);
 
-        self::assertSame('<p>Hello</p>', $renderer->renderString('p=$message', [
+        self::assertSame('<p>Hello</p>', $renderer->render('p=$message', [
             'message' => 'Hello',
         ]));
     }
@@ -95,7 +95,7 @@ class FileAdapterTest extends AbstractRendererTest
         file_put_contents($path, 'p=$message');
 
         ob_start();
-        $renderer->displayString('section=$message', [
+        $renderer->display('section=$message', [
             'message' => 'Hi',
         ]);
         $actual = str_replace(

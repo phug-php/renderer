@@ -39,7 +39,6 @@ class Renderer implements ModuleContainerInterface
     {
         $this->setOptionsDefaults($options ?: [], [
             'debug'                 => true,
-            'file_auto_detect'      => false,
             'up_to_date_check'      => true,
             'keep_base_name'        => false,
             'error_handler'         => null,
@@ -377,7 +376,7 @@ class Renderer implements ModuleContainerInterface
                     $adapter->displayCached($path, $input, $getSource, $parameters);
                 };
 
-                return in_array($method, ['display', 'displayString'])
+                return in_array($method, ['display', 'displayFile'])
                     ? $display()
                     : $adapter->captureBuffer($display);
             }
@@ -419,30 +418,13 @@ class Renderer implements ModuleContainerInterface
         return $sandBox->getResult();
     }
 
-    private function useFileMethod($path)
-    {
-        return $this->getOption('file_auto_detect') && file_exists($path);
-    }
-
-    /**
-     * @param string $path input string or path
-     *
-     * @return string
-     */
-    public function compile($path)
-    {
-        $method = $this->useFileMethod($path) ? 'compileFile' : 'compileString';
-
-        return call_user_func_array([$this, $method], func_get_args());
-    }
-
     /**
      * @param string $string
      * @param string $filename
      *
      * @return string
      */
-    public function compileString($string, $filename = null)
+    public function compile($string, $filename = null)
     {
         $this->lastString = $string;
         $this->lastFile = $filename;
@@ -463,17 +445,23 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string       $path       input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
+     * @param string $string     input string or path
+     * @param array  $parameters parameters or file name
+     * @param string $filename
      *
      * @return string
      */
-    public function render($path)
+    public function render($string, array $parameters = [], $filename = null)
     {
-        $method = $this->useFileMethod($path) ? 'renderFile' : 'renderString';
-
-        return call_user_func_array([$this, $method], func_get_args());
+        return $this->callAdapter(
+            'render',
+            null,
+            $string,
+            function () use ($string, $filename) {
+                return $this->compile($string, $filename);
+            },
+            $parameters
+        );
     }
 
     /**
@@ -499,32 +487,18 @@ class Renderer implements ModuleContainerInterface
      * @param string $string     input string or path
      * @param array  $parameters parameters or file name
      * @param string $filename
-     *
-     * @return string
      */
-    public function renderString($string, array $parameters = [], $filename = null)
+    public function display($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
-            'render',
+            'display',
             null,
             $string,
             function () use ($string, $filename) {
-                return $this->compileString($string, $filename);
+                return $this->compile($string, $filename);
             },
             $parameters
         );
-    }
-
-    /**
-     * @param string       $path       input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
-     */
-    public function display($path)
-    {
-        $method = $this->useFileMethod($path) ? 'displayFile' : 'displayString';
-
-        return call_user_func_array([$this, $method], func_get_args());
     }
 
     /**
@@ -539,24 +513,6 @@ class Renderer implements ModuleContainerInterface
             null,
             function () use ($path) {
                 return $this->compileFile($path);
-            },
-            $parameters
-        );
-    }
-
-    /**
-     * @param string $string     input string or path
-     * @param array  $parameters parameters or file name
-     * @param string $filename
-     */
-    public function displayString($string, array $parameters = [], $filename = null)
-    {
-        return $this->callAdapter(
-            'display',
-            null,
-            $string,
-            function () use ($string, $filename) {
-                return $this->compileString($string, $filename);
             },
             $parameters
         );

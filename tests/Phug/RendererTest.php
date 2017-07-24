@@ -16,41 +16,27 @@ use Phug\RendererException;
 class RendererTest extends AbstractRendererTest
 {
     /**
-     * @covers ::compileString
-     * @covers ::renderString
-     */
-    public function testRenderString()
-    {
-        $actual = trim($this->renderer->renderString('#{"p"}.foo Hello'));
-        self::assertSame('<p class="foo">Hello</p>', $actual);
-    }
-
-    /**
-     * @covers ::useFileMethod
-     * @covers ::renderFile
-     * @covers ::renderString
+     * @covers ::compile
      * @covers ::render
      */
     public function testRender()
     {
-        foreach ([true, false] as $fileAutoDetect) {
-            $renderer = new Renderer([
-                'file_auto_detect' => $fileAutoDetect,
-            ]);
-            $actual = trim($renderer->render('#{"p"}.foo Hello'));
+        $actual = trim($this->renderer->render('#{"p"}.foo Hello'));
 
-            self::assertSame('<p class="foo">Hello</p>', $actual);
-        }
+        self::assertSame('<p class="foo">Hello</p>', $actual);
+    }
 
-        $renderer = new Renderer([
-            'file_auto_detect' => true,
-            'compiler_modules' => [JsPhpizePhug::class],
-        ]);
-
+    /**
+     * @covers ::renderFile
+     * @covers ::render
+     * @covers ::render
+     */
+    public function testRenderFile()
+    {
         $actual = str_replace(
             ["\r", "\n"],
             '',
-            trim($renderer->render(__DIR__.'/../cases/code.pug'))
+            trim($this->renderer->renderFile(__DIR__.'/../cases/code.pug'))
         );
         $expected = str_replace(
             ["\r", "\n"],
@@ -59,152 +45,23 @@ class RendererTest extends AbstractRendererTest
         );
 
         self::assertSame($expected, $actual);
-
-        $renderer->setOption('file_auto_detect', false);
-        $actual = str_replace(
-            ["\r", "\n"],
-            '',
-            trim($renderer->render(__DIR__.'/../cases/code.pug'))
-        );
-        $expected = str_replace(
-            ["\r", "\n"],
-            '',
-            trim($renderer->renderString(__DIR__.'/../cases/code.pug'))
-        );
-
-        self::assertSame($expected, $actual);
     }
 
     /**
-     * @covers ::useFileMethod
      * @covers ::displayFile
-     * @covers ::displayString
      * @covers ::display
      */
     public function testDisplay()
     {
-        foreach ([true, false] as $fileAutoDetect) {
-            $renderer = new Renderer([
-                'file_auto_detect' => $fileAutoDetect,
-            ]);
-            ob_start();
-            $renderer->display('#{"p"}.foo Hello');
-            $actual = str_replace(
-                "\r",
-                '',
-                trim(ob_get_contents())
-            );
-            ob_end_clean();
-
-            self::assertSame('<p class="foo">Hello</p>', $actual);
-        }
-
-        $renderer = new Renderer([
-            'file_auto_detect' => true,
-            'compiler_modules' => [JsPhpizePhug::class],
-        ]);
-
         ob_start();
-        $renderer->display(__DIR__.'/../cases/code.pug');
+        $this->renderer->display('#{"p"}.foo Hello');
         $actual = str_replace(
-            ["\r", "\n"],
-            '',
-            trim(ob_get_contents())
-        );
-        ob_end_clean();
-        $expected = str_replace(
-            ["\r", "\n"],
-            '',
-            trim(file_get_contents(__DIR__.'/../cases/code.html'))
-        );
-
-        self::assertSame($expected, $actual);
-
-        $renderer->setOption('file_auto_detect', false);
-
-        ob_start();
-        $renderer->display(__DIR__.'/../cases/code.pug');
-        $actual = str_replace(
-            ["\r", "\n"],
-            '',
-            trim(ob_get_contents())
-        );
-        ob_end_clean();
-        ob_start();
-        $renderer->displayString(__DIR__.'/../cases/code.pug');
-        $expected = str_replace(
-            ["\r", "\n"],
+            "\r",
             '',
             trim(ob_get_contents())
         );
         ob_end_clean();
 
-        self::assertSame($expected, $actual);
-    }
-
-    /**
-     * @covers ::useFileMethod
-     * @covers ::compileFile
-     * @covers ::compileString
-     * @covers ::compile
-     */
-    public function testCompile()
-    {
-        foreach ([true, false] as $fileAutoDetect) {
-            $renderer = new Renderer([
-                'debug'            => false,
-                'file_auto_detect' => $fileAutoDetect,
-            ]);
-            $actual = trim($renderer->compile('p Hello'));
-
-            self::assertSame('<p>Hello</p>', $actual);
-        }
-
-        $renderer = new Renderer([
-            'pretty'           => true,
-            'debug'            => false,
-            'file_auto_detect' => true,
-        ]);
-
-        $actual = $renderer->compile(__DIR__.'/../cases/basic.pug');
-        $actual = str_replace(
-            "\r",
-            '',
-            trim($actual)
-        );
-        $expected = str_replace(
-            "\r",
-            '',
-            trim(file_get_contents(__DIR__.'/../cases/basic.html'))
-        );
-
-        self::assertSame($expected, $actual);
-
-        $renderer->setOption('file_auto_detect', false);
-        $actual = $renderer->compile(__DIR__.'/../cases/basic.pug');
-        $actual = str_replace(
-            "\r",
-            '',
-            trim($actual)
-        );
-        $expected = str_replace(
-            "\r",
-            '',
-            trim($renderer->compileString(__DIR__.'/../cases/basic.pug'))
-        );
-
-        self::assertSame($expected, $actual);
-    }
-
-    /**
-     * @covers ::displayString
-     */
-    public function testDisplayString()
-    {
-        ob_start();
-        $this->renderer->displayString('#{"p"}.foo Hello');
-        $actual = trim(ob_get_contents());
-        ob_end_clean();
         self::assertSame('<p class="foo">Hello</p>', $actual);
     }
 
@@ -231,6 +88,38 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::compileFile
+     * @covers ::compile
+     */
+    public function testCompile()
+    {
+        $actual = trim($this->renderer->compile('p Hello'));
+
+        self::assertSame('<p>Hello</p>', $actual);
+    }
+
+    /**
+     * @covers ::compileFile
+     * @covers ::compile
+     */
+    public function testCompileFile()
+    {
+        $actual = $this->renderer->compileFile(__DIR__.'/../cases/basic.pug');
+        $actual = str_replace(
+            "\r",
+            '',
+            trim($actual)
+        );
+        $expected = str_replace(
+            "\r",
+            '',
+            trim(file_get_contents(__DIR__.'/../cases/basic.html'))
+        );
+
+        self::assertSame($expected, $actual);
+    }
+
+    /**
      * @covers ::__construct
      */
     public function testFilter()
@@ -238,7 +127,7 @@ class RendererTest extends AbstractRendererTest
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('script: :cdata foo'))
+            trim($this->renderer->render('script: :cdata foo'))
         );
         self::assertSame('<script><![CDATA[foo]]></script>', $actual);
     }
@@ -276,14 +165,14 @@ class RendererTest extends AbstractRendererTest
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('=foo + bar'))
+            trim($this->renderer->render('=foo + bar'))
         );
         self::assertSame('6', $actual);
 
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('=foo - bar'))
+            trim($this->renderer->render('=foo - bar'))
         );
         self::assertSame('2', $actual);
 
@@ -291,7 +180,7 @@ class RendererTest extends AbstractRendererTest
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('=foo || bar ? "ok" : "ko"'))
+            trim($this->renderer->render('=foo || bar ? "ok" : "ko"'))
         );
         self::assertSame('ko', $actual);
     }
@@ -310,7 +199,7 @@ class RendererTest extends AbstractRendererTest
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('section: div Hello'))
+            trim($this->renderer->render('section: div Hello'))
         );
         self::assertSame(
             "<section>\n".
@@ -324,7 +213,7 @@ class RendererTest extends AbstractRendererTest
         $actual = str_replace(
             "\r",
             '',
-            trim($this->renderer->renderString('section: div Hello'))
+            trim($this->renderer->render('section: div Hello'))
         );
         self::assertSame(
             '<section>'.
@@ -334,7 +223,7 @@ class RendererTest extends AbstractRendererTest
         );
 
         $template = "p\n    i\n\tb";
-        $actual = trim($this->renderer->renderString($template));
+        $actual = trim($this->renderer->render($template));
         self::assertSame('<p><i></i><b></b></p>', $actual);
 
         $this->renderer->setOptionsRecursive([
@@ -343,7 +232,7 @@ class RendererTest extends AbstractRendererTest
         ]);
         $message = '';
         try {
-            $this->renderer->renderString($template);
+            $this->renderer->render($template);
         } catch (LexerException $error) {
             $message = $error->getMessage();
         }
@@ -375,7 +264,7 @@ class RendererTest extends AbstractRendererTest
             ]);
             $message = null;
             try {
-                $renderer->renderString('div: p=12/0');
+                $renderer->render('div: p=12/0');
             } catch (\Exception $error) {
                 $message = $error->getMessage();
             }
@@ -393,7 +282,7 @@ class RendererTest extends AbstractRendererTest
             $message = null;
             $renderer->setOption('debug', true);
             try {
-                $renderer->renderString('div: p=12/0');
+                $renderer->render('div: p=12/0');
             } catch (RendererException $error) {
                 $message = $error->getMessage();
             }
@@ -488,7 +377,7 @@ class RendererTest extends AbstractRendererTest
 
         $message = null;
         try {
-            $renderer->renderString(
+            $renderer->render(
                 "doctype html\n".
                 "html\n".
                 "  //-\n".
