@@ -2,7 +2,6 @@
 
 namespace Phug\Test;
 
-use JsPhpize\JsPhpizePhug;
 use Phug\LexerException;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\EvalAdapter;
