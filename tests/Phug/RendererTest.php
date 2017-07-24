@@ -248,6 +248,11 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
+     * @covers ::getDebuggedException
+     * @covers ::hasColorSupport
+     * @covers ::getRendererException
+     * @covers ::getErrorMessage
+     * @covers ::highlightLine
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleError()
@@ -348,6 +353,44 @@ class RendererTest extends AbstractRendererTest
             "implode('','')",
             $message
         );
+    }
+
+    /**
+     * @covers ::handleError
+     * @covers ::callAdapter
+     * @covers ::getDebuggedException
+     * @covers ::hasColorSupport
+     * @covers ::getRendererException
+     * @covers ::getErrorMessage
+     * @covers ::getErrorAsHtml
+     * @covers ::highlightLine
+     * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
+     */
+    public function testHandleHtmlError()
+    {
+        $lastError = null;
+        foreach ([
+             FileAdapter::class,
+             EvalAdapter::class,
+             StreamAdapter::class,
+        ] as $adapter) {
+            $renderer = new Renderer([
+                'debug'              => true,
+                'html_error'         => true,
+                'adapter_class_name' => $adapter,
+                'error_handler'      => function ($error) use (&$lastError) {
+                    $lastError = $error;
+                },
+            ]);
+            $renderer->render('div: p=12/0');
+
+            /* @var RendererException $lastError */
+            self::assertInstanceOf(RendererException::class, $lastError);
+            $message = $lastError->getMessage();
+            self::assertContains('Division by zero on line 1, offset 7', $message);
+            self::assertContains('<span class="error-line">'.
+                'div: p=<span class="error-offset">1</span>2/0</span>', $message);
+        }
     }
 
     /**

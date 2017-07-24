@@ -27,16 +27,13 @@ abstract class AbstractAdapter implements AdapterInterface
     public function captureBuffer(callable $display)
     {
         $throwable = null;
-        ob_start();
         $sandBox = new SandBox($display);
-        $html = ob_get_contents();
-        ob_end_clean();
 
         if ($throwable = $sandBox->getThrowable()) {
             throw $throwable;
         }
 
-        return $html;
+        return $sandBox->getBuffer();
     }
 
     public function render($php, array $parameters)

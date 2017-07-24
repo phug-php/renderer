@@ -154,11 +154,11 @@ class Renderer implements ModuleContainerInterface
             return '<span class="error-line">'.
                 (is_null($offset)
                     ? $lineText
-                    : mb_substr($lineText, 0, $offset + 7).
+                    : mb_substr($lineText, 0, $offset).
                     '<span class="error-offset">'.
-                    mb_substr($lineText, $offset + 7, 1).
+                    mb_substr($lineText, $offset, 1).
                     '</span>'.
-                    mb_substr($lineText, $offset + 8)
+                    mb_substr($lineText, $offset + 1)
                 ).
                 "</span>\n";
         }
@@ -179,7 +179,7 @@ class Renderer implements ModuleContainerInterface
             "\e[0m\n";
     }
 
-    private function outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
+    private function getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
     {
         $sandBox = new SandBox(function () use (
             $error, $start, $message, $code, $parameters, $line, $offset, $untilOffset
@@ -207,10 +207,10 @@ class Renderer implements ModuleContainerInterface
         });
 
         if ($throwable = $sandBox->getThrowable()) {
-            echo '<pre>'.$throwable->getMessage()."\n\n".$throwable->getTraceAsString().'</pre>';
+            return '<pre>'.$throwable->getMessage()."\n\n".$throwable->getTraceAsString().'</pre>';
         }
 
-        exit(1);
+        return $sandBox->getBuffer();
     }
 
     private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
@@ -253,7 +253,7 @@ class Renderer implements ModuleContainerInterface
             }
         }
         if ($htmlError) {
-            $this->outputErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
+            return $this->getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
         }
 
         return $message.$code;
@@ -343,6 +343,12 @@ class Renderer implements ModuleContainerInterface
 
         $handler = $this->getOption('error_handler');
         if (!$handler) {
+            // @codeCoverageIgnoreStart
+            if ($this->getOption('debug') && $this->getOption('html_error')) {
+                echo $exception->getMessage();
+                exit(1);
+            }
+            // @codeCoverageIgnoreEnd
             throw $exception;
         }
 
@@ -359,7 +365,18 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
-    private function handleCache($method, $path, $input, callable $getSource, array $parameters)
+    /**
+     * @param string   $method
+     * @param string   $path
+     * @param string   $input
+     * @param callable $getSource
+     * @param array    $parameters
+     *
+     * @throws RendererException
+     *
+     * @return bool|string|null
+     */
+    public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
         $source = '';
 
@@ -391,29 +408,7 @@ class Renderer implements ModuleContainerInterface
             $this->handleError($error, 1, $path, $source, $parameters);
         }
 
-        return $sandBox->getResult();
-    }
-
-    /**
-     * @param string   $method
-     * @param string   $path
-     * @param string   $input
-     * @param callable $getSource
-     * @param array    $parameters
-     *
-     * @throws RendererException
-     *
-     * @return bool|string|null
-     */
-    public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
-    {
-        $sandBox = new SandBox(function () use ($method, $path, $input, $getSource, $parameters) {
-            return $this->handleCache($method, $path, $input, $getSource, $parameters);
-        });
-
-        if ($throwable = $sandBox->getThrowable()) {
-            throw $throwable;
-        }
+        $sandBox->outputBuffer();
 
         return $sandBox->getResult();
     }
