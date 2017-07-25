@@ -124,7 +124,8 @@ class FileAdapterTest extends AbstractRendererTest
             $message = $error->getMessage();
         }
 
-        self::assertSame('You cannot use "cache" option with '.StreamAdapter::class.
+        self::assertSame(
+            'You cannot use "cache" option with '.StreamAdapter::class.
             ' because this adapter does not implement '.CacheInterface::class,
             $message
         );
@@ -136,7 +137,8 @@ class FileAdapterTest extends AbstractRendererTest
             $message = $error->getMessage();
         }
 
-        self::assertSame('You cannot cache a directory with '.StreamAdapter::class.
+        self::assertSame(
+            'You cannot cache a directory with '.StreamAdapter::class.
             ' because this adapter does not implement '.CacheInterface::class,
             $message
         );

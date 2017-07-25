@@ -7,7 +7,7 @@ class Date extends DateTime
         $timezone = new DateTimeZone('UTC');
         try {
             parent::__construct($time, $timezone);
-        } catch (Exception $e) {
+        } catch (Exception $exception) {
             parent::__construct('now', $timezone);
             $this->setTimestamp($time);
         }

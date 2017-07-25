@@ -43,6 +43,7 @@ class Renderer implements ModuleContainerInterface
             'keep_base_name'        => false,
             'error_handler'         => null,
             'html_error'            => php_sapi_name() !== 'cli',
+            'color_support'         => null,
             'error_context_lines'   => 7,
             'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
                 ? FileAdapter::class
@@ -182,7 +183,14 @@ class Renderer implements ModuleContainerInterface
     private function getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
     {
         $sandBox = new SandBox(function () use (
-            $error, $start, $message, $code, $parameters, $line, $offset, $untilOffset
+            $error,
+            $start,
+            $message,
+            $code,
+            $parameters,
+            $line,
+            $offset,
+            $untilOffset
         ) {
             /* @var \Throwable $error */
             $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
@@ -261,7 +269,10 @@ class Renderer implements ModuleContainerInterface
 
     private function getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters)
     {
-        $colorSupport = $this->hasColorSupport();
+        $colorSupport = $this->getOption('color_support');
+        if (is_null($colorSupport)) {
+            $colorSupport = $this->hasColorSupport();
+        }
         $isPugError = $error instanceof LocatedException;
 
         return new RendererException($this->getErrorMessage(

@@ -300,6 +300,24 @@ class RendererTest extends AbstractRendererTest
                 '12/0',
                 str_replace(' ', '', $message)
             );
+
+            $message = null;
+            $renderer->setOption('color_support', true);
+            try {
+                $renderer->render('div: p=12/0');
+            } catch (RendererException $error) {
+                $message = $error->getMessage();
+            }
+
+            self::assertContains(
+                'Division by zero on line 1',
+                $message
+            );
+
+            self::assertContains(
+                "\033[43;30m>   1 | div: p\033[43;31m=\033[43;30m12/0\e[0m\n",
+                $message
+            );
         }
 
         $message = null;
