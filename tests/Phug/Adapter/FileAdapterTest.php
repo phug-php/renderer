@@ -19,7 +19,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::createTemporaryFile
      * @covers ::getCompiledFile
      * @covers ::getRenderingFile
-     * @covers \Phug\Formatter::getAdapter
+     * @covers \Phug\Renderer::getAdapter
      */
     public function testRender()
     {
