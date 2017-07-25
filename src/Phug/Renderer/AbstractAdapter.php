@@ -2,10 +2,9 @@
 
 namespace Phug\Renderer;
 
-use Exception;
 use Phug\Renderer;
 use Phug\Util\Partial\OptionTrait;
-use Throwable;
+use Phug\Util\SandBox;
 
 abstract class AbstractAdapter implements AdapterInterface
 {
@@ -13,7 +12,7 @@ abstract class AbstractAdapter implements AdapterInterface
 
     private $renderer;
 
-    public function __construct(Renderer $renderer, array $options)
+    public function __construct(Renderer $renderer, $options)
     {
         $this->renderer = $renderer;
 
@@ -28,22 +27,13 @@ abstract class AbstractAdapter implements AdapterInterface
     public function captureBuffer(callable $display)
     {
         $throwable = null;
-        ob_start();
-        try {
-            $display();
-        } catch (Throwable $e) { // PHP 7
-            $throwable = $e;
-        } catch (Exception $e) { // PHP 5
-            $throwable = $e;
-        }
-        $html = ob_get_contents();
-        ob_end_clean();
+        $sandBox = new SandBox($display);
 
-        if ($throwable) {
+        if ($throwable = $sandBox->getThrowable()) {
             throw $throwable;
         }
 
-        return $html;
+        return $sandBox->getBuffer();
     }
 
     public function render($php, array $parameters)

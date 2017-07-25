@@ -8,9 +8,9 @@ use Phug\Util\OptionInterface;
 interface AdapterInterface extends OptionInterface
 {
     /**
-     * @param array $options
+     * @param array|\ArrayObject $options
      */
-    public function __construct(Renderer $renderer, array $options);
+    public function __construct(Renderer $renderer, $options);
 
     public function getRenderer();
 
@@ -33,12 +33,4 @@ interface AdapterInterface extends OptionInterface
      * @param array  $parameters variables names and values
      */
     public function display($php, array $parameters);
-
-    /**
-     * An adapter must declare where the rendering is done
-     * for debugging stack trace to be accurate.
-     *
-     * @return string
-     */
-    public function getRenderingFile();
 }

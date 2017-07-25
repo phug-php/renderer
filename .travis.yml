@@ -21,7 +21,7 @@ install:
     - travis_retry composer install
 
 script:
-    - vendor/bin/phug-dev check --report --ignore-tests
+    - vendor/bin/phug-dev check --report --ignore-tests --ignore-debug
 
 notifications:
     slack: phug:nzXFnxhU14RWK2EQSDL0u08z

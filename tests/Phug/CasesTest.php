@@ -20,6 +20,7 @@ class CasesTest extends AbstractRendererTest
     }
 
     /**
+     * @group cases
      * @dataProvider caseProvider
      * @covers ::compileFile
      * @covers ::render
@@ -28,7 +29,7 @@ class CasesTest extends AbstractRendererTest
     {
         self::assertSameLines(
             file_get_contents($expected),
-            $this->renderer->render($actual),
+            $this->renderer->renderFile($actual),
             $message
         );
     }

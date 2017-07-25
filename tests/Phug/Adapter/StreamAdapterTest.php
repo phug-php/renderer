@@ -14,6 +14,7 @@ class StreamAdapterTest extends AbstractRendererTest
 {
     /**
      * @covers ::<public>
+     * @covers ::setRenderingFile
      * @covers \Phug\Renderer\Adapter\Stream\Template::<public>
      */
     public function testRender()
@@ -22,7 +23,7 @@ class StreamAdapterTest extends AbstractRendererTest
             'adapter_class_name' => StreamAdapter::class,
         ]);
 
-        self::assertSame('<p>Hello</p>', $renderer->renderString('p=$message', [
+        self::assertSame('<p>Hello</p>', $renderer->render('p=$message', [
             'message' => 'Hello',
         ]));
 

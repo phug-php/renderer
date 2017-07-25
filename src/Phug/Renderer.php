@@ -2,7 +2,6 @@
 
 namespace Phug;
 
-use Exception;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
@@ -10,7 +9,7 @@ use Phug\Renderer\CacheInterface;
 use Phug\Util\Exception\LocatedException;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
-use Throwable;
+use Phug\Util\SandBox;
 
 class Renderer implements ModuleContainerInterface
 {
@@ -36,36 +35,32 @@ class Renderer implements ModuleContainerInterface
      */
     private $lastFile;
 
-    public function __construct(array $options = null)
+    public function __construct($options = null)
     {
-        $this->setOptionsRecursive([
+        $this->setOptionsDefaults($options ?: [], [
             'debug'                 => true,
             'up_to_date_check'      => true,
             'keep_base_name'        => false,
             'error_handler'         => null,
             'html_error'            => php_sapi_name() !== 'cli',
+            'color_support'         => null,
             'error_context_lines'   => 7,
             'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
                 ? FileAdapter::class
                 : EvalAdapter::class,
-            'adapter_options'     => [],
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
-            'compiler_options'    => [
-                'formatter_options' => [],
-                'parser_options'    => [
-                    'lexer_options' => [],
-                ],
-                'filters' => [
-                    'cdata' => function ($contents) {
-                        return '<![CDATA['.trim($contents).']]>';
-                    },
-                ],
+            'filters'             => [
+                'cdata' => function ($contents) {
+                    return '<![CDATA['.trim($contents).']]>';
+                },
             ],
         ]);
-        $this->setOptionsRecursive($options ?: []);
-        $this->forwardOptions();
+
+        $this->handleOptionAliases();
+
+        $options = $this->getOptions();
 
         $compilerClassName = $this->getOption('compiler_class_name');
 
@@ -76,7 +71,7 @@ class Renderer implements ModuleContainerInterface
             );
         }
 
-        $this->compiler = new $compilerClassName($this->getOption('compiler_options'));
+        $this->compiler = new $compilerClassName($options);
 
         $adapterClassName = $this->getOption('adapter_class_name');
 
@@ -86,9 +81,24 @@ class Renderer implements ModuleContainerInterface
                 'not a valid '.AdapterInterface::class
             );
         }
-        $this->adapter = new $adapterClassName($this, $this->getOption('adapter_options'));
+        $this->adapter = new $adapterClassName($this, $options);
 
         $this->addModules($this->getOption('modules'));
+    }
+
+    private function handleOptionAliases()
+    {
+        if ($this->hasOption('basedir')) {
+            $basedir = $this->getOption('basedir');
+            $this->setOption('paths', array_merge(
+                $this->hasOption('paths')
+                    ? (array) $this->getOption('paths')
+                    : [],
+                is_array($basedir)
+                    ? $basedir
+                    : [$basedir]
+            ));
+        }
     }
 
     /**
@@ -105,128 +115,6 @@ class Renderer implements ModuleContainerInterface
     public function getCompiler()
     {
         return $this->compiler;
-    }
-
-    private function forwardOptions()
-    {
-        $options = $this->getOptions();
-
-        //Check for top-level options that are forwarded to specific children
-        $forwardedOptions = [
-            'compiler_options' => [
-                'formatter_options' => [],
-                'parser_options'    => [
-                    'lexer_options' => [],
-                ],
-            ],
-        ];
-
-        //Compiler
-        foreach ([
-            'basedir',
-            'paths',
-            'debug',
-            'extensions',
-            'default_tag',
-            'filters',
-            'parser_class_name',
-            'parser_options',
-            'formatter_class_name',
-            'formatter_options',
-            'mixins_storage_mode',
-            'node_compilers',
-        ] as $optionName) {
-            if (isset($options[$optionName])) {
-                $forwardedOptions['compiler_options'][$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($options['compiler_modules'])) {
-            $forwardedOptions['compiler_options']['modules'] = $options['compiler_modules'];
-        }
-
-        if (isset($forwardedOptions['compiler_options']['basedir'])) {
-            $forwardedOptions['compiler_options']['paths'] = array_merge(
-                isset($forwardedOptions['compiler_options']['paths'])
-                    ? (array) $forwardedOptions['compiler_options']['paths']
-                    : [],
-                is_array($forwardedOptions['compiler_options']['basedir'])
-                    ? $forwardedOptions['compiler_options']['basedir']
-                    : [$forwardedOptions['compiler_options']['basedir']]
-            );
-        }
-
-        //Formatter
-        foreach ([
-            'debug',
-            'dependencies_storage',
-            'default_format',
-            'formats',
-            'inline_tags',
-            'self_closing_tags',
-            'pattern',
-            'patterns',
-            'attribute_assignments',
-            'assignment_handlers',
-            'pretty',
-        ] as $optionName) {
-            if (isset($options[$optionName])) {
-                $forwardedOptions['compiler_options']['formatter_options'][$optionName] = $options[$optionName];
-            }
-        }
-
-        if (isset($options['formatter_modules'])) {
-            $forwardedOptions['compiler_options']['formatter_options']['modules'] = $options['formatter_modules'];
-        }
-
-        if (isset($options['formatter_options'])) {
-            $forwardedOptions['compiler_options']['formatter_options'] = array_replace_recursive(
-                $forwardedOptions['compiler_options']['formatter_options'],
-                $options['formatter_options']
-            );
-        }
-
-        //Parser
-        if (isset($options['parser_modules'])) {
-            $forwardedOptions['compiler_options']['parser_options']['modules'] = $options['parser_modules'];
-        }
-
-        if (isset($options['parser_options'])) {
-            $forwardedOptions['compiler_options']['parser_options'] = array_replace_recursive(
-                $forwardedOptions['compiler_options']['parser_options'],
-                $options['parser_options']
-            );
-        }
-
-        //Lexer
-        $parserOptions = &$forwardedOptions['compiler_options']['parser_options'];
-        if (isset($options['lexer_modules'])) {
-            $parserOptions['lexer_options']['modules'] = $options['lexer_modules'];
-        }
-
-        if (isset($options['lexer_options'])) {
-            $parserOptions['lexer_options'] = array_replace_recursive(
-                $parserOptions['lexer_options'],
-                $options['lexer_options']
-            );
-        }
-
-        //Adapters
-        if (is_a($this->getOption('adapter_class_name'), FileAdapter::class, true)) {
-            foreach ([
-                'cache_dir',
-                'tmp_dir',
-                'tmp_name_function',
-                'keep_base_name',
-                'modified_check',
-            ] as $optionName) {
-                if (isset($options[$optionName])) {
-                    $forwardedOptions['adapter_options'][$optionName] = $options[$optionName];
-                }
-            }
-        }
-
-        $this->setOptionsRecursive($forwardedOptions);
     }
 
     private function mergeWithSharedVariables(array $parameters)
@@ -267,11 +155,11 @@ class Renderer implements ModuleContainerInterface
             return '<span class="error-line">'.
                 (is_null($offset)
                     ? $lineText
-                    : mb_substr($lineText, 0, $offset + 7).
+                    : mb_substr($lineText, 0, $offset).
                     '<span class="error-offset">'.
-                    mb_substr($lineText, $offset + 7, 1).
+                    mb_substr($lineText, $offset, 1).
                     '</span>'.
-                    mb_substr($lineText, $offset + 8)
+                    mb_substr($lineText, $offset + 1)
                 ).
                 "</span>\n";
         }
@@ -290,6 +178,47 @@ class Renderer implements ModuleContainerInterface
                 mb_substr($lineText, $offset + 8)
             ).
             "\e[0m\n";
+    }
+
+    private function getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
+    {
+        $sandBox = new SandBox(function () use (
+            $error,
+            $start,
+            $message,
+            $code,
+            $parameters,
+            $line,
+            $offset,
+            $untilOffset
+        ) {
+            /* @var \Throwable $error */
+            $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
+            (new static([
+                'debug'   => false,
+                'filters' => [
+                    'no-php' => function ($text) {
+                        return str_replace('<?', '<<?= "?" ?>', $text);
+                    },
+                ],
+            ]))->displayFile(__DIR__.'/../debug/index.pug', [
+                'title'       => $error->getMessage(),
+                'trace'       => $trace,
+                'start'       => $start,
+                'untilOffset' => htmlspecialchars($untilOffset),
+                'line'        => $line,
+                'offset'      => $offset,
+                'message'     => trim($message),
+                'code'        => $code,
+                'parameters'  => $parameters ? print_r($parameters, true) : '',
+            ]);
+        });
+
+        if ($throwable = $sandBox->getThrowable()) {
+            return '<pre>'.$throwable->getMessage()."\n\n".$throwable->getTraceAsString().'</pre>';
+        }
+
+        return $sandBox->getBuffer();
     }
 
     private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
@@ -332,35 +261,76 @@ class Renderer implements ModuleContainerInterface
             }
         }
         if ($htmlError) {
-            static::cleanBuffers();
-            try {
-                $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
-                (new static([
-                    'debug'   => false,
-                    'filters' => [
-                        'no-php' => function ($text) {
-                            return str_replace('<?', '<<?= "?" ?>', $text);
-                        },
-                    ],
-                ]))->displayFile(__DIR__.'/../debug/index.pug', [
-                    'title'       => $error->getMessage(),
-                    'trace'       => $trace,
-                    'start'       => $start,
-                    'untilOffset' => htmlspecialchars($untilOffset),
-                    'line'        => $line,
-                    'offset'      => $offset,
-                    'message'     => trim($message),
-                    'code'        => $code,
-                    'parameters'  => $parameters ? print_r($parameters, true) : '',
-                ]);
-            } catch (\Throwable $exception) {
-                echo '<pre>'.$exception->getMessage()."\n\n".$exception->getTraceAsString().'</pre>';
-            }
-
-            exit(1);
+            return $this->getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
         }
 
         return $message.$code;
+    }
+
+    private function getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters)
+    {
+        $colorSupport = $this->getOption('color_support');
+        if (is_null($colorSupport)) {
+            $colorSupport = $this->hasColorSupport();
+        }
+        $isPugError = $error instanceof LocatedException;
+
+        return new RendererException($this->getErrorMessage(
+            $error,
+            $isPugError ? $error->getLocation()->getLine() : $line,
+            $isPugError ? $error->getLocation()->getOffset() : $offset,
+            $isPugError && ($path = $error->getLocation()->getPath())
+                ? file_get_contents($path)
+                : $source,
+            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
+            $colorSupport,
+            $parameters
+        ), $code, $error);
+    }
+
+    private function hasColorSupport()
+    {
+        return DIRECTORY_SEPARATOR === '\\'
+            ? false !== getenv('ANSICON') ||
+            'ON' === getenv('ConEmuANSI') ||
+            false !== getenv('BABUN_HOME')
+            : (false !== getenv('BABUN_HOME')) ||
+            function_exists('posix_isatty') &&
+            @posix_isatty(STDOUT);
+    }
+
+    private function getDebuggedException($error, $code, $source, $path, $parameters)
+    {
+        /* @var \Throwable $error */
+        $isLocatedError = $error instanceof LocatedException;
+
+        if ($isLocatedError && is_null($error->getLine())) {
+            return $error;
+        }
+
+        $pugError = $isLocatedError
+            ? $error
+            : $this->getCompiler()->getFormatter()->getDebugError(
+                $error,
+                $source,
+                $path
+            );
+
+        if (!($pugError instanceof LocatedException)) {
+            return $pugError;
+        }
+
+        $line = $pugError->getLocation()->getLine();
+        $offset = $pugError->getLocation()->getOffset();
+        $sourcePath = $pugError->getLocation()->getPath() ?: $path;
+
+        if ($sourcePath && !file_exists($sourcePath)) {
+            return $error;
+        }
+
+        $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
+
+        return $this->getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters);
     }
 
     /**
@@ -373,68 +343,27 @@ class Renderer implements ModuleContainerInterface
      * @param array      $parameters
      *
      * @throws RendererException
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function handleError($error, $code, $path, $source, $parameters = null)
     {
-        /* @var Throwable $error */
-        $offset = null;
-        $exception = $error;
-        if ($this->getOption('debug')) {
-            $isLocatedError = $error instanceof LocatedException;
-            if ($isLocatedError && is_null($error->getLine())) {
-                static::cleanBuffers();
-                throw $error;
-            }
-            $pugError = $isLocatedError
-                ? $error
-                : $this->getCompiler()->getFormatter()->getDebugError(
-                    $error,
-                    $source,
-                    $this->getAdapter()->getRenderingFile()
-                );
-            if (!($pugError instanceof LocatedException)) {
-                static::cleanBuffers();
-                throw $pugError;
-            }
-            $line = $pugError->getLocation()->getLine();
-            $offset = $pugError->getLocation()->getOffset();
-            $sourcePath = $pugError->getLocation()->getPath() ?: $path;
-            $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
-            $colorSupport = DIRECTORY_SEPARATOR === '\\'
-                ? false !== getenv('ANSICON') ||
-                'ON' === getenv('ConEmuANSI') ||
-                false !== getenv('BABUN_HOME')
-                : (false !== getenv('BABUN_HOME')) ||
-                function_exists('posix_isatty') &&
-                @posix_isatty(STDOUT);
-            $isPugError = $error instanceof LocatedException;
-            $message = $this->getErrorMessage(
-                $error,
-                $isPugError ? $error->getLocation()->getLine() : $line,
-                $isPugError ? $error->getLocation()->getOffset() : $offset,
-                $isPugError ? file_get_contents($error->getLocation()->getPath()) : $source,
-                $isPugError ? $error->getLocation()->getPath() : $sourcePath,
-                $colorSupport,
-                $parameters
-            );
-            $exception = new RendererException($message, $code, $error);
-        }
+        /* @var \Throwable $error */
+        $exception = $this->getOption('debug')
+            ? $this->getDebuggedException($error, $code, $source, $path, $parameters)
+            : $error;
 
         $handler = $this->getOption('error_handler');
         if (!$handler) {
-            static::cleanBuffers();
+            // @codeCoverageIgnoreStart
+            if ($this->getOption('debug') && $this->getOption('html_error')) {
+                echo $exception->getMessage();
+                exit(1);
+            }
+            // @codeCoverageIgnoreEnd
             throw $exception;
         }
 
         $handler($exception);
-    }
-
-    protected static function cleanBuffers()
-    {
-        while (count(ob_list_handlers())) {
-            ob_end_clean();
-        }
     }
 
     private function expectCacheAdapter($adapter)
@@ -460,55 +389,39 @@ class Renderer implements ModuleContainerInterface
      */
     public function callAdapter($method, $path, $input, callable $getSource, array $parameters)
     {
-        if ($this->getOption('debug')) {
-            ob_start();
-        }
-        $render = false;
         $source = '';
 
-        try {
+        $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
             $source = $getSource();
             if ($this->hasOption('cache_dir') && $this->getOption('cache_dir')) {
                 $this->expectCacheAdapter($adapter);
             }
             if ($adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir')) {
+                /* @var CacheInterface $adapter */
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     $adapter->displayCached($path, $input, $getSource, $parameters);
                 };
 
-                return in_array($method, ['display', 'displayString'])
+                return in_array($method, ['display', 'displayFile'])
                     ? $display()
                     : $adapter->captureBuffer($display);
             }
 
-            $render = $adapter->$method(
+            return $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
-        } catch (Throwable $error) {
+        });
+
+        if ($error = $sandBox->getThrowable()) {
             $this->handleError($error, 1, $path, $source, $parameters);
-        } catch (Exception $error) {
-            $this->handleError($error, 2, $path, $source, $parameters);
-        }
-        if ($this->getOption('debug')) {
-            ob_end_flush();
         }
 
-        return $render;
-    }
+        $sandBox->outputBuffer();
 
-    /**
-     * @param string $path input string or path
-     *
-     * @return string
-     */
-    public function compile($path)
-    {
-        $method = file_exists($path) ? 'compileFile' : 'compileString';
-
-        return call_user_func_array([$this, $method], func_get_args());
+        return $sandBox->getResult();
     }
 
     /**
@@ -517,7 +430,7 @@ class Renderer implements ModuleContainerInterface
      *
      * @return string
      */
-    public function compileString($string, $filename)
+    public function compile($string, $filename = null)
     {
         $this->lastString = $string;
         $this->lastFile = $filename;
@@ -538,17 +451,23 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string       $path       input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
+     * @param string $string     input string or path
+     * @param array  $parameters parameters or file name
+     * @param string $filename
      *
      * @return string
      */
-    public function render($path)
+    public function render($string, array $parameters = [], $filename = null)
     {
-        $method = file_exists($path) ? 'renderFile' : 'renderString';
-
-        return call_user_func_array([$this, $method], func_get_args());
+        return $this->callAdapter(
+            'render',
+            null,
+            $string,
+            function () use ($string, $filename) {
+                return $this->compile($string, $filename);
+            },
+            $parameters
+        );
     }
 
     /**
@@ -574,13 +493,11 @@ class Renderer implements ModuleContainerInterface
      * @param string $string     input string or path
      * @param array  $parameters parameters or file name
      * @param string $filename
-     *
-     * @return string
      */
-    public function renderString($string, array $parameters = [], $filename = null)
+    public function display($string, array $parameters = [], $filename = null)
     {
         return $this->callAdapter(
-            'render',
+            'display',
             null,
             $string,
             function () use ($string, $filename) {
@@ -588,18 +505,6 @@ class Renderer implements ModuleContainerInterface
             },
             $parameters
         );
-    }
-
-    /**
-     * @param string       $path       input string or path
-     * @param string|array $parameters parameters or file name
-     * @param string       $filename
-     */
-    public function display($path)
-    {
-        $method = file_exists($path) ? 'displayFile' : 'displayString';
-
-        return call_user_func_array([$this, $method], func_get_args());
     }
 
     /**
@@ -614,24 +519,6 @@ class Renderer implements ModuleContainerInterface
             null,
             function () use ($path) {
                 return $this->compileFile($path);
-            },
-            $parameters
-        );
-    }
-
-    /**
-     * @param string $string     input string or path
-     * @param array  $parameters parameters or file name
-     * @param string $filename
-     */
-    public function displayString($string, array $parameters = [], $filename = null)
-    {
-        return $this->callAdapter(
-            'display',
-            null,
-            $string,
-            function () use ($string, $filename) {
-                return $this->compile($string, $filename);
             },
             $parameters
         );

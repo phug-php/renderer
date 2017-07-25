@@ -25,7 +25,7 @@ class FileAdapterTest extends AbstractRendererTest
             'adapter_class_name' => FileAdapter::class,
         ]);
 
-        self::assertSame('<p>Hello</p>', $renderer->renderString('p=$message', [
+        self::assertSame('<p>Hello</p>', $renderer->render('p=$message', [
             'message' => 'Hello',
         ]));
     }
@@ -33,7 +33,6 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
-     * @covers \Phug\Renderer\Adapter\FileAdapter::setRenderer
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
      * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
@@ -53,25 +52,48 @@ class FileAdapterTest extends AbstractRendererTest
         $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
         file_put_contents($path, 'p=$message');
 
-        self::assertSame('<p>Hi</p>', $renderer->render($path, [
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
 
         $renderer->getAdapter()->setOption('modified_check', false);
         file_put_contents($path, 'div=$message');
 
-        self::assertSame('<p>Hi</p>', $renderer->render($path, [
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
 
         $renderer->getAdapter()->setOption('modified_check', true);
 
-        self::assertSame('<div>Hi</div>', $renderer->render($path, [
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
+    }
+
+    /**
+     * @covers ::<public>
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
+     * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
+     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
+     * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
+     * @covers \Phug\Renderer\AbstractAdapter::<public>
+     * @covers \Phug\Renderer::callAdapter
+     */
+    public function testCacheWithDisplay()
+    {
+        $renderer = new Renderer([
+            'cache_dir' => sys_get_temp_dir(),
+        ]);
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
+        file_put_contents($path, 'p=$message');
 
         ob_start();
-        $renderer->displayString('section=$message', [
+        $renderer->display('section=$message', [
             'message' => 'Hi',
         ]);
         $actual = str_replace(
@@ -85,6 +107,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers \Phug\Renderer::expectCacheAdapter
      * @covers \Phug\Renderer::callAdapter
      * @covers \Phug\Renderer::cacheDirectory
      */
@@ -101,7 +124,8 @@ class FileAdapterTest extends AbstractRendererTest
             $message = $error->getMessage();
         }
 
-        self::assertSame('You cannot use "cache" option with '.StreamAdapter::class.
+        self::assertSame(
+            'You cannot use "cache" option with '.StreamAdapter::class.
             ' because this adapter does not implement '.CacheInterface::class,
             $message
         );
@@ -113,7 +137,8 @@ class FileAdapterTest extends AbstractRendererTest
             $message = $error->getMessage();
         }
 
-        self::assertSame('You cannot cache a directory with '.StreamAdapter::class.
+        self::assertSame(
+            'You cannot cache a directory with '.StreamAdapter::class.
             ' because this adapter does not implement '.CacheInterface::class,
             $message
         );
@@ -182,6 +207,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
