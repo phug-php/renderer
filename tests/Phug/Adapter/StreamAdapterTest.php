@@ -14,6 +14,7 @@ class StreamAdapterTest extends AbstractRendererTest
 {
     /**
      * @covers ::<public>
+     * @covers ::setRenderingFile
      * @covers \Phug\Renderer\Adapter\Stream\Template::<public>
      */
     public function testRender()
