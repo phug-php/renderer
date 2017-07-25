@@ -64,10 +64,10 @@ class Renderer implements ModuleContainerInterface
 
         $compilerClassName = $this->getOption('compiler_class_name');
 
-        if ($compilerClassName !== Compiler::class && !is_a($compilerClassName, Compiler::class, true)) {
+        if (!is_a($compilerClassName, CompilerInterface::class, true)) {
             throw new RendererException(
                 "Passed compiler class $compilerClassName is ".
-                'not a valid '.Compiler::class
+                'not a valid '.CompilerInterface::class
             );
         }
 

@@ -18,16 +18,28 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::<public>
      * @covers ::createTemporaryFile
      * @covers ::getCompiledFile
+     * @covers ::getRenderingFile
+     * @covers \Phug\Formatter::getAdapter
      */
     public function testRender()
     {
         $renderer = new Renderer([
+            'debug'              => false,
             'adapter_class_name' => FileAdapter::class,
         ]);
 
         self::assertSame('<p>Hello</p>', $renderer->render('p=$message', [
             'message' => 'Hello',
         ]));
+
+        $renderer->render('p Hello');
+        /** @var FileAdapter $adapter */
+        $adapter = $renderer->getAdapter();
+
+        self::assertInstanceOf(FileAdapter::class, $adapter);
+        $path = $adapter->getRenderingFile();
+        self::assertFileExists($path);
+        self::assertSame('<p>Hello</p>', file_get_contents($path));
     }
 
     /**

@@ -2,11 +2,13 @@
 
 namespace Phug\Test;
 
+use Phug\CompilerInterface;
 use Phug\LexerException;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\Adapter\StreamAdapter;
+use Phug\Renderer\AdapterInterface;
 use Phug\RendererException;
 
 /**
@@ -371,6 +373,42 @@ class RendererTest extends AbstractRendererTest
             "implode('','')",
             $message
         );
+    }
+
+    /**
+     * @covers ::__construct
+     */
+    public function testCompilerClassNameException()
+    {
+        $message = null;
+        try {
+            new Renderer([
+                'compiler_class_name' => Renderer::class,
+            ]);
+        } catch (RendererException $exception) {
+            $message = $exception->getMessage();
+        }
+
+        self::assertSame('Passed compiler class '.Renderer::class.' is '.
+            'not a valid '.CompilerInterface::class, $message);
+    }
+
+    /**
+     * @covers ::__construct
+     */
+    public function testAdapterClassNameException()
+    {
+        $message = null;
+        try {
+            new Renderer([
+                'adapter_class_name' => Renderer::class,
+            ]);
+        } catch (RendererException $exception) {
+            $message = $exception->getMessage();
+        }
+
+        self::assertSame('Passed adapter class '.Renderer::class.' is '.
+            'not a valid '.AdapterInterface::class, $message);
     }
 
     /**
