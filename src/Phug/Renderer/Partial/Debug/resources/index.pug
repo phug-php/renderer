@@ -3,7 +3,7 @@ html
     head
         meta(charset="utf-8")
         title=$title
-        style: include:no-php ./prism.css
+        style: include:no-php prism.css
     body
         pre=$message
         pre.line-numbers(
@@ -19,4 +19,4 @@ html
             pre: code.language-php
                 ='$parameters = '
                 !=$parameters
-        script: include:no-php ./prism.js
+        script: include:no-php prism.js

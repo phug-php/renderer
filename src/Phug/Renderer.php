@@ -6,7 +6,7 @@ use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
-use Phug\Util\Exception\LocatedException;
+use Phug\Renderer\Partial\Debug\DebuggerTrait;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\SandBox;
@@ -14,6 +14,7 @@ use Phug\Util\SandBox;
 class Renderer implements ModuleContainerInterface
 {
     use ModuleContainerTrait;
+    use DebuggerTrait;
 
     /**
      * @var Compiler
@@ -24,16 +25,6 @@ class Renderer implements ModuleContainerInterface
      * @var AdapterInterface
      */
     private $adapter;
-
-    /**
-     * @var string
-     */
-    private $lastString;
-
-    /**
-     * @var string
-     */
-    private $lastFile;
 
     public function __construct($options = null)
     {
@@ -149,223 +140,6 @@ class Renderer implements ModuleContainerInterface
         return $this->setOption('shared_variables', []);
     }
 
-    private function highlightLine($lineText, $colored, $offset)
-    {
-        if ($this->getOption('html_error')) {
-            return '<span class="error-line">'.
-                (is_null($offset)
-                    ? $lineText
-                    : mb_substr($lineText, 0, $offset).
-                    '<span class="error-offset">'.
-                    mb_substr($lineText, $offset, 1).
-                    '</span>'.
-                    mb_substr($lineText, $offset + 1)
-                ).
-                "</span>\n";
-        }
-
-        if (!$colored) {
-            return "$lineText\n";
-        }
-
-        return "\033[43;30m".
-            (is_null($offset)
-                ? $lineText
-                : mb_substr($lineText, 0, $offset + 7).
-                "\033[43;31m".
-                mb_substr($lineText, $offset + 7, 1).
-                "\033[43;30m".
-                mb_substr($lineText, $offset + 8)
-            ).
-            "\e[0m\n";
-    }
-
-    private function getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
-    {
-        $sandBox = new SandBox(function () use (
-            $error,
-            $start,
-            $message,
-            $code,
-            $parameters,
-            $line,
-            $offset,
-            $untilOffset
-        ) {
-            /* @var \Throwable $error */
-            $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
-            (new static([
-                'debug'   => false,
-                'filters' => [
-                    'no-php' => function ($text) {
-                        return str_replace('<?', '<<?= "?" ?>', $text);
-                    },
-                ],
-            ]))->displayFile(__DIR__.'/../debug/index.pug', [
-                'title'       => $error->getMessage(),
-                'trace'       => $trace,
-                'start'       => $start,
-                'untilOffset' => htmlspecialchars($untilOffset),
-                'line'        => $line,
-                'offset'      => $offset,
-                'message'     => trim($message),
-                'code'        => $code,
-                'parameters'  => $parameters ? print_r($parameters, true) : '',
-            ]);
-        });
-
-        if ($throwable = $sandBox->getThrowable()) {
-            return '<pre>'.$throwable->getMessage()."\n\n".$throwable->getTraceAsString().'</pre>';
-        }
-
-        return $sandBox->getBuffer();
-    }
-
-    private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters = null)
-    {
-        $source = explode("\n", rtrim($source));
-        $errorType = get_class($error);
-        $message = $errorType;
-        if ($path) {
-            $message .= ' in '.$path;
-        }
-        $message .= ":\n".$error->getMessage().' on line '.$line.
-            (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
-        $contextLines = $this->getOption('error_context_lines');
-        $code = '';
-        $untilOffset = mb_substr($source[$line - 1], 0, $offset ?: 0) ?: '';
-        $htmlError = $this->getOption('html_error');
-        $start = null;
-        foreach ($source as $index => $lineText) {
-            if (abs($index + 1 - $line) > $contextLines) {
-                continue;
-            }
-            if (is_null($start)) {
-                $start = $index + 1;
-            }
-            $number = strval($index + 1);
-            $markLine = $line - 1 === $index;
-            if (!$htmlError) {
-                $lineText = ($markLine ? '>' : ' ').
-                    str_repeat(' ', 4 - mb_strlen($number)).$number.' | '.
-                    $lineText;
-            }
-            if (!$markLine) {
-                $code .= $lineText."\n";
-
-                continue;
-            }
-            $code .= $this->highlightLine($lineText, $colored, $offset);
-            if (!$htmlError && !is_null($offset)) {
-                $code .= str_repeat('-', $offset + 7)."^\n";
-            }
-        }
-        if ($htmlError) {
-            return $this->getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
-        }
-
-        return $message.$code;
-    }
-
-    private function getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters)
-    {
-        $colorSupport = $this->getOption('color_support');
-        if (is_null($colorSupport)) {
-            $colorSupport = $this->hasColorSupport();
-        }
-        $isPugError = $error instanceof LocatedException;
-
-        return new RendererException($this->getErrorMessage(
-            $error,
-            $isPugError ? $error->getLocation()->getLine() : $line,
-            $isPugError ? $error->getLocation()->getOffset() : $offset,
-            $isPugError && ($path = $error->getLocation()->getPath())
-                ? file_get_contents($path)
-                : $source,
-            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
-            $colorSupport,
-            $parameters
-        ), $code, $error);
-    }
-
-    private function hasColorSupport()
-    {
-        return DIRECTORY_SEPARATOR === '\\'
-            ? false !== getenv('ANSICON') ||
-            'ON' === getenv('ConEmuANSI') ||
-            false !== getenv('BABUN_HOME')
-            : (false !== getenv('BABUN_HOME')) ||
-            function_exists('posix_isatty') &&
-            @posix_isatty(STDOUT);
-    }
-
-    private function getDebuggedException($error, $code, $source, $path, $parameters)
-    {
-        /* @var \Throwable $error */
-        $isLocatedError = $error instanceof LocatedException;
-
-        if ($isLocatedError && is_null($error->getLine())) {
-            return $error;
-        }
-
-        $pugError = $isLocatedError
-            ? $error
-            : $this->getCompiler()->getFormatter()->getDebugError(
-                $error,
-                $source,
-                $path
-            );
-
-        if (!($pugError instanceof LocatedException)) {
-            return $pugError;
-        }
-
-        $line = $pugError->getLocation()->getLine();
-        $offset = $pugError->getLocation()->getOffset();
-        $sourcePath = $pugError->getLocation()->getPath() ?: $path;
-
-        if ($sourcePath && !file_exists($sourcePath)) {
-            return $error;
-        }
-
-        $source = $sourcePath ? file_get_contents($sourcePath) : $this->lastString;
-
-        return $this->getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters);
-    }
-
-    /**
-     * Handle error occurred in compiled PHP.
-     *
-     * @param \Throwable $error
-     * @param int        $code
-     * @param string     $path
-     * @param string     $source
-     * @param array      $parameters
-     *
-     * @throws RendererException
-     * @throws \Throwable
-     */
-    public function handleError($error, $code, $path, $source, $parameters = null)
-    {
-        /* @var \Throwable $error */
-        $exception = $this->getOption('debug')
-            ? $this->getDebuggedException($error, $code, $source, $path, $parameters)
-            : $error;
-
-        $handler = $this->getOption('error_handler');
-        if (!$handler) {
-            // @codeCoverageIgnoreStart
-            if ($this->getOption('debug') && $this->getOption('html_error')) {
-                echo $exception->getMessage();
-                exit(1);
-            }
-            // @codeCoverageIgnoreEnd
-            throw $exception;
-        }
-
-        $handler($exception);
-    }
-
     private function expectCacheAdapter($adapter)
     {
         if (!($adapter instanceof CacheInterface)) {
@@ -416,7 +190,13 @@ class Renderer implements ModuleContainerInterface
         });
 
         if ($error = $sandBox->getThrowable()) {
-            $this->handleError($error, 1, $path, $source, $parameters);
+            $this->handleError($error, 1, $path, $source, $parameters, [
+                'debug'               => $this->getOption('debug'),
+                'error_handler'       => $this->getOption('error_handler'),
+                'html_error'          => $this->getOption('html_error'),
+                'error_context_lines' => $this->getOption('error_context_lines'),
+                'color_support'       => $this->getOption('color_support'),
+            ]);
         }
 
         $sandBox->outputBuffer();
@@ -432,10 +212,13 @@ class Renderer implements ModuleContainerInterface
      */
     public function compile($string, $filename = null)
     {
-        $this->lastString = $string;
-        $this->lastFile = $filename;
+        $compiler = $this->getCompiler();
 
-        return $this->compiler->compile($string, $filename);
+        $this->setDebugString($string);
+        $this->setDebugFile($filename);
+        $this->setDebugFormatter($compiler->getFormatter());
+
+        return $compiler->compile($string, $filename);
     }
 
     /**
@@ -445,9 +228,12 @@ class Renderer implements ModuleContainerInterface
      */
     public function compileFile($path)
     {
-        $this->lastFile = $path;
+        $compiler = $this->getCompiler();
 
-        return $this->compiler->compileFile($path);
+        $this->setDebugFile($path);
+        $this->setDebugFormatter($compiler->getFormatter());
+
+        return $compiler->compileFile($path);
     }
 
     /**

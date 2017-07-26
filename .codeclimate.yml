@@ -12,6 +12,15 @@ engines:
     enabled: true
   phpmd:
     enabled: true
+    checks:
+      Controversial/CamelCaseParameterName:
+        enabled: true
+        exclude_paths:
+        - src/Phug/Renderer/Adapter/
+      Design/EvalExpression:
+        enabled: true
+        exclude_paths:
+        - src/Phug/Renderer/Adapter/EvalAdapter.php
 ratings:
   paths:
   - "**.inc"
