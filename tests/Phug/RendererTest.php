@@ -251,6 +251,10 @@ class RendererTest extends AbstractRendererTest
      * @covers ::handleError
      * @covers ::callAdapter
      * @covers ::getDebuggedException
+     * @covers ::setDebugFile
+     * @covers ::setDebugString
+     * @covers ::setDebugFormatter
+     * @covers ::getDebugFormatter
      * @covers ::hasColorSupport
      * @covers ::getRendererException
      * @covers ::getErrorMessage
@@ -415,6 +419,10 @@ class RendererTest extends AbstractRendererTest
      * @covers ::handleError
      * @covers ::callAdapter
      * @covers ::getDebuggedException
+     * @covers ::setDebugFile
+     * @covers ::setDebugString
+     * @covers ::setDebugFormatter
+     * @covers ::getDebugFormatter
      * @covers ::hasColorSupport
      * @covers ::getRendererException
      * @covers ::getErrorMessage
@@ -456,6 +464,10 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getRendererException
      * @covers ::hasColorSupport
      * @covers ::getDebuggedException
+     * @covers ::setDebugFile
+     * @covers ::setDebugString
+     * @covers ::setDebugFormatter
+     * @covers ::getDebugFormatter
      * @covers ::handleError
      * @covers ::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer

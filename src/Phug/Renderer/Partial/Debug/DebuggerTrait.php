@@ -169,6 +169,7 @@ trait DebuggerTrait
 
     private function hasColorSupport()
     {
+        // @codeCoverageIgnoreStart
         return DIRECTORY_SEPARATOR === '\\'
             ? false !== getenv('ANSICON') ||
             'ON' === getenv('ConEmuANSI') ||
@@ -176,6 +177,7 @@ trait DebuggerTrait
             : (false !== getenv('BABUN_HOME')) ||
             function_exists('posix_isatty') &&
             @posix_isatty(STDOUT);
+        // @codeCoverageIgnoreEnd
     }
 
     private function getDebuggedException($error, $code, $source, $path, $parameters, $options)
