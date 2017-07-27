@@ -1,0 +1,6 @@
+style: include:no-php profiler.css
+.profiler
+    each $process in $processes
+        .bar(style=$process->style)
+            =$process->link
+script: include:no-php profiler.js

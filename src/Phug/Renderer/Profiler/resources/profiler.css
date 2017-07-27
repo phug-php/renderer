@@ -1,0 +1,21 @@
+.profiler {
+    z-index: 9999;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    width: 100%;
+    background: #f5f5f5;
+    border-top: 1px solid black;
+}
+.profiler .bar {
+    background: #f0ad4e;
+    position: absolute;
+    height: 30px;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    border: 1px solid #88622e;
+}

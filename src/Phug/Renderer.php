@@ -2,6 +2,7 @@
 
 namespace Phug;
 
+use ArrayObject;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
@@ -78,6 +79,21 @@ class Renderer implements ModuleContainerInterface
 
         $this->compiler = new $compilerClassName($options);
 
+        if ($this->getOption('enable_profiler')) {
+            $this->setOptionsDefaults([
+                'profiler_time_precision' => 1000,
+            ]);
+            $events = new ArrayObject();
+            $this->addModule(new ProfilerModule($events, $this));
+            $this->compiler->addModule(new ProfilerModule($events, $this->compiler));
+            $formatter = $this->compiler->getFormatter();
+            $formatter->addModule(new ProfilerModule($events, $formatter));
+            $parser = $this->compiler->getParser();
+            $parser->addModule(new ProfilerModule($events, $parser));
+            $lexer = $parser->getLexer();
+            $lexer->addModule(new ProfilerModule($events, $lexer));
+        }
+
         $adapterClassName = $this->getOption('adapter_class_name');
 
         if (!is_a($adapterClassName, AdapterInterface::class, true)) {
@@ -88,9 +104,6 @@ class Renderer implements ModuleContainerInterface
         }
         $this->adapter = new $adapterClassName($this, $options);
 
-        if ($this->getOption('enable_profiler')) {
-            $this->addModule(ProfilerModule::class);
-        }
         $this->addModules($this->getOption('modules'));
     }
 
@@ -182,12 +195,12 @@ class Renderer implements ModuleContainerInterface
     {
         $source = '';
 
-        $event = new RenderEvent($input, $path, $method, $parameters);
-        $this->trigger($event);
-        $input = $event->getInput();
-        $path = $event->getPath();
-        $method = $event->getMethod();
-        $parameters = $event->getParameters();
+        $renderEvent = new RenderEvent($input, $path, $method, $parameters);
+        $this->trigger($renderEvent);
+        $input = $renderEvent->getInput();
+        $path = $renderEvent->getPath();
+        $method = $renderEvent->getMethod();
+        $parameters = $renderEvent->getParameters();
 
         $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
@@ -213,10 +226,10 @@ class Renderer implements ModuleContainerInterface
             );
         });
 
-        $event = new HtmlEvent($sandBox->getResult(), $sandBox->getBuffer(), $sandBox->getThrowable());
-        $this->trigger($event);
+        $htmlEvent = new HtmlEvent($renderEvent, $sandBox->getResult(), $sandBox->getBuffer(), $sandBox->getThrowable());
+        $this->trigger($htmlEvent);
 
-        if ($error = $event->getError()) {
+        if ($error = $htmlEvent->getError()) {
             $this->handleError($error, 1, $path, $source, $parameters, [
                 'debug'               => $this->getOption('debug'),
                 'error_handler'       => $this->getOption('error_handler'),
@@ -226,11 +239,11 @@ class Renderer implements ModuleContainerInterface
             ]);
         }
 
-        if ($buffer = $event->getBuffer()) {
+        if ($buffer = $htmlEvent->getBuffer()) {
             echo $buffer;
         }
 
-        return $event->getResult();
+        return $htmlEvent->getResult();
     }
 
     /**
