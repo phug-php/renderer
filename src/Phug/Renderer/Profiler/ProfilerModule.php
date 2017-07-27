@@ -46,7 +46,7 @@ class ProfilerModule extends AbstractRendererModule
         $start = $this->events[0]->getParam('__time');
 
         return implode("\n", array_map(function (Event $event) use ($start) {
-            return str_pad($event->getParam('__time') - $start, 30,' ').$event->getName();
+            return str_pad($event->getParam('__time') - $start, 30, ' ').$event->getName();
         }, $this->events));
     }
 
