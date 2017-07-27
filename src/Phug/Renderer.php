@@ -6,6 +6,8 @@ use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
+use Phug\Renderer\Event\HtmlEvent;
+use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
@@ -42,12 +44,22 @@ class Renderer implements ModuleContainerInterface
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
+            'on_render'           => null,
+            'on_html'             => null,
             'filters'             => [
                 'cdata' => function ($contents) {
                     return '<![CDATA['.trim($contents).']]>';
                 },
             ],
         ]);
+
+        if ($onRender = $this->getOption('on_render')) {
+            $this->attach(RendererEvent::RENDER, $onRender);
+        }
+
+        if ($onHtml = $this->getOption('on_html')) {
+            $this->attach(RendererEvent::HTML, $onHtml);
+        }
 
         $this->handleOptionAliases();
 
@@ -165,9 +177,16 @@ class Renderer implements ModuleContainerInterface
     {
         $source = '';
 
+        $event = new RenderEvent($input, $path, $method, $parameters);
+        $this->trigger($event);
+        $input = $event->getInput();
+        $path = $event->getPath();
+        $method = $event->getMethod();
+        $parameters = $event->getParameters();
+
         $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
-            $source = $getSource();
+            $source = $getSource($path, $input);
             if ($this->hasOption('cache_dir') && $this->getOption('cache_dir')) {
                 $this->expectCacheAdapter($adapter);
             }
@@ -189,7 +208,10 @@ class Renderer implements ModuleContainerInterface
             );
         });
 
-        if ($error = $sandBox->getThrowable()) {
+        $event = new HtmlEvent($sandBox->getResult(), $sandBox->getBuffer(), $sandBox->getThrowable());
+        $this->trigger($event);
+
+        if ($error = $event->getError()) {
             $this->handleError($error, 1, $path, $source, $parameters, [
                 'debug'               => $this->getOption('debug'),
                 'error_handler'       => $this->getOption('error_handler'),
@@ -199,9 +221,11 @@ class Renderer implements ModuleContainerInterface
             ]);
         }
 
-        $sandBox->outputBuffer();
+        if ($buffer = $event->getBuffer()) {
+            echo $buffer;
+        }
 
-        return $sandBox->getResult();
+        return $event->getResult();
     }
 
     /**
@@ -249,8 +273,8 @@ class Renderer implements ModuleContainerInterface
             'render',
             null,
             $string,
-            function () use ($string, $filename) {
-                return $this->compile($string, $filename);
+            function ($path, $input) use ($filename) {
+                return $this->compile($input, $filename);
             },
             $parameters
         );
@@ -268,7 +292,7 @@ class Renderer implements ModuleContainerInterface
             'render',
             $path,
             null,
-            function () use ($path) {
+            function ($path) {
                 return $this->compileFile($path);
             },
             $parameters
@@ -286,8 +310,8 @@ class Renderer implements ModuleContainerInterface
             'display',
             null,
             $string,
-            function () use ($string, $filename) {
-                return $this->compile($string, $filename);
+            function ($path, $input) use ($filename) {
+                return $this->compile($input, $filename);
             },
             $parameters
         );
@@ -303,7 +327,7 @@ class Renderer implements ModuleContainerInterface
             'display',
             $path,
             null,
-            function () use ($path) {
+            function ($path) {
                 return $this->compileFile($path);
             },
             $parameters

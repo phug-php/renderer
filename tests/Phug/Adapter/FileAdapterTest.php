@@ -43,6 +43,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @group i
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
