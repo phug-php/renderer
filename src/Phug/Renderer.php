@@ -9,6 +9,7 @@ use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
+use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\SandBox;
@@ -32,6 +33,7 @@ class Renderer implements ModuleContainerInterface
     {
         $this->setOptionsDefaults($options ?: [], [
             'debug'                 => true,
+            'enable_profiler'       => false,
             'up_to_date_check'      => true,
             'keep_base_name'        => false,
             'error_handler'         => null,
@@ -86,6 +88,9 @@ class Renderer implements ModuleContainerInterface
         }
         $this->adapter = new $adapterClassName($this, $options);
 
+        if ($this->getOption('enable_profiler')) {
+            $this->addModule(ProfilerModule::class);
+        }
         $this->addModules($this->getOption('modules'));
     }
 
