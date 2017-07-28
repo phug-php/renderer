@@ -47,6 +47,7 @@ class Renderer implements ModuleContainerInterface
             'shared_variables'    => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
+            'self'                => false,
             'on_render'           => null,
             'on_html'             => null,
             'filters'             => [
@@ -105,6 +106,41 @@ class Renderer implements ModuleContainerInterface
         $this->adapter = new $adapterClassName($this, $options);
 
         $this->addModules($this->getOption('modules'));
+        foreach ($this->getStaticModules() as $moduleClassName) {
+            $interfaces = class_implements($moduleClassName);
+            if (in_array(CompilerModuleInterface::class, $interfaces) &&
+                !$this->compiler->hasModule($moduleClassName)
+            ) {
+                $this->compiler->addModule($moduleClassName);
+                $this->setOptionsRecursive([
+                    'compiler_options' => $moduleClassName,
+                ]);
+            }
+            if (in_array(FormatterModuleInterface::class, $interfaces) &&
+                !$this->compiler->getFormatter()->hasModule($moduleClassName)
+            ) {
+                $this->compiler->getFormatter()->addModule($moduleClassName);
+                $this->setOptionsRecursive([
+                    'formatter_options' => $moduleClassName,
+                ]);
+            }
+            if (in_array(ParserModuleInterface::class, $interfaces) &&
+                !$this->compiler->getParser()->hasModule($moduleClassName)
+            ) {
+                $this->compiler->getParser()->addModule($moduleClassName);
+                $this->setOptionsRecursive([
+                    'parser_options' => $moduleClassName,
+                ]);
+            }
+            if (in_array(LexerModuleInterface::class, $interfaces) &&
+                !$this->compiler->getParser()->getLexer()->hasModule($moduleClassName)
+            ) {
+                $this->compiler->getParser()->getLexer()->addModule($moduleClassName);
+                $this->setOptionsRecursive([
+                    'lexer_options' => $moduleClassName,
+                ]);
+            }
+        }
     }
 
     private function handleOptionAliases()
@@ -201,6 +237,12 @@ class Renderer implements ModuleContainerInterface
         $path = $renderEvent->getPath();
         $method = $renderEvent->getMethod();
         $parameters = $renderEvent->getParameters();
+        if ($self = $this->getOption('self')) {
+            $self = $self === true ? 'self' : strval($self);
+            $parameters = [
+                $self => $parameters,
+            ];
+        }
 
         $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
