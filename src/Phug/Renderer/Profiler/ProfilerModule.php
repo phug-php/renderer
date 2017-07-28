@@ -154,7 +154,7 @@ class ProfilerModule extends AbstractModule
                 $style = [
                     'left'   => ($min * 100 / $duration).'%',
                     'width'  => (($end - $min) * 100 / $duration).'%',
-                    'bottom' => ($index * $lineHeight).'px',
+                    'bottom' => (($index + 1) * $lineHeight).'px',
                 ];
                 if ($currentEvent instanceof FormatEvent) {
                     $style['background'] = '#d8ffd8';
@@ -188,7 +188,8 @@ class ProfilerModule extends AbstractModule
                 },
             ],
         ]))->renderFile(__DIR__.'/resources/index.pug', [
-            'processes'      => $processes,
+            'processes' => $processes,
+            'duration'  => $this->getDuration($duration),
         ]);
 
         if ($log) {
@@ -222,7 +223,7 @@ class ProfilerModule extends AbstractModule
         }
     }
 
-    static public function recordProfilerDisplayEvent($profilerId, $nodeId)
+    public static function recordProfilerDisplayEvent($profilerId, $nodeId)
     {
         /** @var ProfilerModule $profiler */
         $profiler = static::$profilers[$profilerId];

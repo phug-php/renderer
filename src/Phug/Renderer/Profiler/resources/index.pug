@@ -1,5 +1,8 @@
 style: include:no-php profiler.css
 .profiler
+    | TOTAL
+    br
+    =$duration
     each $process in $processes
         .bar(style=$process->style)
             =$process->link
