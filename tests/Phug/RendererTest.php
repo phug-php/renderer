@@ -2,6 +2,7 @@
 
 namespace Phug\Test;
 
+use JsPhpize\JsPhpizePhug;
 use Phug\CompilerInterface;
 use Phug\LexerException;
 use Phug\Renderer;
@@ -413,6 +414,68 @@ class RendererTest extends AbstractRendererTest
 
         self::assertSame('Passed adapter class '.Renderer::class.' is '.
             'not a valid '.AdapterInterface::class, $message);
+    }
+
+    /**
+     * @group i
+     * @covers ::__construct
+     * @covers ::callAdapter
+     */
+    public function testSelfOption()
+    {
+        $renderer = new Renderer([
+            'self'    => false,
+            'modules' => [JsPhpizePhug::class],
+        ]);
+
+        self::assertSame('bar', $renderer->render('=foo', [
+            'foo' => 'bar',
+        ]));
+        self::assertSame('bar', $renderer->render('=foo', [
+            'foo'  => 'bar',
+            'self' => [
+                'foo' => 'oof',
+            ],
+        ]));
+        self::assertSame('oof', $renderer->render('=self.foo', [
+            'foo'  => 'bar',
+            'self' => [
+                'foo' => 'oof',
+            ],
+        ]));
+
+        $renderer->setOption('self', true);
+
+        self::assertSame('', $renderer->render('=foo', [
+            'foo' => 'bar',
+        ]));
+        self::assertSame('', $renderer->render('=foo', [
+            'foo' => 'bar',
+        ]));
+        self::assertSame('', $renderer->render('=foo', [
+            'foo'  => 'bar',
+            'self' => [
+                'foo' => 'oof',
+            ],
+        ]));
+        self::assertSame('bar', $renderer->render('=self.foo', [
+            'foo'  => 'bar',
+            'self' => [
+                'foo' => 'oof',
+            ],
+        ]));
+
+        $renderer->setOption('self', 'locals');
+
+        self::assertSame('', $renderer->render('=foo', [
+            'foo' => 'bar',
+        ]));
+        self::assertSame('', $renderer->render('=self.foo', [
+            'foo' => 'bar',
+        ]));
+        self::assertSame('bar', $renderer->render('=locals.foo', [
+            'foo'  => 'bar',
+        ]));
     }
 
     /**
