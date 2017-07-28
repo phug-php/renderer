@@ -417,7 +417,6 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @group i
      * @covers ::__construct
      * @covers ::callAdapter
      */

@@ -82,7 +82,13 @@ class Renderer implements ModuleContainerInterface
 
         if ($this->getOption('enable_profiler')) {
             $this->setOptionsDefaults([
-                'profiler_time_precision' => 1000,
+                'profiler' => [
+                    'max_time'       => 10000,
+                    'time_precision' => 3,
+                    'line_height'    => 30,
+                    'display'        => true,
+                    'log'            => false,
+                ],
             ]);
             $events = new ArrayObject();
             $this->addModule(new ProfilerModule($events, $this));
@@ -113,7 +119,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'compiler_options' => $moduleClassName,
+                    'compiler_modules' => $moduleClassName,
                 ]);
             }
             if (in_array(FormatterModuleInterface::class, $interfaces) &&
@@ -121,7 +127,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getFormatter()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'formatter_options' => $moduleClassName,
+                    'formatter_modules' => $moduleClassName,
                 ]);
             }
             if (in_array(ParserModuleInterface::class, $interfaces) &&
@@ -129,7 +135,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'parser_options' => $moduleClassName,
+                    'parser_modules' => $moduleClassName,
                 ]);
             }
             if (in_array(LexerModuleInterface::class, $interfaces) &&
@@ -137,7 +143,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->getLexer()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'lexer_options' => $moduleClassName,
+                    'lexer_modules' => $moduleClassName,
                 ]);
             }
         }

@@ -22,6 +22,7 @@ use Phug\Renderer;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\RendererEvent;
+use Phug\RendererException;
 use Phug\Util\AbstractModule;
 use Phug\Util\ModuleContainerInterface;
 use SplObjectStorage;
@@ -55,12 +56,22 @@ class ProfilerModule extends AbstractModule
 
     private function record(Event $event)
     {
-        $this->appendParam($event, '__time', microtime(true) - $this->startTime);
+        $time = microtime(true) - $this->startTime;
+        $maxTime = $this->getContainer()->getOption('profiler.max_time');
+        if ($time * 1000 > $maxTime) {
+            throw new RendererException('profiler.max_time of '.$maxTime.'ms exceeded.');
+        }
+        $this->appendParam($event, '__time', $time);
         $this->events[] = $event;
     }
 
     private function renderProfile()
     {
+        $display = $this->getContainer()->getOption('profiler.display');
+        $log = $this->getContainer()->getOption('profiler.log');
+        if (!$display && !$log) {
+            return '';
+        }
         $duration = microtime(true) - $this->startTime;
         $linkedProcesses = new SplObjectStorage();
         array_walk($this->events, function (Event $event, $index) use ($linkedProcesses) {
@@ -72,27 +83,57 @@ class ProfilerModule extends AbstractModule
                 $linkedProcesses[$link] = [];
             }
             $list = $linkedProcesses[$link];
-            $list[] = $event->getParam('__time');
+            $list[] = $event;
             $linkedProcesses[$link] = $list;
         });
+        $lineHeight = $this->getContainer()->getOption('profiler.line_height');
 
+        $lines = [];
         $processes = [];
-        $index = 0;
         foreach ($linkedProcesses as $link) {
+            /** @var array $list */
             $list = $linkedProcesses[$link];
-            $min = min($list);
-            $max = max($list);
-            $processes[] = (object) [
-                'link'  => $link->getName(),
-                'style' => [
-                    'left'  => ($min * 100 / $duration).'%',
-                    'width' => (($max - $min) * 100 / $duration).'%',
-                    'bottom' => ((++$index) * 10).'px',
-                ]
-            ];
+            $count = count($list);
+            for ($i = $count > 1 ? 1 : 0; $i < $count; $i++) {
+                /** @var Event $previousEvent */
+                $previousEvent = $list[max(0, $i - 1)];
+                /** @var Event $currentEvent */
+                $currentEvent = $list[$i];
+                $min = $previousEvent->getParam('__time');
+                $originalMax = $currentEvent->getParam('__time');
+                $max = max($originalMax, $min + $duration / 20);
+                $index = 0;
+                foreach ($lines as $level => $line) {
+                    foreach ($line as $process) {
+                        list($from, $to) = $process;
+                        if ($to <= $min || $from >= $max) {
+                            continue;
+                        }
+                        $index = $level + 1;
+                        continue 2;
+                    }
+                    break;
+                }
+                if (!isset($lines[$index])) {
+                    $lines[$index] = [];
+                }
+                $lines[$index][] = [$min, $max];
+                $style = [
+                    'left'   => ($min * 100 / $duration).'%',
+                    'width'  => (($max - $min) * 100 / $duration).'%',
+                    'bottom' => ($index * $lineHeight).'px',
+                ];
+                if ($currentEvent instanceof FormatEvent) {
+                    $style['background'] = '#d8ffd8';
+                }
+                $processes[] = (object) [
+                    'link'  => $link->getName(),
+                    'style' => $style,
+                ];
+            }
         }
 
-        return (new Renderer([
+        $render = (new Renderer([
             'debug'   => false,
             'filters' => [
                 'no-php' => function ($text) {
@@ -100,9 +141,15 @@ class ProfilerModule extends AbstractModule
                 },
             ],
         ]))->renderFile(__DIR__.'/resources/index.pug', [
-            'profiler_time_precision' => $this->getContainer()->getOption('profiler_time_precision'),
-            'processes'               => $processes,
+            'time_precision' => $this->getContainer()->getOption('profiler.time_precision'),
+            'processes'      => $processes,
         ]);
+
+        if ($log) {
+            file_put_contents($log, $render);
+        }
+
+        return $display ? $render : '';
     }
 
     public function getEventListeners()
