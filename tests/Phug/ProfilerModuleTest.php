@@ -2,7 +2,6 @@
 
 namespace Phug\Test;
 
-use Phug\Formatter;
 use Phug\Renderer;
 
 /**
