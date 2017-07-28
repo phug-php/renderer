@@ -9,6 +9,7 @@ use Phug\Compiler\Event\NodeEvent;
 use Phug\Compiler\Event\OutputEvent;
 use Phug\CompilerEvent;
 use Phug\Event;
+use Phug\Formatter;
 use Phug\Formatter\Event\DependencyStorageEvent;
 use Phug\Formatter\Event\FormatEvent;
 use Phug\FormatterEvent;
@@ -39,6 +40,11 @@ class ProfilerModule extends AbstractModule
      */
     private $events = null;
 
+    /**
+     * @var array
+     */
+    private static $profilers = [];
+
     public function __construct(ArrayObject $events, ModuleContainerInterface $container)
     {
         parent::__construct($container);
@@ -63,6 +69,27 @@ class ProfilerModule extends AbstractModule
         }
         $this->appendParam($event, '__time', $time);
         $this->events[] = $event;
+    }
+
+    private function getDuration($time)
+    {
+        if (!$time) {
+            return '';
+        }
+        $precision = $this->getContainer()->getOption('profiler.time_precision');
+        $unit = 's';
+        if ($precision >= 3) {
+            $unit = 'ms';
+            $time *= 1000;
+            $precision -= 3;
+        }
+        if ($precision >= 3) {
+            $unit = 'µs';
+            $time *= 1000;
+            $precision -= 3;
+        }
+
+        return round($time, $precision).$unit;
     }
 
     private function renderProfile()
@@ -93,6 +120,28 @@ class ProfilerModule extends AbstractModule
         foreach ($linkedProcesses as $link) {
             /** @var array $list */
             $list = $linkedProcesses[$link];
+            $times = array_map(function (Event $event) {
+                return $event->getParam('__time');
+            }, $list);
+            $min = min($times);
+            $max = max(max($times), $min + $duration / 20);
+            $index = 0;
+            foreach ($lines as $level => $line) {
+                foreach ($line as $process) {
+                    list($from, $to) = $process;
+                    if ($to <= $min || $from >= $max) {
+                        continue;
+                    }
+                    $index = $level + 1;
+                    continue 2;
+                }
+                break;
+            }
+            if (!isset($lines[$index])) {
+                $lines[$index] = [];
+            }
+            $lines[$index][] = [$min, $max];
+            $maxSpace = $max;
             $count = count($list);
             for ($i = $count > 1 ? 1 : 0; $i < $count; $i++) {
                 /** @var Event $previousEvent */
@@ -100,35 +149,33 @@ class ProfilerModule extends AbstractModule
                 /** @var Event $currentEvent */
                 $currentEvent = $list[$i];
                 $min = $previousEvent->getParam('__time');
-                $originalMax = $currentEvent->getParam('__time');
-                $max = max($originalMax, $min + $duration / 20);
-                $index = 0;
-                foreach ($lines as $level => $line) {
-                    foreach ($line as $process) {
-                        list($from, $to) = $process;
-                        if ($to <= $min || $from >= $max) {
-                            continue;
-                        }
-                        $index = $level + 1;
-                        continue 2;
-                    }
-                    break;
-                }
-                if (!isset($lines[$index])) {
-                    $lines[$index] = [];
-                }
-                $lines[$index][] = [$min, $max];
+                $max = $currentEvent->getParam('__time');
+                $end = $i === $count - 1 ? $maxSpace : $max;
                 $style = [
                     'left'   => ($min * 100 / $duration).'%',
-                    'width'  => (($max - $min) * 100 / $duration).'%',
+                    'width'  => (($end - $min) * 100 / $duration).'%',
                     'bottom' => ($index * $lineHeight).'px',
                 ];
                 if ($currentEvent instanceof FormatEvent) {
                     $style['background'] = '#d8ffd8';
+                } elseif ($currentEvent instanceof ParseEvent) {
+                    $style['background'] = '#a8ffff';
+                } elseif ($previousEvent instanceof ParserNodeEvent) {
+                    $style['background'] = '#d8ffff';
+                } elseif ($previousEvent instanceof CompileEvent) {
+                    $style['background'] = '#ffffa8';
+                } elseif ($previousEvent instanceof ElementEvent) {
+                    $style['background'] = '#ffffd8';
+                } elseif ($previousEvent instanceof TokenEvent) {
+                    $style['background'] = '#ffd8d8';
+                }
+                if ($currentEvent->getName() === 'display') {
+                    $style['background'] = '#d8d8ff';
                 }
                 $processes[] = (object) [
-                    'link'  => $link->getName(),
-                    'style' => $style,
+                    'link'     => $link->getName(),
+                    'duration' => $this->getDuration($max - $min),
+                    'style'    => $style,
                 ];
             }
         }
@@ -141,7 +188,6 @@ class ProfilerModule extends AbstractModule
                 },
             ],
         ]))->renderFile(__DIR__.'/resources/index.pug', [
-            'time_precision' => $this->getContainer()->getOption('profiler.time_precision'),
             'processes'      => $processes,
         ]);
 
@@ -150,6 +196,51 @@ class ProfilerModule extends AbstractModule
         }
 
         return $display ? $render : '';
+    }
+
+    public function getId()
+    {
+        if ($id = array_search($this, static::$profilers)) {
+            return $id;
+        }
+
+        $id = count(static::$profilers);
+        static::$profilers[$id] = $this;
+
+        return $id;
+    }
+
+    public function recordDisplayEvent($nodeId)
+    {
+        /** @var Formatter $formatter */
+        $formatter = $this->getContainer();
+        if ($formatter->debugIdExists($nodeId)) {
+            $node = $formatter->getNodeFromDebugId($nodeId);
+            $event = new Event('display');
+            $this->appendParam($event, '__link', $node);
+            $this->record($event);
+        }
+    }
+
+    static public function recordProfilerDisplayEvent($profilerId, $nodeId)
+    {
+        /** @var ProfilerModule $profiler */
+        $profiler = static::$profilers[$profilerId];
+        $profiler->recordDisplayEvent($nodeId);
+    }
+
+    public function attachEvents()
+    {
+        parent::attachEvents();
+        $formatter = $this->getContainer();
+        if ($formatter instanceof Formatter) {
+            $formatter->setOption('patterns.debug_comment', function ($nodeId) {
+                return "\n".static::class.'::recordProfilerDisplayEvent('.
+                    var_export($this->getId(), true).', '.
+                    var_export($nodeId, true).
+                    ");\n// PUG_DEBUG:$nodeId\n";
+            });
+        }
     }
 
     public function getEventListeners()
@@ -176,11 +267,11 @@ class ProfilerModule extends AbstractModule
                 $this->record($event);
             },
             CompilerEvent::ELEMENT => function (ElementEvent $event) {
-                $this->appendParam($event, '__link', $event->getElement()->getOriginNode());
+                $this->appendParam($event, '__link', $event->getElement()->getOriginNode()->getToken());
                 $this->record($event);
             },
             CompilerEvent::NODE => function (NodeEvent $event) {
-                $this->appendParam($event, '__link', $event->getNode());
+                $this->appendParam($event, '__link', $event->getNode()->getToken());
                 $this->record($event);
             },
             CompilerEvent::OUTPUT => function (OutputEvent $event) {
@@ -192,7 +283,7 @@ class ProfilerModule extends AbstractModule
                 $this->record($event);
             },
             FormatterEvent::FORMAT => function (FormatEvent $event) {
-                $this->appendParam($event, '__link', $event->getElement()->getOriginNode());
+                $this->appendParam($event, '__link', $event->getElement()->getOriginNode()->getToken());
                 $this->record($event);
             },
             ParserEvent::PARSE => function (ParseEvent $event) {
@@ -200,19 +291,19 @@ class ProfilerModule extends AbstractModule
                 $this->record($event);
             },
             ParserEvent::DOCUMENT => function (ParserNodeEvent $event) {
-                $this->appendParam($event, '__link', $event->getNode());
+                $this->appendParam($event, '__link', $event->getNode()->getToken());
                 $this->record($event);
             },
             ParserEvent::STATE_ENTER => function (ParserNodeEvent $event) {
-                $this->appendParam($event, '__link', $event->getNode());
+                $this->appendParam($event, '__link', $event->getNode()->getToken());
                 $this->record($event);
             },
             ParserEvent::STATE_LEAVE => function (ParserNodeEvent $event) {
-                $this->appendParam($event, '__link', $event->getNode());
+                $this->appendParam($event, '__link', $event->getNode()->getToken());
                 $this->record($event);
             },
             ParserEvent::STATE_STORE => function (ParserNodeEvent $event) {
-                $this->appendParam($event, '__link', $event->getNode());
+                $this->appendParam($event, '__link', $event->getNode()->getToken());
                 $this->record($event);
             },
             LexerEvent::LEX => function (LexEvent $event) {

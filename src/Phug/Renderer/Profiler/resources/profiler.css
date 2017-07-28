@@ -8,6 +8,8 @@
     width: 100%;
     background: #f5f5f5;
     border-top: 1px solid black;
+    font-family: sans-serif;
+    font-size: 12px;
 }
 .profiler .bar {
     background: #f0ad4e;

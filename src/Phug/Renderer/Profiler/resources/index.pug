@@ -3,4 +3,6 @@ style: include:no-php profiler.css
     each $process in $processes
         .bar(style=$process->style)
             =$process->link
+            br
+            =$process->duration
 script: include:no-php profiler.js
