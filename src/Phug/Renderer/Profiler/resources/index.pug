@@ -1,11 +1,25 @@
 style: include:no-php profiler.css
-.profiler
-    | TOTAL
-    br
-    =$duration
-    each $process in $processes
-        .bar(style=$process->style)
-            =$process->link
+.profiler-wrapper
+    .profiler-info
+        .profiler-reduce:div
+        .profiler-details
+            a.profiler-info-close Close
+            | Use the mousewheel while pressing Shift to zoom
             br
-            =$process->duration
+            | Click on an event to display more data:
+            pre
+    .profiler
+        | TOTAL
+        br
+        =$duration
+        each $process in $processes
+            .profiler-bar(
+                style=$process->style
+                title=$process->title
+                data-event=$process->event
+                data-previous=$process->previous
+            )
+                =$process->link
+                br
+                =$process->duration
 script: include:no-php profiler.js

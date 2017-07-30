@@ -2,7 +2,6 @@
 
 namespace Phug;
 
-use ArrayObject;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
@@ -10,6 +9,7 @@ use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
+use Phug\Renderer\Profiler\EventList;
 use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
@@ -80,17 +80,29 @@ class Renderer implements ModuleContainerInterface
 
         $this->compiler = new $compilerClassName($options);
 
+        $this->setOptionsDefaults([
+            'execution_max_time' => $this->getOption('debug') ? -1 : 30000,
+        ]);
+
+        if (!$this->getOption('enable_profiler') && $this->getOption('execution_max_time') > -1) {
+            $this->setOptionsRecursive([
+                'enable_profiler' => true,
+                'profiler'        => [
+                    'display'        => false,
+                    'log'            => false,
+                ],
+            ]);
+        }
         if ($this->getOption('enable_profiler')) {
             $this->setOptionsDefaults([
                 'profiler' => [
-                    'max_time'       => 10000,
                     'time_precision' => 3,
                     'line_height'    => 30,
                     'display'        => true,
                     'log'            => false,
                 ],
             ]);
-            $events = new ArrayObject();
+            $events = new EventList();
             $this->addModule(new ProfilerModule($events, $this));
             $this->compiler->addModule(new ProfilerModule($events, $this->compiler));
             $formatter = $this->compiler->getFormatter();
