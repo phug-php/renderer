@@ -3,6 +3,7 @@
 namespace Phug\Test;
 
 use DateTimeImmutable;
+use Phug\Renderer\Profiler\ProfilerModule;
 
 /**
  * @coversDefaultClass \Phug\Renderer
@@ -27,6 +28,11 @@ class CasesTest extends AbstractRendererTest
      */
     public function testRender($expected, $actual, $message)
     {
+        foreach ($this->renderer->getModules() as $module) {
+            if ($module instanceof ProfilerModule) {
+                $module->reset();
+            }
+        }
         self::assertSameLines(
             file_get_contents($expected),
             $this->renderer->renderFile($actual),

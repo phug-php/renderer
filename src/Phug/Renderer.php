@@ -81,7 +81,8 @@ class Renderer implements ModuleContainerInterface
         $this->compiler = new $compilerClassName($options);
 
         $this->setOptionsDefaults([
-            'execution_max_time' => $this->getOption('debug') ? -1 : 30000,
+            'memory_limit'       => $this->getOption('debug') ? -1 : 0x3200000, // 50MB by default in debug
+            'execution_max_time' => $this->getOption('debug') ? -1 : 30000, // 30s by default in debug
         ]);
 
         if (!$this->getOption('enable_profiler') && $this->getOption('execution_max_time') > -1) {
@@ -286,7 +287,12 @@ class Renderer implements ModuleContainerInterface
             );
         });
 
-        $htmlEvent = new HtmlEvent($renderEvent, $sandBox->getResult(), $sandBox->getBuffer(), $sandBox->getThrowable());
+        $htmlEvent = new HtmlEvent(
+            $renderEvent,
+            $sandBox->getResult(),
+            $sandBox->getBuffer(),
+            $sandBox->getThrowable()
+        );
         $this->trigger($htmlEvent);
 
         if ($error = $htmlEvent->getError()) {

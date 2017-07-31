@@ -48,6 +48,11 @@ class ProfilerModule extends AbstractModule
     private $startTime = 0;
 
     /**
+     * @var int
+     */
+    private $initialMemoryUsage = 0;
+
+    /**
      * @var EventList
      */
     private $events = null;
@@ -62,13 +67,32 @@ class ProfilerModule extends AbstractModule
      */
     private static $profilers = [];
 
+    /**
+     * @var int
+     */
+    private static $profilersIndex = 0;
+
     public function __construct(EventList $events, ModuleContainerInterface $container)
     {
         parent::__construct($container);
 
         $this->events = $events;
+        $this->initialize();
+    }
+
+    public function initialize()
+    {
         $this->startTime = microtime(true);
+        $this->initialMemoryUsage = memory_get_usage();
         $this->nodesRegister = new SplObjectStorage();
+    }
+
+    public function reset()
+    {
+        $this->initialize();
+        foreach ($this->events as &$event) {
+            unset($event);
+        }
     }
 
     public function kill()
@@ -112,7 +136,11 @@ class ProfilerModule extends AbstractModule
         $container = $this->getContainer();
         $maxTime = $container->getOption('execution_max_time');
         if ($maxTime > -1 && $time * 1000 > $maxTime) {
-            $this->throwException($event, 'profiler.max_time of '.$maxTime.'ms exceeded.');
+            $this->throwException($event, 'execution_max_time of '.$maxTime.'ms exceeded.');
+        }
+        $memoryLimit = $container->getOption('memory_limit');
+        if ($memoryLimit > -1 && memory_get_usage() - $this->initialMemoryUsage > $memoryLimit) {
+            $this->throwException($event, 'memory_limit of '.$memoryLimit.'B exceeded.');
         }
         $this->appendParam($event, '__time', $time);
         if ($container->getOption('profiler.display') || $container->getOption('profiler.log')) {
@@ -350,7 +378,8 @@ class ProfilerModule extends AbstractModule
 
     public function getDebugId($nodeId)
     {
-        $id = count(static::$profilers);
+
+        $id = static::$profilersIndex++;
         static::$profilers[$id] = [$this, $nodeId];
 
         return $id;
@@ -374,6 +403,7 @@ class ProfilerModule extends AbstractModule
     {
         /** @var ProfilerModule $profiler */
         list($profiler, $nodeId) = static::$profilers[$debugId];
+        unset(static::$profilers[$debugId]);
         $profiler->recordDisplayEvent($nodeId);
     }
 
