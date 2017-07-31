@@ -502,6 +502,7 @@ class RendererTest extends AbstractRendererTest
         ] as $adapter) {
             $renderer = new Renderer([
                 'debug'              => true,
+                'execution_max_time' => 90,
                 'html_error'         => true,
                 'adapter_class_name' => $adapter,
                 'error_handler'      => function ($error) use (&$lastError) {
