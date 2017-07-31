@@ -28,7 +28,13 @@ class CasesTest extends AbstractRendererTest
      */
     public function testRender($expected, $actual, $message)
     {
-        foreach ($this->renderer->getModules() as $module) {
+        foreach (array_merge(
+             $this->renderer->getModules(),
+             $this->renderer->getCompiler()->getModules(),
+             $this->renderer->getCompiler()->getFormatter()->getModules(),
+             $this->renderer->getCompiler()->getParser()->getModules(),
+             $this->renderer->getCompiler()->getParser()->getLexer()->getModules()
+        ) as $module) {
             if ($module instanceof ProfilerModule) {
                 $module->reset();
             }
