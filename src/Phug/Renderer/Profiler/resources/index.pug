@@ -1,5 +1,5 @@
 style: include:no-php profiler.css
-.profiler-wrapper
+.profiler-wrapper(style=['min-height' => $height . 'px'])
     .profiler-info
         .profiler-reduce:div
         .profiler-details
@@ -7,7 +7,7 @@ style: include:no-php profiler.css
             | Use the mousewheel while pressing Shift to zoom
             br
             | Click on an event to display more data:
-            pre
+            pre.profiler-details-dump
     .profiler
         | TOTAL
         br

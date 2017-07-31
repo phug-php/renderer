@@ -1,13 +1,18 @@
 (function () {
 
     function each(list, callback) {
-        for (var i = 0; i < list.length; i++) {
-            callback(list[i]);
+        if ((list || []).length) {
+            for (var i = 0; i < list.length; i++) {
+                callback(list[i]);
+            }
         }
+    }
+    function hasClass(element, className) {
+        return (new RegExp('\\s' + className + '\\s')).test(' ' + element.className + ' ');
     }
     function info(html) {
         each(document.getElementsByClassName('profiler-info'), function (info) {
-            each(info.getElementsByTagName('pre'), function (pre) {
+            each(info.getElementsByClassName('profiler-details-dump'), function (pre) {
                 pre.innerHTML = html;
             });
             each(info.getElementsByClassName('profiler-info-close'), function (close) {
@@ -16,30 +21,19 @@
         });
     }
     document.addEventListener('click',  function (event) {
-        if (~event.target.className.indexOf('profiler-bar')) {
+        if (hasClass(event.target, 'profiler-bar')) {
             var current = event.target.getAttribute('data-event');
             var previous = event.target.getAttribute('data-previous');
             info("Current event: " + current + "\n\nPrevious event: " + previous);
-        } else if (~event.target.className.indexOf('profiler-info-close')) {
-            info('');
-        }
-    });
-    document.addEventListener('click',  function (event) {
-        if (~event.target.className.indexOf('profiler-bar')) {
-            var current = event.target.getAttribute('data-event');
-            var previous = event.target.getAttribute('data-previous');
-            info("Current event: " + current + "\n\nPrevious event: " + previous);
-        } else if (~event.target.className.indexOf('profiler-info-close')) {
+        } else if (hasClass(event.target, 'profiler-info-close')) {
             info('');
         }
     });
     each(document.getElementsByClassName('profiler-reduce'), function (reduce) {
         reduce.addEventListener('click',  function () {
             var wrapper = reduce.parentNode.parentNode;
-            var className = ' ' + wrapper.className + ' ';
-            var regExp = /\sclosed\s/g;
-            if (regExp.test(className)) {
-                wrapper.className = className.replace(regExp, ' ');
+            if (hasClass(wrapper, 'closed')) {
+                wrapper.className = (' ' + wrapper.className + ' ').replace(/\sclosed\s/g, ' ');
 
                 return;
             }

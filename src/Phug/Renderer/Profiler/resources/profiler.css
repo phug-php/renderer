@@ -1,11 +1,13 @@
 .profiler-wrapper {
     position: absolute;
     font-family: sans-serif;
-    background: rgba(255, 255, 255, 0.85);
     top: 0;
-    bottom: 0;
     left: 0;
     right: 0;
+}
+.profiler-details-dump,
+.profiler-wrapper {
+    background: rgba(255, 255, 255, 0.85);
 }
 .profiler-wrapper.closed {
     overflow: hidden;
@@ -15,7 +17,7 @@
 .profiler {
     position: absolute;
     z-index: 9998;
-    top: 80px;
+    top: 81px;
     left: 0;
     right: 0;
     height: 30px;
@@ -36,6 +38,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     border: 1px solid #88622e;
+    cursor: pointer;
 }
 .profiler-reduce {
     position: absolute;
@@ -44,6 +47,7 @@
     width: 11px;
     height: 11px;
     background: #656565;
+    cursor: pointer;
 }
 .profiler-reduce div {
     position: absolute;
@@ -67,13 +71,8 @@
     box-sizing: border-box;
     min-height: 80px;
 }
-.profiler-wrapper.closed .profiler-info {
-    right: auto;
-    width: 15px;
-    height: 15px;
-    overflow: hidden;
-    border: none;
-    padding: 0;
+.profiler-wrapper.closed {
+    min-height: 0 !important;
 }
 .profiler-wrapper.closed .profiler-info {
     right: auto;
@@ -97,4 +96,5 @@
     padding: 15px;
     background: #656565;
     display: none;
+    cursor: pointer;
 }

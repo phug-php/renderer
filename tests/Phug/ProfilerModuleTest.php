@@ -20,12 +20,18 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $renderer = new Renderer([
             'enable_profiler' => true,
         ]);
+        $render = $renderer->render('div');
 
-        self::assertSame(implode("\n", [
-            'x profiler',
-            'x renderer.render',
-            'x renderer.html',
-        ]), preg_replace('/^\d?(\.\d+)?\s+(\S)/m', 'x $2', $renderer->render('div')));
+        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div lexing:', $render);
+        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div parsing:', $render);
+        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div compiling:', $render);
+        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div formatting:', $render);
+        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div rendering:', $render);
     }
 
     /**
@@ -44,10 +50,15 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $contents = ob_get_contents();
         ob_end_clean();
 
-        self::assertSame(implode("\n", [
-            'x profiler',
-            'x renderer.render',
-            'x renderer.html',
-        ]), preg_replace('/^\d?(\.\d+)?\s+(\S)/m', 'x $2', $contents));
+        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $contents);
+        self::assertContains('title="div lexing:', $contents);
+        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $contents);
+        self::assertContains('title="div parsing:', $contents);
+        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $contents);
+        self::assertContains('title="div compiling:', $contents);
+        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $contents);
+        self::assertContains('title="div formatting:', $contents);
+        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $contents);
+        self::assertContains('title="div rendering:', $contents);
     }
 }
