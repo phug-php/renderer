@@ -369,6 +369,8 @@ class ProfilerModule extends AbstractModule
             'height'    => $lineHeight * (count($lines) + 1) + 81,
         ]);
 
+        $this->cleanupProfilerNodes();
+
         if ($log) {
             file_put_contents($log, $render);
         }
@@ -378,7 +380,6 @@ class ProfilerModule extends AbstractModule
 
     public function getDebugId($nodeId)
     {
-
         $id = static::$profilersIndex++;
         static::$profilers[$id] = [$this, $nodeId];
 
@@ -403,8 +404,14 @@ class ProfilerModule extends AbstractModule
     {
         /** @var ProfilerModule $profiler */
         list($profiler, $nodeId) = static::$profilers[$debugId];
-        unset(static::$profilers[$debugId]);
         $profiler->recordDisplayEvent($nodeId);
+    }
+
+    private function cleanupProfilerNodes()
+    {
+        static::$profilers = array_filter(static::$profilers, function ($params) {
+            return $params[0] !== $this;
+        });
     }
 
     public function attachEvents()
