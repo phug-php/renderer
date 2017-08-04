@@ -354,6 +354,8 @@ class ProfilerModule extends AbstractModule
             }
         }
 
+        $this->kill();
+
         $render = (new Renderer([
             'debug'           => false,
             'enable_profiler' => false,
@@ -419,10 +421,13 @@ class ProfilerModule extends AbstractModule
         parent::attachEvents();
         $formatter = $this->getContainer();
         if ($formatter instanceof Formatter) {
-            $formatter->setOption('patterns.debug_comment', function ($nodeId) {
-                return "\n".static::class.'::recordProfilerDisplayEvent('.
-                    var_export($this->getDebugId($nodeId), true).
-                    ");\n// PUG_DEBUG:$nodeId\n";
+            $formatter->setOption('patterns.debug_comment', function ($nodeId) use ($formatter) {
+                return "\n".($nodeId !== ''
+                        ? static::class.'::recordProfilerDisplayEvent('.
+                            var_export($this->getDebugId($nodeId), true).
+                        ");\n"
+                        : ''
+                    )."// PUG_DEBUG:$nodeId\n";
             });
         }
     }
@@ -495,7 +500,9 @@ class ProfilerModule extends AbstractModule
                 $event->setBuffer($this->renderProfile().$event->getBuffer());
             }
 
-            $event->setResult($this->renderProfile().$event->getResult());
+            if (is_string($event->getResult())) {
+                $event->setResult($this->renderProfile().$event->getResult());
+            }
         };
 
         return $eventListeners;
