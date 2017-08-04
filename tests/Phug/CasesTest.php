@@ -3,7 +3,6 @@
 namespace Phug\Test;
 
 use DateTimeImmutable;
-use Phug\Renderer\Profiler\ProfilerModule;
 
 /**
  * @coversDefaultClass \Phug\Renderer
