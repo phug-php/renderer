@@ -177,6 +177,11 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
+    private function mergeWithSharedVariables(array $parameters)
+    {
+        return array_merge($this->getOption('shared_variables'), $parameters);
+    }
+
     /**
      * @return AdapterInterface
      */
@@ -191,11 +196,6 @@ class Renderer implements ModuleContainerInterface
     public function getCompiler()
     {
         return $this->compiler;
-    }
-
-    private function mergeWithSharedVariables(array $parameters)
-    {
-        return array_merge($this->getOption('shared_variables'), $parameters);
     }
 
     /**

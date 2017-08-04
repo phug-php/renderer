@@ -63,7 +63,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             return $contents;
         };
         $this->renderer = new Renderer([
-            'debug'              => true,
+            'debug'              => false,
             'execution_max_time' => 10000,
             'basedir'            => __DIR__.'/../cases',
             'pretty'             => true,
