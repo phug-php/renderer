@@ -151,7 +151,7 @@ class ProfilerModule extends AbstractModule
     private function getDuration($time)
     {
         if (!$time) {
-            return '';
+            return '0s';
         }
         $precision = $this->getContainer()->getOption('profiler.time_precision');
         $unit = 's';
