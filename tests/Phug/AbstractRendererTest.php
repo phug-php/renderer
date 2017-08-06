@@ -64,7 +64,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         };
         $this->renderer = new Renderer([
             'debug'              => false,
-            'execution_max_time' => 40000,
+            'execution_max_time' => 60000,
             'basedir'            => __DIR__.'/../cases',
             'pretty'             => true,
             'modules'            => [JsPhpizePhug::class],
