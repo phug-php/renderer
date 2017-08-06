@@ -203,20 +203,23 @@ class ProfilerModule extends AbstractModule
         }
         $duration = microtime(true) - $this->startTime;
         $linkedProcesses = new SplObjectStorage();
-        array_walk($this->events, function (Event $event) use ($linkedProcesses) {
-            $link = $this->getEventLink($event);
-            if (!($link instanceof TokenInterface) && !method_exists($link, 'getName')) {
-                $link = $link instanceof DocumentNode
-                    ? $this->getProfilerEvent('document', $link)
-                    : $event;
+        if ($this->events) {
+            foreach ($this->events as $event) {
+                /* @var Event $event */
+                $link = $this->getEventLink($event);
+                if (!($link instanceof TokenInterface) && !method_exists($link, 'getName')) {
+                    $link = $link instanceof DocumentNode
+                        ? $this->getProfilerEvent('document', $link)
+                        : $event;
+                }
+                if (!isset($linkedProcesses[$link])) {
+                    $linkedProcesses[$link] = [];
+                }
+                $list = $linkedProcesses[$link];
+                $list[] = $event;
+                $linkedProcesses[$link] = $list;
             }
-            if (!isset($linkedProcesses[$link])) {
-                $linkedProcesses[$link] = [];
-            }
-            $list = $linkedProcesses[$link];
-            $list[] = $event;
-            $linkedProcesses[$link] = $list;
-        });
+        }
         $lineHeight = $this->getContainer()->getOption('profiler.line_height');
 
         $lines = [];
