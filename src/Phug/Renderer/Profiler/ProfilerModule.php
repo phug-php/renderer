@@ -11,27 +11,15 @@ use Phug\Event;
 use Phug\Formatter;
 use Phug\Formatter\Event\DependencyStorageEvent;
 use Phug\Formatter\Event\FormatEvent;
-use Phug\Formatter\Format\HtmlFormat;
 use Phug\FormatterEvent;
 use Phug\Lexer\Event\EndLexEvent;
 use Phug\Lexer\Event\LexEvent;
 use Phug\Lexer\Event\TokenEvent;
-use Phug\Lexer\Token\AttributeEndToken;
-use Phug\Lexer\Token\AttributeStartToken;
-use Phug\Lexer\Token\IndentToken;
-use Phug\Lexer\Token\MixinCallToken;
-use Phug\Lexer\Token\MixinToken;
-use Phug\Lexer\Token\NewLineToken;
-use Phug\Lexer\Token\OutdentToken;
-use Phug\Lexer\Token\TextToken;
-use Phug\Lexer\TokenInterface;
 use Phug\LexerEvent;
 use Phug\Parser\Event\NodeEvent as ParserNodeEvent;
 use Phug\Parser\Event\ParseEvent;
-use Phug\Parser\Node\DocumentNode;
 use Phug\Parser\NodeInterface;
 use Phug\ParserEvent;
-use Phug\Renderer;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\RendererEvent;
@@ -111,6 +99,7 @@ class ProfilerModule extends AbstractModule
         foreach ($this->events as &$event) {
             unset($event);
         }
+        $this->events->unlock();
     }
 
     public function kill()
@@ -166,27 +155,6 @@ class ProfilerModule extends AbstractModule
         }
     }
 
-    private function getDuration($time)
-    {
-        if (!$time) {
-            return '0s';
-        }
-        $precision = $this->getContainer()->getOption('profiler.time_precision');
-        $unit = 's';
-        if ($precision >= 3) {
-            $unit = 'ms';
-            $time *= 1000;
-            $precision -= 3;
-        }
-        if ($precision >= 3) {
-            $unit = 'µs';
-            $time *= 1000;
-            $precision -= 3;
-        }
-
-        return round($time, $precision).$unit;
-    }
-
     /**
      * Catch output of a dump function and return it as string.
      *
@@ -216,22 +184,6 @@ class ProfilerModule extends AbstractModule
         return $dump->dump();
     }
 
-    private function getEventLink(Event $event)
-    {
-        return isset($event->getParams()['__link'])
-            ? $event->getParam('__link')
-            : null;
-    }
-
-    private function getProfilerEvent($name, $object)
-    {
-        if (!isset($this->nodesRegister[$object])) {
-            $this->nodesRegister[$object] = new Event($name);
-        }
-
-        return $this->nodesRegister[$object];
-    }
-
     private function renderProfile()
     {
         $display = $this->getContainer()->getOption('profiler.display');
@@ -239,178 +191,23 @@ class ProfilerModule extends AbstractModule
         if (!$display && !$log) {
             return '';
         }
-        $duration = microtime(true) - $this->startTime;
-        $linkedProcesses = new SplObjectStorage();
-        if ($this->events) {
-            foreach ($this->events as $event) {
-                /* @var Event $event */
-                $link = $this->getEventLink($event);
-                if (!($link instanceof TokenInterface) && !method_exists($link, 'getName')) {
-                    $link = $link instanceof DocumentNode
-                        ? $this->getProfilerEvent('document', $link)
-                        : $event;
-                }
-                if (!isset($linkedProcesses[$link])) {
-                    $linkedProcesses[$link] = [];
-                }
-                $list = $linkedProcesses[$link];
-                $list[] = $event;
-                $linkedProcesses[$link] = $list;
-            }
-        }
-        $lineHeight = $this->getContainer()->getOption('profiler.line_height');
 
-        $lines = [];
-        $processes = [];
-        foreach ($linkedProcesses as $link) {
-            /** @var array $list */
-            $list = $linkedProcesses[$link];
-            $times = array_map(function (Event $event) {
-                return $event->getParam('__time');
-            }, $list);
-            $min = min($times);
-            $max = max(max($times), $min + $duration / 20);
-            $index = 0;
-            foreach ($lines as $level => $line) {
-                foreach ($line as $process) {
-                    list($from, $to) = $process;
-                    if ($to <= $min || $from >= $max) {
-                        continue;
-                    }
-                    $index = $level + 1;
-                    continue 2;
-                }
-                break;
-            }
-            if (!isset($lines[$index])) {
-                $lines[$index] = [];
-            }
-            $lines[$index][] = [$min, $max];
-            $maxSpace = $max;
-            $count = count($list);
-            if ($count === 1 && $list[0] instanceof TokenEvent) {
-                $tokenClass = get_class($list[0]->getToken());
-                $tokenSymbol = null;
-                $tokenName = null;
-                if ($tokenClass === NewLineToken::class) {
-                    $tokenSymbol = '↩';
-                    $tokenName = 'new line';
-                } elseif ($tokenClass === IndentToken::class) {
-                    $tokenSymbol = '→';
-                    $tokenName = 'indent';
-                } elseif ($tokenClass === OutdentToken::class) {
-                    $tokenSymbol = '←';
-                    $tokenName = 'outdent';
-                } elseif ($tokenClass === AttributeStartToken::class) {
-                    $tokenSymbol = '(';
-                    $tokenName = 'attributes start';
-                } elseif ($tokenClass === AttributeEndToken::class) {
-                    $tokenSymbol = ')';
-                    $tokenName = 'attributes end';
-                }
-                if ($tokenName) {
-                    $processes[] = (object) [
-                        'event'    => call_user_func($this->eventDump, $list[0]),
-                        'previous' => '#current',
-                        'title'    => $tokenName,
-                        'link'     => $tokenSymbol,
-                        'duration' => '',
-                        'style'    => [
-                            'font-weight' => 'bold',
-                            'font-size'   => '20px',
-                            'background'  => '#d7d7d7',
-                            'left'        => ($list[0]->getParam('__time') * 100 / $duration).'%',
-                            'width'       => '3%',
-                            'top'         => (($index + 1) * $lineHeight).'px',
-                        ],
-                    ];
+        $profile = new Profile(
+            $this->events,
+            $this->nodesRegister,
+            $this->startTime,
+            $this->initialMemoryUsage,
+            $this->eventDump
+        );
 
-                    continue;
-                }
-            }
-            for ($i = $count > 1 ? 1 : 0; $i < $count; $i++) {
-                /** @var Event $previousEvent */
-                $previousEvent = $list[max(0, $i - 1)];
-                /** @var Event $currentEvent */
-                $currentEvent = $list[$i];
-                $min = $previousEvent->getParam('__time');
-                $max = $currentEvent->getParam('__time');
-                $end = $i === $count - 1 ? $maxSpace : $max;
-                $style = [
-                    'left'  => ($min * 100 / $duration).'%',
-                    'width' => (($end - $min) * 100 / $duration).'%',
-                    'top'   => (($index + 1) * $lineHeight).'px',
-                ];
-                $name = $link instanceof TextToken
-                    ? 'text'
-                    : (method_exists($link, 'getName')
-                        ? $link->getName()
-                        : get_class($link)
-                    );
-                if ($link instanceof MixinCallToken) {
-                    $name = '+'.$name;
-                }
-                if ($link instanceof MixinToken) {
-                    $name = 'mixin '.$name;
-                }
-                if ($currentEvent instanceof EndLexEvent) {
-                    $style['background'] = '#7200c4';
-                    $style['color'] = 'white';
-                    $name = 'lexing';
-                } elseif ($currentEvent instanceof HtmlEvent) {
-                    $style['background'] = '#648481';
-                    $style['color'] = 'white';
-                    $name = 'rendering';
-                } elseif ($previousEvent instanceof CompileEvent) {
-                    $style['background'] = '#ffff78';
-                } elseif ($currentEvent instanceof ParseEvent) {
-                    $style['background'] = '#a8ffff';
-                } elseif ($previousEvent instanceof FormatEvent) {
-                    $name .= ' rendering';
-                    $style['background'] = '#d8ffd8';
-                } elseif ($previousEvent instanceof NodeEvent) {
-                    $name .= ' compiling';
-                    $style['background'] = '#ffffa8';
-                } elseif ($previousEvent instanceof ParserNodeEvent) {
-                    $name .= ' parsing';
-                    $style['background'] = '#d8ffff';
-                } elseif ($previousEvent instanceof ElementEvent) {
-                    $name .= ' formatting';
-                    $style['background'] = '#d8d8ff';
-                } elseif ($previousEvent instanceof TokenEvent) {
-                    $name .= ' lexing';
-                    $style['background'] = '#ffd8d8';
-                }
-                $time = $this->getDuration($max - $min);
-                $processes[] = (object) [
-                    'event'    => call_user_func($this->eventDump, $currentEvent),
-                    'previous' => $currentEvent === $previousEvent
-                        ? '#current'
-                        : call_user_func($this->eventDump, $previousEvent),
-                    'title'    => $name.': '.$time,
-                    'link'     => $name,
-                    'duration' => $time,
-                    'style'    => $style,
-                ];
-            }
-        }
+        $profile->compose(
+            $this->getContainer()->getOption('profiler.time_precision'),
+            $this->getContainer()->getOption('profiler.line_height')
+        );
 
         $this->kill();
 
-        $render = (new Renderer([
-            'debug'           => false,
-            'enable_profiler' => false,
-            'default_format'  => HtmlFormat::class,
-            'filters'         => [
-                'no-php' => function ($text) {
-                    return str_replace('<?', '<<?= "?" ?>', $text);
-                },
-            ],
-        ]))->renderFile(__DIR__.'/resources/index.pug', [
-            'processes' => $processes,
-            'duration'  => $this->getDuration($duration),
-            'height'    => $lineHeight * (count($lines) + 1) + 81,
-        ]);
+        $render = $profile->render();
 
         $this->cleanupProfilerNodes();
 
@@ -423,10 +220,10 @@ class ProfilerModule extends AbstractModule
 
     public function getDebugId($nodeId)
     {
-        $id = static::$profilersIndex++;
-        static::$profilers[$id] = [$this, $nodeId];
+        $index = static::$profilersIndex++;
+        static::$profilers[$index] = [$this, $nodeId];
 
-        return $id;
+        return $index;
     }
 
     public function recordDisplayEvent($nodeId)

@@ -16,9 +16,80 @@ class Dump
         $this->object = $object;
     }
 
+    private function dumpArray($object, $deep, $maxDeep = 3)
+    {
+        $result = ($object instanceof Traversable
+                ? get_class($object)
+                : 'array'
+            ).' ';
+        $count = 0;
+        $content = '';
+        foreach ($object as $key => $value) {
+            if (++$count <= 16) {
+                $content .= "\n".str_repeat(' ', ($deep + 1) * 2);
+                $content .= $count === 16
+                    ? '...'
+                    : var_export($key, true).' => '.
+                    $this->dumpValue($value, $deep + 1);
+            }
+        }
+        $result .= $count
+            ? "($count) [$content\n".str_repeat(' ', $deep * 2).']'
+            : '[]';
+
+        return $result;
+    }
+
     private function getExposedProperties($object, $deep, $maxDeep = 3)
     {
+        $result = get_class($object).' {'.(
+            $deep <= $maxDeep
+                ? call_user_func(function () use ($object, $deep) {
+                $result = "\n";
+                foreach (get_class_methods($object) as $method) {
+                    if (mb_strlen($result) > 0x80000) {
+                        $result .= str_repeat(' ', ($deep + 1) * 2).'...';
+                        break;
+                    }
+                    if (preg_match('/^get[A-Z]/', $method)) {
+                        if ($method === 'getOptions') {
+                            continue;
+                        }
+                        $reflexion = new ReflectionMethod($object, $method);
+                        if ($reflexion->getNumberOfRequiredParameters() > 0) {
+                            continue;
+                        }
+                        $value = call_user_func([$object, $method]);
+                        if ($value instanceof ModuleContainerInterface) {
+                            continue;
+                        }
+
+                        $result .= str_repeat(' ', ($deep + 1) * 2).
+                            mb_substr($method, 3).' => '.
+                            ($value instanceof Event
+                                ? $value->getName().' event'
+                                : $this->dumpValue($value, $deep + 1)
+                            ).
+                            "\n";
+                    }
+                }
+
+                return $result.str_repeat(' ', $deep * 2);
+            })
+            : '...'
+        ).'}';
+
+        if (mb_strlen($result) > 0x80000) {
+            $result = mb_substr($result, 0, 0x80000 - 3).'...';
+        }
+
+        return $result;
+    }
+
+    private function dumpValue($object, $deep, $maxDeep = 3)
+    {
         $type = gettype($object);
+
         if (in_array($type, [
             'boolean',
             'integer',
@@ -29,72 +100,12 @@ class Dump
         ])) {
             return var_export($object, true);
         }
-        $result = '';
+
         if ($type === 'array' || $object instanceof Traversable) {
-            $result .= ($object instanceof Traversable
-                    ? get_class($object)
-                    : 'array'
-                ).' ';
-            $count = 0;
-            $content = '';
-            foreach ($object as $key => $value) {
-                if (++$count <= 16) {
-                    $content .= "\n".str_repeat(' ', ($deep + 1) * 2);
-                    $content .= $count === 16
-                        ? '...'
-                        : var_export($key, true).' => '.
-                        $this->getExposedProperties($value, $deep + 1);
-                }
-            }
-            $result .= $count
-                ? "($count) [$content\n".str_repeat(' ', $deep * 2).']'
-                : '[]';
-
-            return $result;
+            return $this->dumpArray($object, $deep, $maxDeep);
         }
 
-        $result .= get_class($object).' {'.(
-            $deep <= $maxDeep
-                ? call_user_func(function () use ($object, $deep) {
-                    $result = "\n";
-                    foreach (get_class_methods($object) as $method) {
-                        if (mb_strlen($result) > 0x80000) {
-                            $result .= str_repeat(' ', ($deep + 1) * 2).'...';
-                            break;
-                        }
-                        if (preg_match('/^get[A-Z]/', $method)) {
-                            if ($method === 'getOptions') {
-                                continue;
-                            }
-                            $reflexion = new ReflectionMethod($object, $method);
-                            if ($reflexion->getNumberOfRequiredParameters() > 0) {
-                                continue;
-                            }
-                            $value = call_user_func([$object, $method]);
-                            if ($value instanceof ModuleContainerInterface) {
-                                continue;
-                            }
-
-                            $result .= str_repeat(' ', ($deep + 1) * 2).
-                                mb_substr($method, 3).' => '.
-                                ($value instanceof Event
-                                    ? $value->getName().' event'
-                                    : $this->getExposedProperties($value, $deep + 1)
-                                ).
-                                "\n";
-                        }
-                    }
-
-                    return $result.str_repeat(' ', $deep * 2);
-                })
-                : '...'
-            ).'}';
-
-        if (mb_strlen($result) > 0x80000) {
-            $result = mb_substr($result, 0x80000 - 3).'...';
-        }
-
-        return $result;
+        return $this->getExposedProperties($object, $deep, $maxDeep);
     }
 
     /**
@@ -106,6 +117,6 @@ class Dump
      */
     public function dump()
     {
-        return $this->getExposedProperties($this->object, 0);
+        return $this->dumpValue($this->object, 0);
     }
 }

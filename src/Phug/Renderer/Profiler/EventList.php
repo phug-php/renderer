@@ -20,10 +20,22 @@ class EventList extends ArrayObject
     }
 
     /**
-     * @param bool $locked
+     * @return $this
      */
     public function lock()
     {
         $this->locked = true;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function unlock()
+    {
+        $this->locked = false;
+
+        return $this;
     }
 }
