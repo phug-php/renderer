@@ -234,7 +234,7 @@ class ProfilerModule extends AbstractModule
                     $this->getExposedPropertiesDump($value, $deep + 1);
             }
             $result .= $count
-                ? "($count) [$content\n".str_repeat(' ', $deep * 2)."]"
+                ? "($count) [$content\n".str_repeat(' ', $deep * 2).']'
                 : '[]';
 
             return $result;
@@ -285,7 +285,6 @@ class ProfilerModule extends AbstractModule
     {
         return $this->getExposedPropertiesDump($event, 0);
     }
-
 
     private function getEventLink(Event $event)
     {
