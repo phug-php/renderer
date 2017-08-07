@@ -132,7 +132,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'compiler_modules' => $moduleClassName,
+                    'compiler_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(FormatterModuleInterface::class, $interfaces) &&
@@ -140,7 +140,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getFormatter()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'formatter_modules' => $moduleClassName,
+                    'formatter_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(ParserModuleInterface::class, $interfaces) &&
@@ -148,7 +148,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'parser_modules' => $moduleClassName,
+                    'parser_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(LexerModuleInterface::class, $interfaces) &&
@@ -156,7 +156,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->getLexer()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'lexer_modules' => $moduleClassName,
+                    'lexer_modules' => [$moduleClassName],
                 ]);
             }
         }
