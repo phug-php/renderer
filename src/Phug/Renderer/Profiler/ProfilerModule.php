@@ -38,9 +38,7 @@ use Phug\RendererEvent;
 use Phug\Util\AbstractModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\SandBox;
-use ReflectionMethod;
 use SplObjectStorage;
-use Traversable;
 
 class ProfilerModule extends AbstractModule
 {
@@ -206,76 +204,6 @@ class ProfilerModule extends AbstractModule
         return $sandBox->getBuffer();
     }
 
-    private function getExposedPropertiesDump($object, $deep, $maxDeep = 3)
-    {
-        $type = gettype($object);
-        if (in_array($type, [
-            'boolean',
-            'integer',
-            'double',
-            'string',
-            'resource',
-            'NULL',
-        ])) {
-            return var_export($object, true);
-        }
-        $result = '';
-        if ($type === 'array' || $object instanceof Traversable) {
-            $result .= ($object instanceof Traversable
-                ? get_class($object)
-                : 'array'
-            ).' ';
-            $count = 0;
-            $content = '';
-            foreach ($object as $key => $value) {
-                $count++;
-                $content .= "\n".str_repeat(' ', ($deep + 1) * 2).
-                    var_export($key, true).' => '.
-                    $this->getExposedPropertiesDump($value, $deep + 1);
-            }
-            $result .= $count
-                ? "($count) [$content\n".str_repeat(' ', $deep * 2).']'
-                : '[]';
-
-            return $result;
-        }
-
-        $result .= get_class($object).' {'.(
-            $deep <= $maxDeep
-                ? call_user_func(function () use ($object, $deep) {
-                    $result = "\n";
-                    foreach (get_class_methods($object) as $method) {
-                        if (preg_match('/^get[A-Z]/', $method)) {
-                            if ($method === 'getOptions') {
-                                continue;
-                            }
-                            $reflexion = new ReflectionMethod($object, $method);
-                            if ($reflexion->getNumberOfRequiredParameters() > 0) {
-                                continue;
-                            }
-                            $value = call_user_func([$object, $method]);
-                            if ($value instanceof ModuleContainerInterface) {
-                                continue;
-                            }
-
-                            $result .= str_repeat(' ', ($deep + 1) * 2).
-                                mb_substr($method, 3).' => '.
-                                ($value instanceof Event
-                                    ? $value->getName().' event'
-                                    : $this->getExposedPropertiesDump($value, $deep + 1)
-                                ).
-                                "\n";
-                        }
-                    }
-
-                    return $result.str_repeat(' ', $deep * 2);
-                })
-                : '...'
-            ).'}';
-
-        return $result;
-    }
-
     /**
      * @param Event $event
      *
@@ -283,7 +211,9 @@ class ProfilerModule extends AbstractModule
      */
     public function getEventDump(Event $event)
     {
-        return $this->getExposedPropertiesDump($event, 0);
+        $dump = new Dump($event);
+
+        return $dump->dump();
     }
 
     private function getEventLink(Event $event)

@@ -73,15 +73,18 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
      */
     public function testHtmlEvent()
     {
+        $source = null;
         $renderer = new Renderer([
-            'on_html' => function (Renderer\Event\HtmlEvent $event) {
+            'on_html' => function (Renderer\Event\HtmlEvent $event) use (&$source) {
                 if ($event->getResult() === '<div></div>') {
                     $event->setError(new \Exception('Empty div'));
+                    $source = $event->getRenderEvent()->getInput();
                 }
             },
         ]);
 
         self::assertSame('<p></p>', $renderer->render('p'));
+        self::assertSame(null, $source);
 
         $message = null;
         try {
@@ -91,6 +94,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         }
 
         self::assertSame('Empty div', $message);
+        self::assertSame('div', $source);
 
         $renderer = new Renderer([
             'on_html' => function (Renderer\Event\HtmlEvent $event) {

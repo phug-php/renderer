@@ -262,7 +262,7 @@ class RendererTest extends AbstractRendererTest
      * @covers ::highlightLine
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
-    public function testHandleError()
+    public function testHandleErrorInString()
     {
         foreach ([
             FileAdapter::class,
@@ -326,7 +326,24 @@ class RendererTest extends AbstractRendererTest
                 $message
             );
         }
+    }
 
+    /**
+     * @covers ::handleError
+     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::hasColorSupport
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getRendererException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorMessage
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::highlightLine
+     * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
+     */
+    public function testHandleErrorInFile()
+    {
         $message = null;
         $renderer = new Renderer([
             'debug'         => false,
@@ -480,21 +497,20 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
-     * @covers ::getDebuggedException
-     * @covers ::setDebugFile
-     * @covers ::setDebugString
-     * @covers ::setDebugFormatter
-     * @covers ::getDebugFormatter
-     * @covers ::hasColorSupport
-     * @covers ::getRendererException
-     * @covers ::getErrorMessage
-     * @covers ::getErrorAsHtml
-     * @covers ::highlightLine
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorAsHtml
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::hasColorSupport
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getRendererException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorMessage
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::highlightLine
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleHtmlError()
     {
-        return;
         $lastError = null;
         foreach ([
              FileAdapter::class,
@@ -522,17 +538,17 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @group error
-     * @covers ::getErrorMessage
-     * @covers ::highlightLine
-     * @covers ::getRendererException
-     * @covers ::hasColorSupport
-     * @covers ::getDebuggedException
-     * @covers ::setDebugFile
-     * @covers ::setDebugString
-     * @covers ::setDebugFormatter
-     * @covers ::getDebugFormatter
      * @covers ::handleError
      * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebugFormatter
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::hasColorSupport
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getRendererException
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorMessage
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::highlightLine
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleParseError()

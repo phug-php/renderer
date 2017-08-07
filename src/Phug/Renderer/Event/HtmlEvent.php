@@ -15,12 +15,12 @@ class HtmlEvent extends Event
     /**
      * CompileEvent constructor.
      *
-     * @param Event      $renderEvent
-     * @param mixed      $result
-     * @param string     $buffer
-     * @param \Throwable $error
+     * @param RenderEvent $renderEvent
+     * @param mixed       $result
+     * @param string      $buffer
+     * @param \Throwable  $error
      */
-    public function __construct(Event $renderEvent, $result, $buffer, $error)
+    public function __construct(RenderEvent $renderEvent, $result, $buffer, $error)
     {
         parent::__construct(RendererEvent::HTML);
 
@@ -31,7 +31,7 @@ class HtmlEvent extends Event
     }
 
     /**
-     * @return Event
+     * @return RenderEvent
      */
     public function getRenderEvent()
     {

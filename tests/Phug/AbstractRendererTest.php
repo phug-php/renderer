@@ -20,6 +20,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
+        ini_set('memory_limit', '512M');
         include_once __DIR__.'/Date.php';
         include_once __DIR__.'/XmlHhvmFormat.php';
 
