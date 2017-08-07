@@ -38,7 +38,9 @@ use Phug\RendererEvent;
 use Phug\Util\AbstractModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\SandBox;
+use ReflectionMethod;
 use SplObjectStorage;
+use Traversable;
 
 class ProfilerModule extends AbstractModule
 {
@@ -63,6 +65,11 @@ class ProfilerModule extends AbstractModule
     private $nodesRegister = null;
 
     /**
+     * @var callable
+     */
+    private $eventDump = null;
+
+    /**
      * @var array
      */
     private static $profilers = [];
@@ -85,6 +92,19 @@ class ProfilerModule extends AbstractModule
         $this->startTime = microtime(true);
         $this->initialMemoryUsage = memory_get_usage();
         $this->nodesRegister = new SplObjectStorage();
+
+        if (!$this->getContainer()->hasOption('profiler.dump_event')) {
+            $this->getContainer()->setOption('profiler.dump_event', [$this, 'getEventDump']);
+        }
+
+        $this->eventDump = $this->getContainer()->getOption('profiler.dump_event');
+
+        if (in_array($this->eventDump, ['var_dump', 'print_r'])) {
+            $function = $this->eventDump;
+            $this->eventDump = function ($value) use ($function) {
+                return $this->getFunctionDump($value, $function);
+            };
+        }
     }
 
     public function reset()
@@ -169,14 +189,103 @@ class ProfilerModule extends AbstractModule
         return round($time, $precision).$unit;
     }
 
-    private function getDump($value)
+    /**
+     * Catch output of a dump function and return it as string.
+     *
+     * @param mixed    $value
+     * @param callable $function
+     *
+     * @return string
+     */
+    public function getFunctionDump($value, $function = 'var_dump')
     {
-        $sandBox = new SandBox(function () use ($value) {
-            var_dump($value);
+        $sandBox = new SandBox(function () use ($function, $value) {
+            $function($value);
         });
 
         return $sandBox->getBuffer();
     }
+
+    private function getExposedPropertiesDump($object, $deep, $maxDeep = 3)
+    {
+        $type = gettype($object);
+        if (in_array($type, [
+            'boolean',
+            'integer',
+            'double',
+            'string',
+            'resource',
+            'NULL',
+        ])) {
+            return var_export($object, true);
+        }
+        $result = '';
+        if ($type === 'array' || $object instanceof Traversable) {
+            $result .= ($object instanceof Traversable
+                ? get_class($object)
+                : 'array'
+            ).' ';
+            $count = 0;
+            $content = '';
+            foreach ($object as $key => $value) {
+                $count++;
+                $content .= "\n".str_repeat(' ', ($deep + 1) * 2).
+                    var_export($key, true).' => '.
+                    $this->getExposedPropertiesDump($value, $deep + 1);
+            }
+            $result .= $count
+                ? "($count) [$content\n".str_repeat(' ', $deep * 2)."]"
+                : '[]';
+
+            return $result;
+        }
+
+        $result .= get_class($object).' {'.(
+            $deep <= $maxDeep
+                ? call_user_func(function () use ($object, $deep) {
+                    $result = "\n";
+                    foreach (get_class_methods($object) as $method) {
+                        if (preg_match('/^get[A-Z]/', $method)) {
+                            if ($method === 'getOptions') {
+                                continue;
+                            }
+                            $reflexion = new ReflectionMethod($object, $method);
+                            if ($reflexion->getNumberOfRequiredParameters() > 0) {
+                                continue;
+                            }
+                            $value = call_user_func([$object, $method]);
+                            if ($value instanceof ModuleContainerInterface) {
+                                continue;
+                            }
+
+                            $result .= str_repeat(' ', ($deep + 1) * 2).
+                                mb_substr($method, 3).' => '.
+                                ($value instanceof Event
+                                    ? $value->getName().' event'
+                                    : $this->getExposedPropertiesDump($value, $deep + 1)
+                                ).
+                                "\n";
+                        }
+                    }
+
+                    return $result.str_repeat(' ', $deep * 2);
+                })
+                : '...'
+            ).'}';
+
+        return $result;
+    }
+
+    /**
+     * @param Event $event
+     *
+     * @return string
+     */
+    public function getEventDump(Event $event)
+    {
+        return $this->getExposedPropertiesDump($event, 0);
+    }
+
 
     private function getEventLink(Event $event)
     {
@@ -272,7 +381,7 @@ class ProfilerModule extends AbstractModule
                 }
                 if ($tokenName) {
                     $processes[] = (object) [
-                        'event'    => $this->getDump($list[0]),
+                        'event'    => call_user_func($this->eventDump, $list[0]),
                         'previous' => '#current',
                         'title'    => $tokenName,
                         'link'     => $tokenSymbol,
@@ -345,10 +454,10 @@ class ProfilerModule extends AbstractModule
                 }
                 $time = $this->getDuration($max - $min);
                 $processes[] = (object) [
-                    'event'    => $this->getDump($currentEvent),
+                    'event'    => call_user_func($this->eventDump, $currentEvent),
                     'previous' => $currentEvent === $previousEvent
                         ? '#current'
-                        : $this->getDump($previousEvent),
+                        : call_user_func($this->eventDump, $previousEvent),
                     'title'    => $name.': '.$time,
                     'link'     => $name,
                     'duration' => $time,
