@@ -247,7 +247,9 @@ trait DebuggerTrait
             'execution_max_time' => $profilerContainer->getOption('debug') ? -1 : 30000, // 30s by default in debug
         ]);
 
-        if (!$profilerContainer->getOption('enable_profiler') && $profilerContainer->getOption('execution_max_time') > -1) {
+        if (!$profilerContainer->getOption('enable_profiler') &&
+            $profilerContainer->getOption('execution_max_time') > -1
+        ) {
             $profilerContainer->setOptionsRecursive([
                 'enable_profiler' => true,
                 'profiler'        => [
