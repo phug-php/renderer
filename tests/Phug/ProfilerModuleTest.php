@@ -60,9 +60,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         ]);
         $render = $renderer->render("mixin foo\n  | Hello\n+foo");
 
-        self::assertRegExp('/\+foo\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
-        self::assertRegExp('/text\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
-        self::assertRegExp('/mixin\s+foo\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/\+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/text\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/mixin\s+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
     }
 
     /**
