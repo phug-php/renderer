@@ -2,25 +2,14 @@
 
 namespace Phug\Renderer\Profiler;
 
-use Phug\Compiler\Event\CompileEvent;
-use Phug\Compiler\Event\ElementEvent;
-use Phug\Compiler\Event\NodeEvent;
+use Phug\Compiler\Event as CompilerEvent;
 use Phug\Event;
 use Phug\Formatter\Event\FormatEvent;
 use Phug\Formatter\Format\HtmlFormat;
-use Phug\Lexer\Event\EndLexEvent;
-use Phug\Lexer\Event\TokenEvent;
-use Phug\Lexer\Token\AttributeEndToken;
-use Phug\Lexer\Token\AttributeStartToken;
-use Phug\Lexer\Token\IndentToken;
-use Phug\Lexer\Token\MixinCallToken;
-use Phug\Lexer\Token\MixinToken;
-use Phug\Lexer\Token\NewLineToken;
-use Phug\Lexer\Token\OutdentToken;
-use Phug\Lexer\Token\TextToken;
+use Phug\Lexer\Event as LexerEvent;
+use Phug\Lexer\Token;
 use Phug\Lexer\TokenInterface;
-use Phug\Parser\Event\NodeEvent as ParserNodeEvent;
-use Phug\Parser\Event\ParseEvent;
+use Phug\Parser\Event as ParserEvent;
 use Phug\Parser\Node\DocumentNode;
 use Phug\Renderer;
 use Phug\Renderer\Event\HtmlEvent;
@@ -159,23 +148,23 @@ class Profile
             $lines[$index][] = [$min, $max];
             $maxSpace = $max;
             $count = count($list);
-            if ($count === 1 && $list[0] instanceof TokenEvent) {
+            if ($count === 1 && $list[0] instanceof LexerEvent\TokenEvent) {
                 $tokenClass = get_class($list[0]->getToken());
                 $tokenSymbol = null;
                 $tokenName = null;
-                if ($tokenClass === NewLineToken::class) {
+                if ($tokenClass === Token\NewLineToken::class) {
                     $tokenSymbol = '↩';
                     $tokenName = 'new line';
-                } elseif ($tokenClass === IndentToken::class) {
+                } elseif ($tokenClass === Token\IndentToken::class) {
                     $tokenSymbol = '→';
                     $tokenName = 'indent';
-                } elseif ($tokenClass === OutdentToken::class) {
+                } elseif ($tokenClass === Token\OutdentToken::class) {
                     $tokenSymbol = '←';
                     $tokenName = 'outdent';
-                } elseif ($tokenClass === AttributeStartToken::class) {
+                } elseif ($tokenClass === Token\AttributeStartToken::class) {
                     $tokenSymbol = '(';
                     $tokenName = 'attributes start';
-                } elseif ($tokenClass === AttributeEndToken::class) {
+                } elseif ($tokenClass === Token\AttributeEndToken::class) {
                     $tokenSymbol = ')';
                     $tokenName = 'attributes end';
                 }
@@ -212,19 +201,19 @@ class Profile
                     'width' => (($end - $min) * 100 / $duration).'%',
                     'top'   => (($index + 1) * $lineHeight).'px',
                 ];
-                $name = $link instanceof TextToken
+                $name = $link instanceof Token\TextToken
                     ? 'text'
                     : (method_exists($link, 'getName')
                         ? $link->getName()
                         : get_class($link)
                     );
-                if ($link instanceof MixinCallToken) {
+                if ($link instanceof Token\MixinCallToken) {
                     $name = '+'.$name;
                 }
-                if ($link instanceof MixinToken) {
+                if ($link instanceof Token\MixinToken) {
                     $name = 'mixin '.$name;
                 }
-                if ($currentEvent instanceof EndLexEvent) {
+                if ($currentEvent instanceof LexerEvent\EndLexEvent) {
                     $style['background'] = '#7200c4';
                     $style['color'] = 'white';
                     $name = 'lexing';
@@ -232,23 +221,23 @@ class Profile
                     $style['background'] = '#648481';
                     $style['color'] = 'white';
                     $name = 'rendering';
-                } elseif ($previousEvent instanceof CompileEvent) {
+                } elseif ($previousEvent instanceof CompilerEvent\CompileEvent) {
                     $style['background'] = '#ffff78';
-                } elseif ($currentEvent instanceof ParseEvent) {
+                } elseif ($currentEvent instanceof ParserEvent\ParseEvent) {
                     $style['background'] = '#a8ffff';
                 } elseif ($previousEvent instanceof FormatEvent) {
                     $name .= ' rendering';
                     $style['background'] = '#d8ffd8';
-                } elseif ($previousEvent instanceof NodeEvent) {
+                } elseif ($previousEvent instanceof CompilerEvent\NodeEvent) {
                     $name .= ' compiling';
                     $style['background'] = '#ffffa8';
-                } elseif ($previousEvent instanceof ParserNodeEvent) {
+                } elseif ($previousEvent instanceof ParserEvent\NodeEvent) {
                     $name .= ' parsing';
                     $style['background'] = '#d8ffff';
-                } elseif ($previousEvent instanceof ElementEvent) {
+                } elseif ($previousEvent instanceof CompilerEvent\ElementEvent) {
                     $name .= ' formatting';
                     $style['background'] = '#d8d8ff';
-                } elseif ($previousEvent instanceof TokenEvent) {
+                } elseif ($previousEvent instanceof LexerEvent\TokenEvent) {
                     $name .= ' lexing';
                     $style['background'] = '#ffd8d8';
                 }
