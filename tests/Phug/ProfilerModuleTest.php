@@ -102,6 +102,50 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $renderer = new Renderer([
             'enable_profiler' => true,
         ]);
+        $renderer->setOption('profiler.dump_event', 'get_class');
+        /* @var ProfilerModule $profiler */
+        $profiler = array_filter($renderer->getModules(), function ($module) {
+            return $module instanceof ProfilerModule;
+        })[0];
+
+        self::assertInstanceOf(ProfilerModule::class, $profiler);
+
+        $renderer->render('p');
+
+        self::assertGreaterThan(1, count($profiler->getEvents()));
+
+        $profiler->reset();
+
+        self::assertCount(0, $profiler->getEvents());
+
+        $render = $renderer->render('div');
+
+        self::assertContains('Phug\\Compiler\\Event\\NodeEvent', $render);
+    }
+
+    /**
+     * @group profiler
+     * @covers ::reset
+     * @covers ::initialize
+     * @covers ::getFunctionDump
+     * @covers ::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::getEventLink
+     * @covers \Phug\Renderer\Profiler\Profile::getProfilerEvent
+     * @covers \Phug\Renderer\Profiler\Profile::getDuration
+     * @covers \Phug\Renderer::__construct
+     */
+    public function testEventVarDump()
+    {
+        if (defined('HHVM_VERSION')) {
+            self::markTestSkipped('var_dump test update disabled for HHVM.');
+
+            return;
+        }
+
+        $renderer = new Renderer([
+            'enable_profiler' => true,
+        ]);
         $renderer->setOption('profiler.dump_event', 'var_dump');
         /* @var ProfilerModule $profiler */
         $profiler = array_filter($renderer->getModules(), function ($module) {
