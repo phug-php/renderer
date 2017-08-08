@@ -35,7 +35,7 @@ class LinkDump
                 'background' => '#7200c4',
                 'color' => 'white',
             ]],
-            ['current', EndLexEvent::class, 'rendering', [
+            ['current', HtmlEvent::class, 'rendering', [
                 'background' => '#648481',
                 'color' => 'white',
             ]],
@@ -83,14 +83,14 @@ class LinkDump
                 : get_class($link)
             );
         if ($link instanceof MixinCallToken) {
-            $name = '+' . $name;
+            $name = '+'.$name;
         }
         if ($link instanceof MixinToken) {
-            $name = 'mixin ' . $name;
+            $name = 'mixin '.$name;
         }
 
         $this->initProperties($name, [
-            'current' => $currentEvent,
+            'current'  => $currentEvent,
             'previous' => $previousEvent,
         ]);
     }
