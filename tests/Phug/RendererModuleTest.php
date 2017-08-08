@@ -12,7 +12,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
 {
     public function testModule()
     {
-        include_once __DIR__.'/TestRendererModule.php';
+        include_once __DIR__.'/Utils/TestRendererModule.php';
         $module = new TestRendererModule(new Formatter());
 
         self::assertTrue(is_array($module->getEventListeners()));
@@ -73,15 +73,18 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
      */
     public function testHtmlEvent()
     {
+        $source = null;
         $renderer = new Renderer([
-            'on_html' => function (Renderer\Event\HtmlEvent $event) {
+            'on_html' => function (Renderer\Event\HtmlEvent $event) use (&$source) {
                 if ($event->getResult() === '<div></div>') {
                     $event->setError(new \Exception('Empty div'));
+                    $source = $event->getRenderEvent()->getInput();
                 }
             },
         ]);
 
         self::assertSame('<p></p>', $renderer->render('p'));
+        self::assertSame(null, $source);
 
         $message = null;
         try {
@@ -91,6 +94,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         }
 
         self::assertSame('Empty div', $message);
+        self::assertSame('div', $source);
 
         $renderer = new Renderer([
             'on_html' => function (Renderer\Event\HtmlEvent $event) {
@@ -117,5 +121,30 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         ob_end_clean();
 
         self::assertSame('<p>Empty div</p>', $contents);
+    }
+
+    /**
+     * @covers \Phug\Renderer::__construct
+     */
+    public function testModulePropagation()
+    {
+        include_once __DIR__.'/Utils/TestCompilerModule.php';
+        include_once __DIR__.'/Utils/TestFormatterModule.php';
+        include_once __DIR__.'/Utils/TestParserModule.php';
+        include_once __DIR__.'/Utils/TestLexerModule.php';
+
+        $renderer = new Renderer([
+            'modules' => [
+                TestCompilerModule::class,
+                TestFormatterModule::class,
+                TestParserModule::class,
+                TestLexerModule::class,
+            ],
+        ]);
+
+        self::assertSame([TestCompilerModule::class], $renderer->getOption('compiler_modules'));
+        self::assertSame([TestFormatterModule::class], $renderer->getOption('formatter_modules'));
+        self::assertSame([TestParserModule::class], $renderer->getOption('parser_modules'));
+        self::assertSame([TestLexerModule::class], $renderer->getOption('lexer_modules'));
     }
 }

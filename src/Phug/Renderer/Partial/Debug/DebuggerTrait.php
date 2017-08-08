@@ -4,6 +4,8 @@ namespace Phug\Renderer\Partial\Debug;
 
 use Phug\Formatter;
 use Phug\Renderer;
+use Phug\Renderer\Profiler\EventList;
+use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\RendererException;
 use Phug\Util\Exception\LocatedException;
 use Phug\Util\SandBox;
@@ -236,6 +238,44 @@ trait DebuggerTrait
     protected function setDebugFormatter(Formatter $debugFormatter)
     {
         $this->debugFormatter = $debugFormatter;
+    }
+
+    protected function initDebugOptions(Renderer $profilerContainer)
+    {
+        $profilerContainer->setOptionsDefaults([
+            'memory_limit'       => $profilerContainer->getOption('debug') ? -1 : 0x3200000, // 50MB by default in debug
+            'execution_max_time' => $profilerContainer->getOption('debug') ? -1 : 30000, // 30s by default in debug
+        ]);
+
+        if (!$profilerContainer->getOption('enable_profiler') && $profilerContainer->getOption('execution_max_time') > -1) {
+            $profilerContainer->setOptionsRecursive([
+                'enable_profiler' => true,
+                'profiler'        => [
+                    'display'        => false,
+                    'log'            => false,
+                ],
+            ]);
+        }
+        if ($profilerContainer->getOption('enable_profiler')) {
+            $profilerContainer->setOptionsDefaults([
+                'profiler' => [
+                    'time_precision' => 3,
+                    'line_height'    => 30,
+                    'display'        => true,
+                    'log'            => false,
+                ],
+            ]);
+            $events = new EventList();
+            $profilerContainer->addModule(new ProfilerModule($events, $profilerContainer));
+            $compiler = $profilerContainer->getCompiler();
+            $compiler->addModule(new ProfilerModule($events, $compiler));
+            $formatter = $compiler->getFormatter();
+            $formatter->addModule(new ProfilerModule($events, $formatter));
+            $parser = $compiler->getParser();
+            $parser->addModule(new ProfilerModule($events, $parser));
+            $lexer = $parser->getLexer();
+            $lexer->addModule(new ProfilerModule($events, $lexer));
+        }
     }
 
     /**

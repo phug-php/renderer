@@ -20,8 +20,9 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        include_once __DIR__.'/Date.php';
-        include_once __DIR__.'/XmlHhvmFormat.php';
+        ini_set('memory_limit', '512M');
+        include_once __DIR__.'/Utils/Date.php';
+        include_once __DIR__.'/Utils/XmlHhvmFormat.php';
 
         $lastCompiler = null;
         $uglify = function ($contents) {
@@ -63,14 +64,15 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             return $contents;
         };
         $this->renderer = new Renderer([
-            'debug'   => false,
-            'basedir' => __DIR__.'/../cases',
-            'pretty'  => true,
-            'modules' => [JsPhpizePhug::class],
-            'formats' => [
-                'xml' => XmlHhvmFormat::class,
+            'debug'              => false,
+            'execution_max_time' => 60000,
+            'basedir'            => __DIR__.'/../cases',
+            'pretty'             => true,
+            'modules'            => [JsPhpizePhug::class],
+            'formats'            => [
+                'xml'            => XmlHhvmFormat::class,
             ],
-            'filters' => [
+            'filters'            => [
                 'custom'        => $custom,
                 'coffee-script' => $coffee,
                 'less'          => $less,
@@ -133,14 +135,20 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         );
         // Tags used in tests where inside end whitespaces does not matter
         foreach (['p', 'foo', 'form', 'audio', 'style', 'li'] as $tag) {
-            $content = preg_replace(
-                '/(<'.$tag.'[^>]*>)\s*(\S[\s\S]*?\S)\s*(<\/'.$tag.'>)/',
-                '$1$2$3',
+            $content = preg_replace_callback(
+                '/(<'.$tag.'[^>]*>)([\S\s]*?)(<\/'.$tag.'>)/',
+                function ($match) {
+                    return $match[1].trim($match[2]).$match[3];
+                },
                 $content
             );
-            $content = preg_replace_callback('/<'.$tag.'[^>]*>([\s\S]*?)<\/'.$tag.'>/', function ($match) {
-                return str_replace("\n", ' ', $match[0]);
-            }, $content);
+            $content = preg_replace_callback(
+                '/<'.$tag.'[^>]*>([\s\S]*?)<\/'.$tag.'>/',
+                function ($match) {
+                    return str_replace("\n", ' ', $match[0]);
+                },
+                $content
+            );
         }
         // Comment squeeze
         $content = preg_replace('/\s*<!--\s*(\S[\s\S]*?\S)\s*-->/', '<!--$1-->', $content);

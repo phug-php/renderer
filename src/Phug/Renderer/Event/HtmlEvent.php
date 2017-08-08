@@ -7,6 +7,7 @@ use Phug\RendererEvent;
 
 class HtmlEvent extends Event
 {
+    private $renderEvent;
     private $result;
     private $buffer;
     private $error;
@@ -14,17 +15,27 @@ class HtmlEvent extends Event
     /**
      * CompileEvent constructor.
      *
-     * @param mixed      $result
-     * @param string     $buffer
-     * @param \Throwable $error
+     * @param RenderEvent $renderEvent
+     * @param mixed       $result
+     * @param string      $buffer
+     * @param \Throwable  $error
      */
-    public function __construct($result, $buffer, $error)
+    public function __construct(RenderEvent $renderEvent, $result, $buffer, $error)
     {
         parent::__construct(RendererEvent::HTML);
 
+        $this->renderEvent = $renderEvent;
         $this->result = $result;
         $this->buffer = $buffer;
         $this->error = $error;
+    }
+
+    /**
+     * @return RenderEvent
+     */
+    public function getRenderEvent()
+    {
+        return $this->renderEvent;
     }
 
     /**

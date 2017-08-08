@@ -9,7 +9,6 @@ use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
-use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\SandBox;
@@ -79,6 +78,8 @@ class Renderer implements ModuleContainerInterface
 
         $this->compiler = new $compilerClassName($options);
 
+        $this->initDebugOptions($this);
+
         $adapterClassName = $this->getOption('adapter_class_name');
 
         if (!is_a($adapterClassName, AdapterInterface::class, true)) {
@@ -89,9 +90,6 @@ class Renderer implements ModuleContainerInterface
         }
         $this->adapter = new $adapterClassName($this, $options);
 
-        if ($this->getOption('enable_profiler')) {
-            $this->addModule(ProfilerModule::class);
-        }
         $this->addModules($this->getOption('modules'));
         foreach ($this->getStaticModules() as $moduleClassName) {
             $interfaces = class_implements($moduleClassName);
@@ -100,7 +98,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'compiler_options' => $moduleClassName,
+                    'compiler_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(FormatterModuleInterface::class, $interfaces) &&
@@ -108,7 +106,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getFormatter()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'formatter_options' => $moduleClassName,
+                    'formatter_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(ParserModuleInterface::class, $interfaces) &&
@@ -116,7 +114,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'parser_options' => $moduleClassName,
+                    'parser_modules' => [$moduleClassName],
                 ]);
             }
             if (in_array(LexerModuleInterface::class, $interfaces) &&
@@ -124,7 +122,7 @@ class Renderer implements ModuleContainerInterface
             ) {
                 $this->compiler->getParser()->getLexer()->addModule($moduleClassName);
                 $this->setOptionsRecursive([
-                    'lexer_options' => $moduleClassName,
+                    'lexer_modules' => [$moduleClassName],
                 ]);
             }
         }
@@ -145,6 +143,11 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
+    private function mergeWithSharedVariables(array $parameters)
+    {
+        return array_merge($this->getOption('shared_variables'), $parameters);
+    }
+
     /**
      * @return AdapterInterface
      */
@@ -159,11 +162,6 @@ class Renderer implements ModuleContainerInterface
     public function getCompiler()
     {
         return $this->compiler;
-    }
-
-    private function mergeWithSharedVariables(array $parameters)
-    {
-        return array_merge($this->getOption('shared_variables'), $parameters);
     }
 
     /**
@@ -218,12 +216,12 @@ class Renderer implements ModuleContainerInterface
     {
         $source = '';
 
-        $event = new RenderEvent($input, $path, $method, $parameters);
-        $this->trigger($event);
-        $input = $event->getInput();
-        $path = $event->getPath();
-        $method = $event->getMethod();
-        $parameters = $event->getParameters();
+        $renderEvent = new RenderEvent($input, $path, $method, $parameters);
+        $this->trigger($renderEvent);
+        $input = $renderEvent->getInput();
+        $path = $renderEvent->getPath();
+        $method = $renderEvent->getMethod();
+        $parameters = $renderEvent->getParameters();
         if ($self = $this->getOption('self')) {
             $self = $self === true ? 'self' : strval($self);
             $parameters = [
@@ -255,10 +253,15 @@ class Renderer implements ModuleContainerInterface
             );
         });
 
-        $event = new HtmlEvent($sandBox->getResult(), $sandBox->getBuffer(), $sandBox->getThrowable());
-        $this->trigger($event);
+        $htmlEvent = new HtmlEvent(
+            $renderEvent,
+            $sandBox->getResult(),
+            $sandBox->getBuffer(),
+            $sandBox->getThrowable()
+        );
+        $this->trigger($htmlEvent);
 
-        if ($error = $event->getError()) {
+        if ($error = $htmlEvent->getError()) {
             $this->handleError($error, 1, $path, $source, $parameters, [
                 'debug'               => $this->getOption('debug'),
                 'error_handler'       => $this->getOption('error_handler'),
@@ -268,11 +271,11 @@ class Renderer implements ModuleContainerInterface
             ]);
         }
 
-        if ($buffer = $event->getBuffer()) {
+        if ($buffer = $htmlEvent->getBuffer()) {
             echo $buffer;
         }
 
-        return $event->getResult();
+        return $htmlEvent->getResult();
     }
 
     /**
