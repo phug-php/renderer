@@ -18,10 +18,13 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::appendParam
      * @covers ::appendNode
      * @covers ::<public>
+     * @covers \Phug\Renderer\Profiler\TokenDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
-     * @covers \Phug\Renderer\Profiler\Profile::getEventLink
-     * @covers \Phug\Renderer\Profiler\Profile::getProfilerEvent
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
      */
     public function testRenderProfiler()
@@ -51,10 +54,13 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::appendParam
      * @covers ::appendNode
      * @covers ::<public>
+     * @covers \Phug\Renderer\Profiler\TokenDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
-     * @covers \Phug\Renderer\Profiler\Profile::getEventLink
-     * @covers \Phug\Renderer\Profiler\Profile::getProfilerEvent
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
      */
     public function testDisplayProfiler()
@@ -91,9 +97,12 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::initialize
      * @covers ::getFunctionDump
      * @covers ::<public>
+     * @covers \Phug\Renderer\Profiler\TokenDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
-     * @covers \Phug\Renderer\Profiler\Profile::getEventLink
-     * @covers \Phug\Renderer\Profiler\Profile::getProfilerEvent
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer::__construct
      */
@@ -129,10 +138,13 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::initialize
      * @covers ::getFunctionDump
      * @covers ::<public>
+     * @covers \Phug\Renderer\Profiler\TokenDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
-     * @covers \Phug\Renderer\Profiler\Profile::getEventLink
-     * @covers \Phug\Renderer\Profiler\Profile::getProfilerEvent
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
+     * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
      */
     public function testEventVarDump()

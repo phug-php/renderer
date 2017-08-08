@@ -80,39 +80,7 @@ class Renderer implements ModuleContainerInterface
 
         $this->compiler = new $compilerClassName($options);
 
-        $this->setOptionsDefaults([
-            'memory_limit'       => $this->getOption('debug') ? -1 : 0x3200000, // 50MB by default in debug
-            'execution_max_time' => $this->getOption('debug') ? -1 : 30000, // 30s by default in debug
-        ]);
-
-        if (!$this->getOption('enable_profiler') && $this->getOption('execution_max_time') > -1) {
-            $this->setOptionsRecursive([
-                'enable_profiler' => true,
-                'profiler'        => [
-                    'display'        => false,
-                    'log'            => false,
-                ],
-            ]);
-        }
-        if ($this->getOption('enable_profiler')) {
-            $this->setOptionsDefaults([
-                'profiler' => [
-                    'time_precision' => 3,
-                    'line_height'    => 30,
-                    'display'        => true,
-                    'log'            => false,
-                ],
-            ]);
-            $events = new EventList();
-            $this->addModule(new ProfilerModule($events, $this));
-            $this->compiler->addModule(new ProfilerModule($events, $this->compiler));
-            $formatter = $this->compiler->getFormatter();
-            $formatter->addModule(new ProfilerModule($events, $formatter));
-            $parser = $this->compiler->getParser();
-            $parser->addModule(new ProfilerModule($events, $parser));
-            $lexer = $parser->getLexer();
-            $lexer->addModule(new ProfilerModule($events, $lexer));
-        }
+        $this->initDebugOptions($this);
 
         $adapterClassName = $this->getOption('adapter_class_name');
 
