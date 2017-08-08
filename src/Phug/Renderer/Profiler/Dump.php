@@ -45,39 +45,39 @@ class Dump
         $result = get_class($object).' {'.(
             $deep <= $maxDeep
                 ? call_user_func(function () use ($object, $deep) {
-                $result = "\n";
-                foreach (get_class_methods($object) as $method) {
-                    if (mb_strlen($result) > 0x80000) {
-                        $result .= str_repeat(' ', ($deep + 1) * 2).'...';
-                        break;
-                    }
-                    if (preg_match('/^get[A-Z]/', $method)) {
-                        if ($method === 'getOptions') {
-                            continue;
+                    $result = "\n";
+                    foreach (get_class_methods($object) as $method) {
+                        if (mb_strlen($result) > 0x80000) {
+                            $result .= str_repeat(' ', ($deep + 1) * 2).'...';
+                            break;
                         }
-                        $reflexion = new ReflectionMethod($object, $method);
-                        if ($reflexion->getNumberOfRequiredParameters() > 0) {
-                            continue;
-                        }
-                        $value = call_user_func([$object, $method]);
-                        if ($value instanceof ModuleContainerInterface) {
-                            continue;
-                        }
+                        if (preg_match('/^get[A-Z]/', $method)) {
+                            if ($method === 'getOptions') {
+                                continue;
+                            }
+                            $reflexion = new ReflectionMethod($object, $method);
+                            if ($reflexion->getNumberOfRequiredParameters() > 0) {
+                                continue;
+                            }
+                            $value = call_user_func([$object, $method]);
+                            if ($value instanceof ModuleContainerInterface) {
+                                continue;
+                            }
 
-                        $result .= str_repeat(' ', ($deep + 1) * 2).
+                            $result .= str_repeat(' ', ($deep + 1) * 2).
                             mb_substr($method, 3).' => '.
                             ($value instanceof Event
                                 ? $value->getName().' event'
                                 : $this->dumpValue($value, $deep + 1)
-                            ).
-                            "\n";
+                                ).
+                                "\n";
+                        }
                     }
-                }
 
-                return $result.str_repeat(' ', $deep * 2);
-            })
-            : '...'
-        ).'}';
+                    return $result.str_repeat(' ', $deep * 2);
+                })
+                : '...'
+            ).'}';
 
         if (mb_strlen($result) > 0x80000) {
             $result = mb_substr($result, 0, 0x80000 - 3).'...';

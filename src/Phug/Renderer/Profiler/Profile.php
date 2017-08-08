@@ -64,8 +64,7 @@ class Profile
         $startTime,
         $initialMemoryUsage,
         $eventDump
-    )
-    {
+    ) {
         $this->events = $events;
         $this->nodesRegister = $nodesRegister;
         $this->startTime = $startTime;

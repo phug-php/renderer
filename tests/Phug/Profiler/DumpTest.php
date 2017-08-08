@@ -14,7 +14,6 @@ use Phug\Renderer\Profiler\Dump;
 class DumpTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @group i
      * @covers ::<public>
      * @covers ::dumpValue
      * @covers ::dumpArray
@@ -45,8 +44,8 @@ class DumpTest extends \PHPUnit_Framework_TestCase
             '  }',
             ']',
         ]), $dump([
-            "string",
-            "key" => new RenderEvent('a', 'b', 'c', ['d']),
+            'string',
+            'key' => new RenderEvent('a', 'b', 'c', ['d']),
         ]));
 
         $array = new \ArrayObject();

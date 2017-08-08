@@ -3,7 +3,6 @@
 namespace Phug\Test;
 
 use Phug\Renderer;
-use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Profiler\ProfilerModule;
 
 /**
@@ -15,12 +14,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @group profiler
      * @covers ::record
      * @covers ::renderProfile
-     * @covers ::getEventLink
-     * @covers ::getProfilerEvent
      * @covers ::cleanupProfilerNodes
      * @covers ::appendParam
      * @covers ::appendNode
-     * @covers ::getDuration
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
      * @covers \Phug\Renderer\Profiler\Profile::getEventLink
@@ -51,12 +47,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @group profiler
      * @covers ::record
      * @covers ::renderProfile
-     * @covers ::getEventLink
-     * @covers ::getProfilerEvent
      * @covers ::cleanupProfilerNodes
      * @covers ::appendParam
      * @covers ::appendNode
-     * @covers ::getDuration
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\Profile::<public>
      * @covers \Phug\Renderer\Profiler\Profile::getEventLink
@@ -67,8 +60,8 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
     public function testDisplayProfiler()
     {
         $renderer = new Renderer([
-            'enable_profiler'     => true,
-            'profiler' => [
+            'enable_profiler' => true,
+            'profiler'        => [
                 'dump_event' => function () {
                     return '-void-dump-';
                 },
