@@ -22,6 +22,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::calculateIndex
      * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
@@ -60,6 +61,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::calculateIndex
      * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
@@ -105,6 +107,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::calculateIndex
      * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
@@ -148,6 +151,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::calculateIndex
      * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>

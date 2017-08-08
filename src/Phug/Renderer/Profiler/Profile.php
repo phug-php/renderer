@@ -106,6 +106,24 @@ class Profile
         }
     }
 
+    private function calculateIndex($lines, $min, $max)
+    {
+        $index = 0;
+        foreach ($lines as $level => $line) {
+            foreach ($line as $process) {
+                list($from, $to) = $process;
+                if ($to <= $min || $from >= $max) {
+                    continue;
+                }
+                $index = $level + 1;
+                continue 2;
+            }
+            break;
+        }
+
+        return $index;
+    }
+
     public function compose($timePrecision, $lineHeight)
     {
         $duration = microtime(true) - $this->startTime;
@@ -121,18 +139,7 @@ class Profile
             }, $list);
             $min = min($times);
             $max = max(max($times), $min + $duration / 20);
-            $index = 0;
-            foreach ($lines as $level => $line) {
-                foreach ($line as $process) {
-                    list($from, $to) = $process;
-                    if ($to <= $min || $from >= $max) {
-                        continue;
-                    }
-                    $index = $level + 1;
-                    continue 2;
-                }
-                break;
-            }
+            $index = $this->calculateIndex($lines, $min, $max);
             if (!isset($lines[$index])) {
                 $lines[$index] = [];
             }
