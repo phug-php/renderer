@@ -74,7 +74,17 @@ class DumpTest extends \PHPUnit_Framework_TestCase
             ']',
         ]), $dump($array));
 
-        $phug = new JsPhpizePhug(new Renderer());
+        $jsPhpizeDump = $dump(new JsPhpizePhug(new Renderer()));
+
+        if (defined('HHVM_VERSION')) {
+            self::assertContains('$JsPhpize\\JsPhpizePhug::getEventListeners;', $jsPhpizeDump);
+
+            $jsPhpizeDump = preg_replace(
+                '/Closure\$JsPhpize\JsPhpizePhug::getEventListeners;\d+\s*\{/',
+                'Closure {',
+                $jsPhpizeDump
+            );
+        }
 
         self::assertSame(implode("\n", [
             'JsPhpize\JsPhpizePhug {',
@@ -85,7 +95,7 @@ class DumpTest extends \PHPUnit_Framework_TestCase
             '    }',
             '  ]',
             '}',
-        ]), $dump($phug));
+        ]), $jsPhpizeDump);
 
         $event = new RenderEvent('a', 'b', 'c', ['d']);
 
