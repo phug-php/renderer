@@ -28,8 +28,7 @@ class CasesTest extends AbstractRendererTest
     public function testRender($expected, $actual, $message)
     {
         $debug = $this->renderer->getOption('debug');
-        // Debug mode to heavy for HHVM
-        $this->renderer->setOption('debug', !defined('HHVM_VERSION'));
+        $this->renderer->setOption('debug', true);
         $render = $this->renderer->renderFile($actual);
         $this->renderer->setOption('debug', $debug);
 
