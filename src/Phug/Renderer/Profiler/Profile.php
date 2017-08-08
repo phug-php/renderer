@@ -74,6 +74,38 @@ class Profile
         return round($time, $precision).$unit;
     }
 
+    private function getProcesses($list, $link, $index, $duration, $maxSpace, $lineHeight, $timePrecision)
+    {
+        $count = count($list);
+        for ($i = $count > 1 ? 1 : 0; $i < $count; $i++) {
+            /** @var Event $previousEvent */
+            $previousEvent = $list[max(0, $i - 1)];
+            /** @var Event $currentEvent */
+            $currentEvent = $list[$i];
+            $min = $previousEvent->getParam('__time');
+            $max = $currentEvent->getParam('__time');
+            $end = $i === $count - 1 ? $maxSpace : $max;
+            $linkDump = new LinkDump($link, $currentEvent, $previousEvent);
+            $name = $linkDump->getName();
+            $style = array_merge([
+                'left'  => ($min * 100 / $duration).'%',
+                'width' => (($end - $min) * 100 / $duration).'%',
+                'top'   => (($index + 1) * $lineHeight).'px',
+            ], $linkDump->getStyle());
+            $time = $this->getDuration($max - $min, $timePrecision);
+            yield (object) [
+                'event'    => call_user_func($this->eventDump, $currentEvent),
+                'previous' => $currentEvent === $previousEvent
+                    ? '#current'
+                    : call_user_func($this->eventDump, $previousEvent),
+                'title'    => $name.': '.$time,
+                'link'     => $name,
+                'duration' => $time,
+                'style'    => $style,
+            ];
+        }
+    }
+
     public function compose($timePrecision, $lineHeight)
     {
         $duration = microtime(true) - $this->startTime;
@@ -106,8 +138,7 @@ class Profile
             }
             $lines[$index][] = [$min, $max];
             $maxSpace = $max;
-            $count = count($list);
-            if ($count === 1 && $list[0] instanceof TokenEvent) {
+            if (count($list) === 1 && $list[0] instanceof TokenEvent) {
                 $tokenDump = new TokenDump($list[0]->getToken());
                 $tokenName = $tokenDump->getName();
                 if ($tokenName) {
@@ -130,32 +161,9 @@ class Profile
                     continue;
                 }
             }
-            for ($i = $count > 1 ? 1 : 0; $i < $count; $i++) {
-                /** @var Event $previousEvent */
-                $previousEvent = $list[max(0, $i - 1)];
-                /** @var Event $currentEvent */
-                $currentEvent = $list[$i];
-                $min = $previousEvent->getParam('__time');
-                $max = $currentEvent->getParam('__time');
-                $end = $i === $count - 1 ? $maxSpace : $max;
-                $linkDump = new LinkDump($link, $currentEvent, $previousEvent);
-                $name = $linkDump->getName();
-                $style = array_merge([
-                    'left'  => ($min * 100 / $duration).'%',
-                    'width' => (($end - $min) * 100 / $duration).'%',
-                    'top'   => (($index + 1) * $lineHeight).'px',
-                ], $linkDump->getStyle());
-                $time = $this->getDuration($max - $min, $timePrecision);
-                $processes[] = (object) [
-                    'event'    => call_user_func($this->eventDump, $currentEvent),
-                    'previous' => $currentEvent === $previousEvent
-                        ? '#current'
-                        : call_user_func($this->eventDump, $previousEvent),
-                    'title'    => $name.': '.$time,
-                    'link'     => $name,
-                    'duration' => $time,
-                    'style'    => $style,
-                ];
+            $generator = $this->getProcesses($list, $link, $index, $duration, $maxSpace, $lineHeight, $timePrecision);
+            foreach ($generator as $process) {
+                $processes[] = $process;
             }
         }
 

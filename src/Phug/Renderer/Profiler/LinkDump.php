@@ -27,21 +27,8 @@ class LinkDump
      */
     private $style;
 
-    public function __construct($link, $currentEvent, $previousEvent)
+    private function initProperties($name, $style, $currentEvent, $previousEvent)
     {
-        $style = [];
-        $name = $link instanceof TextToken
-            ? 'text'
-            : (method_exists($link, 'getName')
-                ? $link->getName()
-                : get_class($link)
-            );
-        if ($link instanceof MixinCallToken) {
-            $name = '+'.$name;
-        }
-        if ($link instanceof MixinToken) {
-            $name = 'mixin '.$name;
-        }
         if ($currentEvent instanceof EndLexEvent) {
             $style['background'] = '#7200c4';
             $style['color'] = 'white';
@@ -73,6 +60,25 @@ class LinkDump
 
         $this->name = $name;
         $this->style = $style;
+    }
+
+    public function __construct($link, $currentEvent, $previousEvent)
+    {
+        $style = [];
+        $name = $link instanceof TextToken
+            ? 'text'
+            : (method_exists($link, 'getName')
+                ? $link->getName()
+                : get_class($link)
+            );
+        if ($link instanceof MixinCallToken) {
+            $name = '+'.$name;
+        }
+        if ($link instanceof MixinToken) {
+            $name = 'mixin '.$name;
+        }
+
+        $this->initProperties($name, $style, $currentEvent, $previousEvent);
     }
 
     /**

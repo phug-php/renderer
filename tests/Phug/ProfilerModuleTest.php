@@ -20,7 +20,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
@@ -56,7 +58,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
@@ -99,7 +103,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
@@ -140,7 +146,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
+     * @covers \Phug\Renderer\Profiler\LinkDump::initProperties
      * @covers \Phug\Renderer\Profiler\Profile::<public>
+     * @covers \Phug\Renderer\Profiler\Profile::getProcesses
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::<public>
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
