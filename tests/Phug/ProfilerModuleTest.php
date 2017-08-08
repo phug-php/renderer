@@ -29,6 +29,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testRenderProfiler()
     {
@@ -47,6 +48,21 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         self::assertContains('title="div formatting:', $render);
         self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div rendering:', $render);
+
+        $renderer = new Renderer([
+            'enable_profiler' => true,
+            'profiler'        => [
+                'time_precision' => 7,
+                'dump_event'     => function () {
+                    return '-void-dump-';
+                },
+            ],
+        ]);
+        $render = $renderer->render("mixin foo\n  | Hello\n+foo");
+
+        self::assertRegExp('/\+foo\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/text\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/mixin\s+foo\s+rendering\s*<br>\s*[\.\d]+µs/', $render);
     }
 
     /**
@@ -68,6 +84,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testDisplayProfiler()
     {
@@ -114,6 +131,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer\Profiler\Profile::getDuration
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testCustomDump()
     {
@@ -158,6 +176,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testEventVarDump()
     {

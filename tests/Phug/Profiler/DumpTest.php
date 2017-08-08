@@ -16,6 +16,7 @@ class DumpTest extends \PHPUnit_Framework_TestCase
     /**
      * @covers ::<public>
      * @covers ::dumpValue
+     * @covers ::dumpObject
      * @covers ::dumpArray
      * @covers ::getExposedProperties
      */
