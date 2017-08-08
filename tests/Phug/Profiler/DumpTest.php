@@ -77,10 +77,10 @@ class DumpTest extends \PHPUnit_Framework_TestCase
         $jsPhpizeDump = $dump(new JsPhpizePhug(new Renderer()));
 
         if (defined('HHVM_VERSION')) {
-            self::assertContains('$JsPhpize\\JsPhpizePhug::getEventListeners;', $jsPhpizeDump);
+            self::assertContains('$JsPhpize\\JsPhpizePhug::getEventListeners', $jsPhpizeDump);
 
             $jsPhpizeDump = preg_replace(
-                '/Closure\$JsPhpize\JsPhpizePhug::getEventListeners;\d+\s*\{/',
+                '/Closure\$.+?\d+\s*\{/',
                 'Closure {',
                 $jsPhpizeDump
             );
