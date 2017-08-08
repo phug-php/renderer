@@ -9,8 +9,6 @@ use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
-use Phug\Renderer\Profiler\EventList;
-use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\SandBox;
