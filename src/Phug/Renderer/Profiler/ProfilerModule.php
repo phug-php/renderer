@@ -96,8 +96,8 @@ class ProfilerModule extends AbstractModule
     public function reset()
     {
         $this->initialize();
-        foreach ($this->events as &$event) {
-            unset($event);
+        while (count($this->events)) {
+            $this->events->offsetUnset(key($this->events));
         }
         $this->events->unlock();
     }
@@ -153,6 +153,14 @@ class ProfilerModule extends AbstractModule
         if ($container->getOption('profiler.display') || $container->getOption('profiler.log')) {
             $this->events[] = $event;
         }
+    }
+
+    /**
+     * @return EventList
+     */
+    public function getEvents()
+    {
+        return $this->events;
     }
 
     /**

@@ -117,7 +117,13 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
         self::assertInstanceOf(ProfilerModule::class, $profiler);
 
+        $renderer->render('p');
+
+        self::assertGreaterThan(1, count($profiler->getEvents()));
+
         $profiler->reset();
+
+        self::assertCount(0, $profiler->getEvents());
 
         $render = $renderer->render('div');
 
