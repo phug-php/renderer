@@ -69,6 +69,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group profiler
+     * @covers ::record
      * @covers ::renderProfile
      * @covers ::recordDisplayEvent
      */
@@ -107,6 +108,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group profiler
+     * @covers ::record
      * @covers ::renderProfile
      * @covers ::recordDisplayEvent
      * @covers ::throwException
@@ -119,9 +121,8 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $message = null;
         try {
             $renderer->render('div');
-        } catch (RendererException $exception) {
-            $message = $exception->getMessage();
         } catch (ProfilerException $exception) {
+            // Short time should imply not located exception
             $message = $exception->getMessage();
         }
 
@@ -130,6 +131,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group profiler
+     * @covers ::record
      * @covers ::renderProfile
      * @covers ::recordDisplayEvent
      * @covers ::throwException
@@ -138,11 +140,11 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
     {
         $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = null;
         $renderer = new Renderer([
-            'memory_limit' => 50000,
+            'memory_limit' => 500000,
             'filters'      => [
                 'verbatim' => function ($string) {
                     // Pollute memory
-                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', 50000);
+                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', 500000);
 
                     return $string;
                 },
@@ -152,13 +154,12 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         try {
             $renderer->renderFile(__DIR__.'/../cases/includes.pug');
         } catch (RendererException $exception) {
-            $message = $exception->getMessage();
-        } catch (ProfilerException $exception) {
+            // 500000B should only be exceeded on verbatim call
             $message = $exception->getMessage();
         }
         unset($GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD']);
 
-        self::assertContains('memory_limit of 50000B exceeded.', $message);
+        self::assertContains('memory_limit of 500000B exceeded.', $message);
     }
 
     /**
