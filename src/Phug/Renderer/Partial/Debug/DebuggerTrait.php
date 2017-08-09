@@ -248,7 +248,10 @@ trait DebuggerTrait
         ]);
 
         if (!$profilerContainer->getOption('enable_profiler') &&
-            $profilerContainer->getOption('execution_max_time') > -1
+            (
+                $profilerContainer->getOption('execution_max_time') > -1 ||
+                $profilerContainer->getOption('memory_limit') > -1
+            )
         ) {
             $profilerContainer->setOptionsRecursive([
                 'enable_profiler' => true,

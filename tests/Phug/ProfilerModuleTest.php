@@ -3,7 +3,9 @@
 namespace Phug\Test;
 
 use Phug\Renderer;
+use Phug\Renderer\Profiler\ProfilerException;
 use Phug\Renderer\Profiler\ProfilerModule;
+use Phug\RendererException;
 
 /**
  * @coversDefaultClass Phug\Renderer\Profiler\ProfilerModule
@@ -63,6 +65,129 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         self::assertRegExp('/\+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
         self::assertRegExp('/text\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
         self::assertRegExp('/mixin\s+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
+    }
+
+    /**
+     * @group profiler
+     * @covers ::renderProfile
+     * @covers ::recordDisplayEvent
+     */
+    public function testLogProfiler()
+    {
+        $log = sys_get_temp_dir().DIRECTORY_SEPARATOR.'profiler'.mt_rand(0, 9999999).'.log';
+        $renderer = new Renderer([
+            'enable_profiler' => true,
+            'profiler'        => [
+                'log'     => $log,
+                'display' => false,
+            ],
+        ]);
+        $renderer->render('div');
+        $render = file_get_contents($log);
+        /* @var ProfilerModule $profiler */
+        $profiler = array_filter($renderer->getModules(), function ($module) {
+            return $module instanceof ProfilerModule;
+        })[0];
+        $count = count($profiler->getEvents());
+        $profiler->recordDisplayEvent(1);
+
+        self::assertCount($count, $profiler->getEvents());
+
+        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div lexing:', $render);
+        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div parsing:', $render);
+        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div compiling:', $render);
+        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div formatting:', $render);
+        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertContains('title="div rendering:', $render);
+    }
+
+    /**
+     * @group profiler
+     * @covers ::renderProfile
+     * @covers ::recordDisplayEvent
+     * @covers ::throwException
+     */
+    public function testExecutionMaxTime()
+    {
+        $renderer = new Renderer([
+            'execution_max_time' => 3,
+        ]);
+        $message = null;
+        try {
+            $renderer->render('div');
+        } catch (RendererException $exception) {
+            $message = $exception->getMessage();
+        } catch (ProfilerException $exception) {
+            $message = $exception->getMessage();
+        }
+
+        self::assertContains('execution_max_time of 3ms exceeded.', $message);
+    }
+
+    /**
+     * @group profiler
+     * @covers ::renderProfile
+     * @covers ::recordDisplayEvent
+     * @covers ::throwException
+     */
+    public function testMemoryLimit()
+    {
+        $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = null;
+        $renderer = new Renderer([
+            'memory_limit' => 50000,
+            'filters'      => [
+                'verbatim' => function ($string) {
+                    // Pollute memory
+                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', 50000);
+
+                    return $string;
+                },
+            ],
+        ]);
+        $message = null;
+        try {
+            $renderer->renderFile(__DIR__.'/../cases/includes.pug');
+        } catch (RendererException $exception) {
+            $message = $exception->getMessage();
+        } catch (ProfilerException $exception) {
+            $message = $exception->getMessage();
+        }
+        unset($GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD']);
+
+        self::assertContains('memory_limit of 50000B exceeded.', $message);
+    }
+
+    /**
+     * @group profiler
+     * @covers \Phug\Renderer\Profiler\TokenDump::<public>
+     */
+    public function testTokenDump()
+    {
+        $renderer = new Renderer([
+            'enable_profiler' => true,
+            'profiler'        => [
+                'time_precision' => 7,
+                'dump_event'     => function () {
+                    return '-void-dump-';
+                },
+            ],
+        ]);
+        $render = $renderer->render("a(href='a')\n  | Hello\ndiv");
+
+        self::assertContains('↩', $render);
+        self::assertContains('new line', $render);
+        self::assertContains('→', $render);
+        self::assertContains('indent', $render);
+        self::assertContains('←', $render);
+        self::assertContains('outdent', $render);
+        self::assertContains('(', $render);
+        self::assertContains('attributes start', $render);
+        self::assertContains(')', $render);
+        self::assertContains('attributes end', $render);
     }
 
     /**
