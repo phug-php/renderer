@@ -139,12 +139,13 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
     public function testMemoryLimit()
     {
         $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = null;
+        $limit = 500000;
         $renderer = new Renderer([
-            'memory_limit' => 500000,
+            'memory_limit' => $limit,
             'filters'      => [
-                'verbatim' => function ($string) {
+                'verbatim' => function ($string) use ($limit) {
                     // Pollute memory
-                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', 500000);
+                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', $limit * 1.3);
 
                     return $string;
                 },
@@ -159,7 +160,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         }
         unset($GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD']);
 
-        self::assertContains('memory_limit of 500000B exceeded.', $message);
+        self::assertContains('memory_limit of '.$limit.'B exceeded.', $message);
     }
 
     /**
