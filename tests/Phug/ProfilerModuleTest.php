@@ -69,41 +69,22 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group profiler
-     * @covers ::record
-     * @covers ::renderProfile
-     * @covers ::recordDisplayEvent
      */
     public function testLogProfiler()
     {
-        $log = sys_get_temp_dir().DIRECTORY_SEPARATOR.'profiler'.mt_rand(0, 9999999).'.log';
         $renderer = new Renderer([
-            'enable_profiler' => true,
-            'profiler'        => [
-                'log'     => $log,
-                'display' => false,
-            ],
+            'debug' => true,
         ]);
-        $renderer->render('div');
-        $render = file_get_contents($log);
-        /* @var ProfilerModule $profiler */
-        $profiler = array_filter($renderer->getModules(), function ($module) {
-            return $module instanceof ProfilerModule;
-        })[0];
-        $count = count($profiler->getEvents());
-        $profiler->recordDisplayEvent(1);
 
-        self::assertCount($count, $profiler->getEvents());
+        self::assertGreaterThan(0, $renderer->getOption('memory_limit'));
+        self::assertGreaterThan(0, $renderer->getOption('execution_max_time'));
 
-        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $render);
-        self::assertContains('title="div lexing:', $render);
-        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $render);
-        self::assertContains('title="div parsing:', $render);
-        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $render);
-        self::assertContains('title="div compiling:', $render);
-        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $render);
-        self::assertContains('title="div formatting:', $render);
-        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
-        self::assertContains('title="div rendering:', $render);
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        self::assertLessThan(0, $renderer->getOption('memory_limit'));
+        self::assertLessThan(0, $renderer->getOption('execution_max_time'));
     }
 
     /**

@@ -243,8 +243,8 @@ trait DebuggerTrait
     protected function initDebugOptions(Renderer $profilerContainer)
     {
         $profilerContainer->setOptionsDefaults([
-            'memory_limit'       => $profilerContainer->getOption('debug') ? -1 : 0x3200000, // 50MB by default in debug
-            'execution_max_time' => $profilerContainer->getOption('debug') ? -1 : 30000, // 30s by default in debug
+            'memory_limit'       => $profilerContainer->getOption('debug') ? 0x3200000 : -1, // 50MB by default in debug
+            'execution_max_time' => $profilerContainer->getOption('debug') ? 30000 : -1, // 30s by default in debug
         ]);
 
         if (!$profilerContainer->getOption('enable_profiler') &&
