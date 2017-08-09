@@ -118,11 +118,14 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $renderer = new Renderer([
             'execution_max_time' => 3,
         ]);
-        $message = null;
+        $message = '';
         try {
             $renderer->render('div');
         } catch (ProfilerException $exception) {
             // Short time should imply not located exception
+            $message = $exception->getMessage();
+        } catch (RendererException $exception) {
+            // Should not happen (security for HHVM test)
             $message = $exception->getMessage();
         }
 
@@ -138,6 +141,12 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
      */
     public function testMemoryLimit()
     {
+        if (defined('HHVM_VERSION')) {
+            self::markTestSkipped('Memory limit test skipped on HHVM.');
+
+            return;
+        }
+
         $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = null;
         $limit = 500000;
         $renderer = new Renderer([
@@ -145,13 +154,16 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
             'filters'      => [
                 'verbatim' => function ($string) use ($limit) {
                     // Pollute memory
-                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat('a', $limit * 1.3);
+                    $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat(
+                        'a',
+                        $limit
+                    );
 
                     return $string;
                 },
             ],
         ]);
-        $message = null;
+        $message = '';
         try {
             $renderer->renderFile(__DIR__.'/../cases/includes.pug');
         } catch (RendererException $exception) {
