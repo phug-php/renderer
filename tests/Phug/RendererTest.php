@@ -331,6 +331,61 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::handleError
      * @covers ::callAdapter
+     * @covers ::getDebuggedException
+     * @covers ::setDebugFile
+     * @covers ::setDebugString
+     * @covers ::setDebugFormatter
+     * @covers ::getDebugFormatter
+     * @covers ::hasColorSupport
+     * @covers ::getRendererException
+     * @covers ::getErrorMessage
+     * @covers ::highlightLine
+     * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
+     */
+    public function testContextLines()
+    {
+        $renderer = new Renderer([
+            'debug'               => true,
+            'error_context_lines' => 3,
+            'color_support'       => false,
+            'adapter_class_name'  => EvalAdapter::class,
+        ]);
+        $message = null;
+        try {
+            $renderer->render(implode("\n", [
+                '// line -5',
+                '// line -4',
+                '// line -3',
+                '// line -2',
+                '// line -1',
+                'div: p=12/0',
+                '// line +1',
+                '// line +2',
+                '// line +3',
+                '// line +4',
+                '// line +5',
+            ]));
+        } catch (\Exception $error) {
+            $message = $error->getMessage();
+        }
+
+        self::assertContains('Division by zero', $message);
+        self::assertContains('div: p=12/0', $message);
+        self::assertContains('// line -1', $message);
+        self::assertContains('// line +1', $message);
+        self::assertContains('// line -2', $message);
+        self::assertContains('// line +2', $message);
+        self::assertContains('// line -3', $message);
+        self::assertContains('// line +3', $message);
+        self::assertNotContains('// line -4', $message);
+        self::assertNotContains('// line +4', $message);
+        self::assertNotContains('// line -5', $message);
+        self::assertNotContains('// line +5', $message);
+    }
+
+    /**
+     * @covers ::handleError
+     * @covers ::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
