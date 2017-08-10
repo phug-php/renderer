@@ -60,7 +60,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
                 },
             ],
         ]);
-        $render = $renderer->render("mixin foo\n  | Hello\n+foo");
+        $render = $renderer->render("mixin foo\n  p&attributes(\$attributes)\n    | Hello\n+foo(a='b')");
 
         self::assertRegExp('/\+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
         self::assertRegExp('/text\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
@@ -106,6 +106,8 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @group profiler
+     * @covers ::renderProfile
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testDebugDefaultOptions()
     {
@@ -122,6 +124,19 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
         self::assertLessThan(0, $renderer->getOption('memory_limit'));
         self::assertLessThan(0, $renderer->getOption('execution_max_time'));
+
+        $renderer = new Renderer([
+            'enable_profiler' => false,
+            'memory_limit'    => 2000000,
+        ]);
+
+        self::assertTrue($renderer->getOption('enable_profiler'));
+        self::assertFalse($renderer->getOption('profiler.display'));
+        self::assertFalse($renderer->getOption('profiler.log'));
+
+        $render = $renderer->render('div');
+
+        self::assertSame('<div></div>', $render);
     }
 
     /**
@@ -184,6 +199,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $message = '';
         try {
             $renderer->renderFile(__DIR__.'/../cases/includes.pug');
+        } catch (ProfilerException $exception) {
+            // Should not happen
+            $message = $exception->getMessage();
         } catch (RendererException $exception) {
             // 500000B should only be exceeded on verbatim call
             $message = $exception->getMessage();
