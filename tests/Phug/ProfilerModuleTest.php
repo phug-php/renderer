@@ -360,8 +360,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
             return;
         }
-        if (version_compare(PHP_VERSION, '7.2.0') >= 0) {
-            self::markTestSkipped('var_dump test disabled for PHP 7.2.0.');
+
+        if (version_compare(PHP_VERSION, '7.2.0-dev') >= 0) {
+            self::markTestSkipped('var_dump test disabled for PHP '.PHP_VERSION.'.');
 
             return;
         }
