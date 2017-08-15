@@ -87,6 +87,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         self::assertSame(null, $source);
 
         $message = null;
+
         try {
             $renderer->render('div');
         } catch (\Exception $exception) {

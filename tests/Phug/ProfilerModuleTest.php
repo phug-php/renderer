@@ -152,6 +152,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
             'execution_max_time' => 3,
         ]);
         $message = '';
+
         try {
             $renderer->render('div');
         } catch (ProfilerException $exception) {
@@ -197,6 +198,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
             ],
         ]);
         $message = '';
+
         try {
             $renderer->renderFile(__DIR__.'/../cases/includes.pug');
         } catch (ProfilerException $exception) {

@@ -5,6 +5,7 @@ class Date extends DateTime
     public function __construct($time = 'now')
     {
         $timezone = new DateTimeZone('UTC');
+
         try {
             parent::__construct($time, $timezone);
         } catch (Exception $exception) {
