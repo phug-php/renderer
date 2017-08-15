@@ -233,6 +233,7 @@ class RendererTest extends AbstractRendererTest
             'allow_mixed_indent' => false,
         ]);
         $message = '';
+
         try {
             $this->renderer->render($template);
         } catch (LexerException $error) {
@@ -274,6 +275,7 @@ class RendererTest extends AbstractRendererTest
                 'adapter_class_name' => $adapter,
             ]);
             $message = null;
+
             try {
                 $renderer->render('div: p=12/0');
             } catch (\Exception $error) {
@@ -292,6 +294,7 @@ class RendererTest extends AbstractRendererTest
 
             $message = null;
             $renderer->setOption('debug', true);
+
             try {
                 $renderer->render('div: p=12/0');
             } catch (RendererException $error) {
@@ -310,6 +313,7 @@ class RendererTest extends AbstractRendererTest
 
             $message = null;
             $renderer->setOption('color_support', true);
+
             try {
                 $renderer->render('div: p=12/0');
             } catch (RendererException $error) {
@@ -351,6 +355,7 @@ class RendererTest extends AbstractRendererTest
             'adapter_class_name'  => EvalAdapter::class,
         ]);
         $message = null;
+
         try {
             $renderer->render(implode("\n", [
                 '// line -5',
@@ -458,6 +463,7 @@ class RendererTest extends AbstractRendererTest
     public function testCompilerClassNameException()
     {
         $message = null;
+
         try {
             new Renderer([
                 'compiler_class_name' => Renderer::class,
@@ -476,6 +482,7 @@ class RendererTest extends AbstractRendererTest
     public function testAdapterClassNameException()
     {
         $message = null;
+
         try {
             new Renderer([
                 'adapter_class_name' => Renderer::class,
@@ -620,6 +627,7 @@ class RendererTest extends AbstractRendererTest
         ]);
 
         $message = null;
+
         try {
             $renderer->render(
                 "doctype html\n".

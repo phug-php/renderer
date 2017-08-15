@@ -130,6 +130,7 @@ class FileAdapterTest extends AbstractRendererTest
             'adapter_class_name' => StreamAdapter::class,
             'cache_dir'          => sys_get_temp_dir(),
         ]);
+
         try {
             $renderer->render('foo');
         } catch (RendererException $error) {
@@ -143,6 +144,7 @@ class FileAdapterTest extends AbstractRendererTest
         );
 
         $message = null;
+
         try {
             $renderer->cacheDirectory('foo');
         } catch (RendererException $error) {
