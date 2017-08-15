@@ -250,9 +250,11 @@ class ProfilerModule extends AbstractModule
 
     public static function recordProfilerDisplayEvent($debugId)
     {
-        /** @var ProfilerModule $profiler */
-        list($profiler, $nodeId) = static::$profilers[$debugId];
-        $profiler->recordDisplayEvent($nodeId);
+        if (isset(static::$profilers[$debugId])) {
+            /** @var ProfilerModule $profiler */
+            list($profiler, $nodeId) = static::$profilers[$debugId];
+            $profiler->recordDisplayEvent($nodeId);
+        }
     }
 
     private function cleanupProfilerNodes()
