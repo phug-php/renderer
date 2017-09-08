@@ -190,7 +190,7 @@ class RendererTest extends AbstractRendererTest
     public function testInterpolations()
     {
         $actual = str_replace(
-            array("\n", "\r"),
+            ["\n", "\r"],
             '',
             trim($this->renderer->render('p #[em #[strong Go]]'))
         );
