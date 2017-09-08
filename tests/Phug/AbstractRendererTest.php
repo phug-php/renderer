@@ -24,7 +24,6 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         include_once __DIR__.'/Utils/Date.php';
         include_once __DIR__.'/Utils/XmlHhvmFormat.php';
 
-        $lastCompiler = null;
         $uglify = function ($contents) {
             $engine = new Uglify($contents);
 
@@ -133,6 +132,14 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             ["\n", "/>\n<", '/>', '>/<', '"'],
             trim($content)
         );
+        foreach (['ul', 'div', 'body'] as $tag) {
+            $newContent = preg_replace('/(<'.$tag.'([^>]+|"(?:\\\\[\\s\\S]|[^"\\\\])*")*?>)(?!\n|<\/'.$tag.'>)/', "$1\n", $content);
+            if (preg_last_error()) {
+                break;
+            }
+
+            $content = $newContent;
+        }
         // Tags used in tests where inside end whitespaces does not matter
         foreach (['p', 'foo', 'form', 'audio', 'style', 'li'] as $tag) {
             $content = preg_replace_callback(

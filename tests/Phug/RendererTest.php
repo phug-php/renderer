@@ -187,6 +187,16 @@ class RendererTest extends AbstractRendererTest
         self::assertSame('ko', $actual);
     }
 
+    public function testInterpolations()
+    {
+        $actual = str_replace(
+            array("\n", "\r"),
+            '',
+            trim($this->renderer->render('p #[em #[strong Go]]'))
+        );
+        self::assertSame('<p><em><strong>Go</strong></em></p>', $actual);
+    }
+
     /**
      * @covers ::getAdapter
      * @covers ::getCompiler

@@ -154,7 +154,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $message = '';
 
         try {
-            $renderer->render('div');
+            $renderer->renderFile(__DIR__.'/../cases/includes.pug');
         } catch (ProfilerException $exception) {
             // Short time should imply not located exception
             $message = $exception->getMessage();
@@ -200,7 +200,9 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
         $message = '';
 
         try {
-            $renderer->renderFile(__DIR__.'/../cases/includes.pug');
+            for ($i = 0; $i < 10; $i++) {
+                $renderer->renderFile(__DIR__.'/../cases/includes.pug');
+            }
         } catch (ProfilerException $exception) {
             // Should not happen
             $message = $exception->getMessage();
@@ -363,7 +365,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
             return;
         }
 
-        if (version_compare(PHP_VERSION, '7.2.0-dev') >= 0) {
+        if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
             self::markTestSkipped('var_dump test disabled for PHP '.PHP_VERSION.'.');
 
             return;
