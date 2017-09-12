@@ -154,14 +154,18 @@ trait DebuggerTrait
         }
         $isPugError = $error instanceof LocatedException;
         /* @var LocatedException $error */
+        if ($isPugError) {
+            $compiler = $this->getCompiler();
+            if ($path = $compiler->locate($error->getLocation()->getPath())) {
+                $source = $compiler->getFileContents($path);
+            }
+        }
 
         return new RendererException($this->getErrorMessage(
             $error,
             $isPugError ? $error->getLocation()->getLine() : $line,
             $isPugError ? $error->getLocation()->getOffset() : $offset,
-            $isPugError && ($path = $error->getLocation()->getPath())
-                ? file_get_contents($path)
-                : $source,
+            $source,
             $isPugError ? $error->getLocation()->getPath() : $sourcePath,
             $colorSupport,
             $parameters,
@@ -206,12 +210,14 @@ trait DebuggerTrait
         $line = $pugError->getLocation()->getLine();
         $offset = $pugError->getLocation()->getOffset();
         $sourcePath = $pugError->getLocation()->getPath() ?: $path;
+        $compiler = $this->getCompiler();
+        $sourceFile = $compiler->locate($sourcePath);
 
-        if ($sourcePath && !file_exists($sourcePath)) {
+        if ($sourcePath && !$sourceFile) {
             return $error;
         }
 
-        $source = $sourcePath ? file_get_contents($sourcePath) : $this->debugString;
+        $source = $sourceFile ? $compiler->getFileContents($sourceFile) : $this->debugString;
 
         return $this->getRendererException($error, $code, $line, $offset, $source, $sourcePath, $parameters, $options);
     }
