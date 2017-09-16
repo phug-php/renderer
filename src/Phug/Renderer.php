@@ -195,7 +195,7 @@ class Renderer implements ModuleContainerInterface
     {
         if (!($adapter instanceof CacheInterface)) {
             throw new RendererException(
-                'You cannot use "cache" option with '.get_class($adapter).
+                'You cannot use "cache_dir" option with '.get_class($adapter).
                 ' because this adapter does not implement '.CacheInterface::class
             );
         }
@@ -231,11 +231,13 @@ class Renderer implements ModuleContainerInterface
 
         $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
-            $source = $getSource($path, $input);
-            if ($this->hasOption('cache_dir') && $this->getOption('cache_dir')) {
-                $this->expectCacheAdapter($adapter);
-            }
-            if ($adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir')) {
+            $cacheDir = $adapter->hasOption('cache_dir')
+                ? $adapter->getOption('cache_dir')
+                : ($this->hasOption('cache_dir')
+                    ? $this->getOption('cache_dir')
+                    : null
+                );
+            if ($cacheDir) {
                 /* @var CacheInterface $adapter */
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
@@ -247,12 +249,15 @@ class Renderer implements ModuleContainerInterface
                     : $adapter->captureBuffer($display);
             }
 
+            $source = $getSource($path, $input);
+
             return $adapter->$method(
                 $source,
                 $this->mergeWithSharedVariables($parameters)
             );
         });
 
+        $source = $source ?: $getSource($path, $input);
         $htmlEvent = new HtmlEvent(
             $renderEvent,
             $sandBox->getResult(),

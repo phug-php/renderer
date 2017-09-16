@@ -150,7 +150,9 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
      */
     private function getCachePath($name)
     {
-        return str_replace('//', '/', $this->getRenderer()->getOption('cache_dir').'/'.$name).'.php';
+        $cacheDir = $this->getCacheDirectory();
+
+        return str_replace('//', '/', $cacheDir.'/'.$name).'.php';
     }
 
     /**
@@ -219,7 +221,17 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
 
     private function getCacheDirectory()
     {
-        $cacheFolder = $this->getOption('cache_dir');
+        $cacheFolder = $this->hasOption('cache_dir')
+            ? $this->getOption('cache_dir')
+            : null;
+        if (!$cacheFolder && $cacheFolder !== false) {
+            $cacheFolder = $this->getRenderer()->hasOption('cache_dir')
+                ? $this->getRenderer()->getOption('cache_dir')
+                : null;
+        }
+        if ($cacheFolder === true) {
+            $cacheFolder = $this->getOption('tmp_dir');
+        }
 
         if (!is_dir($cacheFolder) && !@mkdir($cacheFolder, 0777, true)) {
             throw new RuntimeException(

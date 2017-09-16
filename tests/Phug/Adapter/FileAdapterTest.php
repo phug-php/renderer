@@ -138,7 +138,7 @@ class FileAdapterTest extends AbstractRendererTest
         }
 
         self::assertSame(
-            'You cannot use "cache" option with '.StreamAdapter::class.
+            'You cannot use "cache_dir" option with '.StreamAdapter::class.
             ' because this adapter does not implement '.CacheInterface::class,
             $message
         );
