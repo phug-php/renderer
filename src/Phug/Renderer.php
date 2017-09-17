@@ -231,13 +231,11 @@ class Renderer implements ModuleContainerInterface
 
         $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
-            $cacheDir = $adapter->hasOption('cache_dir')
-                ? $adapter->getOption('cache_dir')
-                : ($this->hasOption('cache_dir')
-                    ? $this->getOption('cache_dir')
-                    : null
-                );
-            if ($cacheDir) {
+            $cacheEnabled = (
+                $adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir') ||
+                $this->hasOption('cache_dir') && $this->getOption('cache_dir')
+            );
+            if ($cacheEnabled) {
                 /* @var CacheInterface $adapter */
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
@@ -257,7 +255,6 @@ class Renderer implements ModuleContainerInterface
             );
         });
 
-        $source = $source ?: $getSource($path, $input);
         $htmlEvent = new HtmlEvent(
             $renderEvent,
             $sandBox->getResult(),
@@ -267,6 +264,7 @@ class Renderer implements ModuleContainerInterface
         $this->trigger($htmlEvent);
 
         if ($error = $htmlEvent->getError()) {
+            $source = $source ?: $getSource($path, $input);
             $this->handleError($error, 1, $path, $source, $parameters, [
                 'debug'               => $this->getOption('debug'),
                 'error_handler'       => $this->getOption('error_handler'),
