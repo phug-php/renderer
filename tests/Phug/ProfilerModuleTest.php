@@ -163,7 +163,7 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
 
         try {
             for ($i = 0; $i < 10; $i++) {
-                $renderer->renderFile(__DIR__ . '/../cases/includes.pug');
+                $renderer->renderFile(__DIR__.'/../cases/includes.pug');
             }
         } catch (ProfilerException $exception) {
             // Short time should imply not located exception
