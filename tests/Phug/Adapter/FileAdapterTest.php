@@ -68,14 +68,14 @@ class FileAdapterTest extends AbstractRendererTest
             'message' => 'Hi',
         ]));
 
-        $renderer->getAdapter()->setOption('modified_check', false);
+        $renderer->getAdapter()->setOption('up_to_date_check', false);
         file_put_contents($path, 'div=$message');
 
         self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
 
-        $renderer->getAdapter()->setOption('modified_check', true);
+        $renderer->getAdapter()->setOption('up_to_date_check', true);
 
         self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',

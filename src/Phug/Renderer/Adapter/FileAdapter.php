@@ -18,7 +18,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             'cache_dir'           => null,
             'tmp_dir'             => sys_get_temp_dir(),
             'tmp_name_function'   => 'tempnam',
-            'modified_check'      => true,
+            'up_to_date_check'    => true,
             'keep_base_name'      => false,
         ]);
 
@@ -209,7 +209,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             );
 
             // Do not re-parse file if original is older
-            return !$this->getOption('modified_check') ||
+            return !$this->getOption('up_to_date_check') ||
                 (file_exists($path) && filemtime($input) < filemtime($path));
         }
 
