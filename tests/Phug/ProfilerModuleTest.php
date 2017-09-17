@@ -150,11 +150,21 @@ class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
     {
         $renderer = new Renderer([
             'execution_max_time' => 3,
+            'filters'            => [
+                'verbatim' => function ($string) {
+                    // Pollute memory
+                    usleep(10);
+
+                    return $string;
+                },
+            ],
         ]);
         $message = '';
 
         try {
-            $renderer->renderFile(__DIR__.'/../cases/includes.pug');
+            for ($i = 0; $i < 10; $i++) {
+                $renderer->renderFile(__DIR__ . '/../cases/includes.pug');
+            }
         } catch (ProfilerException $exception) {
             // Short time should imply not located exception
             $message = $exception->getMessage();
