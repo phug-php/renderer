@@ -271,7 +271,7 @@ class ProfilerModule extends AbstractModule
         if ($formatter instanceof Formatter) {
             $formatter->setOption('patterns.debug_comment', function ($nodeId) use ($formatter) {
                 return "\n".($nodeId !== ''
-                        ? static::class.'::recordProfilerDisplayEvent('.
+                        ? '\\'.static::class.'::recordProfilerDisplayEvent('.
                             var_export($this->getDebugId($nodeId), true).
                         ");\n"
                         : ''
