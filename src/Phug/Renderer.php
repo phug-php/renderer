@@ -150,7 +150,7 @@ class Renderer implements ModuleContainerInterface
 
         $this->optionEvents = [
             'on_render' => $onRender,
-            'on_html' => $onHtml,
+            'on_html'   => $onHtml,
         ];
 
         $this->handleOptionAliases();
