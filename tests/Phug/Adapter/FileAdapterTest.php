@@ -20,6 +20,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::getCompiledFile
      * @covers ::getRenderingFile
      * @covers \Phug\Renderer::getAdapter
+     * @covers \Phug\Renderer\AbstractAdapter::getRenderer
      */
     public function testRender()
     {
@@ -37,6 +38,7 @@ class FileAdapterTest extends AbstractRendererTest
         $adapter = $renderer->getAdapter();
 
         self::assertInstanceOf(FileAdapter::class, $adapter);
+        self::assertSame($renderer, $adapter->getRenderer());
         $path = $adapter->getRenderingFile();
         self::assertFileExists($path);
         self::assertSame('<p>Hello</p>', file_get_contents($path));

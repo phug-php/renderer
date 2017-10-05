@@ -143,12 +143,15 @@ class RendererTest extends AbstractRendererTest
     public function testInitCompiler()
     {
         $renderer = new Renderer([
+            'on_render' => function (Renderer\Event\RenderEvent $event) {
+                $event->setInput(str_replace('section', 'blockquote', $event->getInput()));
+            },
             'on_html' => function (Renderer\Event\HtmlEvent $event) {
                 $event->setResult(str_replace('div', 'p', $event->getResult()));
             },
             'on_node' => function (NodeEvent $event) {
                 $node = $event->getNode();
-                if ($node instanceof ElementNode && $node->getName() === 'section') {
+                if ($node instanceof ElementNode && $node->getName() === 'blockquote') {
                     $node->setName('div');
                 }
             },
@@ -158,12 +161,15 @@ class RendererTest extends AbstractRendererTest
         self::assertSame('<p><span></span></p>', $html);
 
         $renderer->setOptions([
+            'on_render' => function (Renderer\Event\RenderEvent $event) {
+                $event->setInput(str_replace('span', 'strong', $event->getInput()));
+            },
             'on_html' => function (Renderer\Event\HtmlEvent $event) {
                 $event->setResult(str_replace('em', 'i', $event->getResult()));
             },
             'on_node' => function (NodeEvent $event) {
                 $node = $event->getNode();
-                if ($node instanceof ElementNode && $node->getName() === 'span') {
+                if ($node instanceof ElementNode && $node->getName() === 'strong') {
                     $node->setName('em');
                 }
             },
