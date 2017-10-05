@@ -3,8 +3,10 @@
 namespace Phug\Test;
 
 use JsPhpize\JsPhpizePhug;
+use Phug\Compiler\Event\NodeEvent;
 use Phug\CompilerInterface;
 use Phug\LexerException;
+use Phug\Parser\Node\ElementNode;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\EvalAdapter;
 use Phug\Renderer\Adapter\FileAdapter;
@@ -123,6 +125,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::__construct
+     * @covers ::initCompiler
      */
     public function testFilter()
     {
@@ -135,7 +138,45 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::initCompiler
+     */
+    public function testInitCompiler()
+    {
+        $renderer = new Renderer([
+            'on_html' => function (Renderer\Event\HtmlEvent $event) {
+                $event->setResult(str_replace('div', 'p', $event->getResult()));
+            },
+            'on_node' => function (NodeEvent $event) {
+                $node = $event->getNode();
+                if ($node instanceof ElementNode && $node->getName() === 'section') {
+                    $node->setName('div');
+                }
+            },
+        ]);
+        $html = trim($renderer->render('section: span'));
+
+        self::assertSame('<p><span></span></p>', $html);
+
+        $renderer->setOptions([
+            'on_html' => function (Renderer\Event\HtmlEvent $event) {
+                $event->setResult(str_replace('em', 'i', $event->getResult()));
+            },
+            'on_node' => function (NodeEvent $event) {
+                $node = $event->getNode();
+                if ($node instanceof ElementNode && $node->getName() === 'span') {
+                    $node->setName('em');
+                }
+            },
+        ]);
+        $renderer->initCompiler();
+        $html = trim($renderer->render('section: span'));
+
+        self::assertSame('<section><i></i></section>', $html);
+    }
+
+    /**
      * @covers ::__construct
+     * @covers ::initCompiler
      * @covers ::getCompiler
      * @covers ::handleOptionAliases
      */
@@ -469,6 +510,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::__construct
+     * @covers ::initCompiler
      */
     public function testCompilerClassNameException()
     {
@@ -488,6 +530,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::__construct
+     * @covers ::initCompiler
      */
     public function testAdapterClassNameException()
     {
@@ -507,6 +550,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::__construct
+     * @covers ::initCompiler
      * @covers ::callAdapter
      */
     public function testSelfOption()

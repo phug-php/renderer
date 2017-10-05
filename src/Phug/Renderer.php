@@ -28,6 +28,11 @@ class Renderer implements ModuleContainerInterface
      */
     private $adapter;
 
+    /**
+     * @var array
+     */
+    private $optionEvents = [];
+
     public function __construct($options = null)
     {
         $this->setOptionsDefaults($options ?: [], [
@@ -55,28 +60,7 @@ class Renderer implements ModuleContainerInterface
             ],
         ]);
 
-        if ($onRender = $this->getOption('on_render')) {
-            $this->attach(RendererEvent::RENDER, $onRender);
-        }
-
-        if ($onHtml = $this->getOption('on_html')) {
-            $this->attach(RendererEvent::HTML, $onHtml);
-        }
-
-        $this->handleOptionAliases();
-
-        $options = $this->getOptions();
-
-        $compilerClassName = $this->getOption('compiler_class_name');
-
-        if (!is_a($compilerClassName, CompilerInterface::class, true)) {
-            throw new RendererException(
-                "Passed compiler class $compilerClassName is ".
-                'not a valid '.CompilerInterface::class
-            );
-        }
-
-        $this->compiler = new $compilerClassName($options);
+        $this->initCompiler();
 
         $this->initDebugOptions($this);
 
@@ -146,6 +130,43 @@ class Renderer implements ModuleContainerInterface
     private function mergeWithSharedVariables(array $parameters)
     {
         return array_merge($this->getOption('shared_variables'), $parameters);
+    }
+
+    public function initCompiler()
+    {
+        if ($onRender = $this->getOption('on_render')) {
+            if (isset($this->optionEvents['on_render'])) {
+                $this->detach(RendererEvent::RENDER, $this->optionEvents['on_render']);
+            }
+            $this->attach(RendererEvent::RENDER, $onRender);
+        }
+
+        if ($onHtml = $this->getOption('on_html')) {
+            if (isset($this->optionEvents['on_html'])) {
+                $this->detach(RendererEvent::HTML, $this->optionEvents['on_html']);
+            }
+            $this->attach(RendererEvent::HTML, $onHtml);
+        }
+
+        $this->optionEvents = [
+            'on_render' => $onRender,
+            'on_html' => $onHtml,
+        ];
+
+        $this->handleOptionAliases();
+
+        $options = $this->getOptions();
+
+        $compilerClassName = $this->getOption('compiler_class_name');
+
+        if (!is_a($compilerClassName, CompilerInterface::class, true)) {
+            throw new RendererException(
+                "Passed compiler class $compilerClassName is ".
+                'not a valid '.CompilerInterface::class
+            );
+        }
+
+        $this->compiler = new $compilerClassName($options);
     }
 
     /**
