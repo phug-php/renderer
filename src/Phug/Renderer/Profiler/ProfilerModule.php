@@ -144,11 +144,11 @@ class ProfilerModule extends AbstractModule
         $maxTime = $container->getOption('execution_max_time');
         if ($maxTime > -1 && $time * 1000 > $maxTime) {
             $this->throwException($event, 'execution_max_time of '.$maxTime.'ms exceeded.');
-        }
+        } // @codeCoverageIgnore
         $memoryLimit = $container->getOption('memory_limit');
         if ($memoryLimit > -1 && memory_get_usage() - $this->initialMemoryUsage > $memoryLimit) {
             $this->throwException($event, 'memory_limit of '.$memoryLimit.'B exceeded.');
-        }
+        } // @codeCoverageIgnore
         $this->appendParam($event, '__time', $time);
         if ($container->getOption('profiler.display') || $container->getOption('profiler.log')) {
             $this->events[] = $event;

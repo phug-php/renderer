@@ -82,6 +82,25 @@ class FileAdapterTest extends AbstractRendererTest
         self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
+
+        $renderer->getAdapter()->setOption('cache_dir', null);
+
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        $renderer->getAdapter()->setOption('cache_dir', null);
+        $renderer->setOption('cache_dir', null);
+
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        $renderer->getAdapter()->setOption('cache_dir', true);
+
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
     }
 
     /**
