@@ -72,7 +72,7 @@ class Renderer implements ModuleContainerInterface
                 'not a valid '.AdapterInterface::class
             );
         }
-        $this->adapter = new $adapterClassName($this, $options);
+        $this->adapter = new $adapterClassName($this, $this->getOptions());
 
         $this->addModules($this->getOption('modules'));
         foreach ($this->getStaticModules() as $moduleClassName) {
@@ -155,8 +155,6 @@ class Renderer implements ModuleContainerInterface
 
         $this->handleOptionAliases();
 
-        $options = $this->getOptions();
-
         $compilerClassName = $this->getOption('compiler_class_name');
 
         if (!is_a($compilerClassName, CompilerInterface::class, true)) {
@@ -166,7 +164,7 @@ class Renderer implements ModuleContainerInterface
             );
         }
 
-        $this->compiler = new $compilerClassName($options);
+        $this->compiler = new $compilerClassName($this->getOptions());
     }
 
     /**
