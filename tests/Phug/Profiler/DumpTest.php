@@ -89,9 +89,7 @@ class DumpTest extends \PHPUnit_Framework_TestCase
 
         self::assertSame(implode("\n", [
             'JsPhpize\JsPhpizePhug {',
-            '  EventListeners => array (2) [',
-            '    \'compiler.compile\' => Closure {',
-            '    }',
+            '  EventListeners => array (1) [',
             '    \'compiler.output\' => Closure {',
             '    }',
             '  ]',
