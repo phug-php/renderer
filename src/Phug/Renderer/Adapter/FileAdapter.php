@@ -82,6 +82,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     {
         $success = 0;
         $errors = 0;
+        $errorDetails = [];
 
         $extensions = $this->getRenderer()->getCompiler()->getOption('extensions');
 
@@ -106,11 +107,17 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
 
                 if ($sandBox->getThrowable()) {
                     $errors++;
+                    $errorDetails[] = [
+                        'directory' => $directory,
+                        'inputFile' => $inputFile,
+                        'path'      => $path,
+                        'error'     => $sandBox->getThrowable(),
+                    ];
                 }
             }
         }
 
-        return [$success, $errors];
+        return [$success, $errors, $errorDetails];
     }
 
     protected function createTemporaryFile()

@@ -101,6 +101,30 @@ class FileAdapterTest extends AbstractRendererTest
         self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',
         ]));
+
+        /** @var FileAdapter $fileAdapter */
+        $fileAdapter = $renderer->getAdapter();
+        $path1 = $fileAdapter->cache(
+            __DIR__.'/../../cases/attrs.pug',
+            file_get_contents(__DIR__.'/../../cases/attrs.pug'),
+            function ($path, $input) {
+                return "$path\n$input";
+            });
+        $path2 = $fileAdapter->cache(
+            __DIR__.'/../../cases/attrs-data.pug',
+            file_get_contents(__DIR__.'/../../cases/attrs-data.pug'),
+            function ($path, $input) {
+                return "$path\n$input";
+            });
+
+        self::assertNotEquals($path1, $path2);
+
+        if (file_exists($path1)) {
+            unlink($path1);
+        }
+        if (file_exists($path2)) {
+            unlink($path2);
+        }
     }
 
     /**
@@ -259,7 +283,7 @@ class FileAdapterTest extends AbstractRendererTest
             'basedir'   => $templatesDirectory,
             'cache_dir' => $cacheDirectory,
         ]);
-        list($success, $errors) = $renderer->cacheDirectory($templatesDirectory);
+        list($success, $errors, $errorDetails) = $renderer->cacheDirectory($templatesDirectory);
         $filesCount = count(array_filter(scandir($cacheDirectory), function ($file) {
             return $file !== '.' && $file !== '..';
         }));
@@ -283,5 +307,6 @@ class FileAdapterTest extends AbstractRendererTest
             $filesCount,
             'Each file successfully cached should be in the cache directory.'
         );
+        self::assertCount($errors, $errorDetails, 'Each error should match a detailed message.');
     }
 }
