@@ -294,6 +294,7 @@ class FileAdapterTest extends AbstractRendererTest
         ), function ($file) {
             return pathinfo($file, PATHINFO_EXTENSION) === 'pug';
         }));
+        list($errSuccess, $errErrors, $errErrorDetails) = $renderer->cacheDirectory(__DIR__.'/../../errored');
         $this->emptyDirectory($cacheDirectory);
         rmdir($cacheDirectory);
 
@@ -308,5 +309,14 @@ class FileAdapterTest extends AbstractRendererTest
             'Each file successfully cached should be in the cache directory.'
         );
         self::assertCount($errors, $errorDetails, 'Each error should match a detailed message.');
+
+        self::assertSame(0, $errSuccess);
+        self::assertSame(1, $errErrors);
+        self::assertStringEndsWith('errored', $errErrorDetails[0]['directory']);
+        self::assertStringEndsWith('errored.pug', $errErrorDetails[0]['inputFile']);
+        self::assertContains(
+            'Inconsistent indentation. Expecting either 0 or 4 spaces/tabs.',
+            $errErrorDetails[0]['error']->getMessage()
+        );
     }
 }
