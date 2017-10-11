@@ -100,7 +100,7 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         }
         foreach (scandir($dir) as $file) {
             if ($file !== '.' && $file !== '..') {
-                $path = $dir . '/' . $file;
+                $path = $dir.'/'.$file;
                 if (is_dir($path)) {
                     static::emptyDirectory($path);
                 } else {
