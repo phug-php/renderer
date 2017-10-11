@@ -210,6 +210,12 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     {
         if (!$input) {
             $input = realpath($path);
+            if (!$input) {
+                $input = $path;
+                if ($this->hasOption('paths')) {
+                    $input = base64_encode(serialize($this->getOption('paths'))).'/'.$input;
+                }
+            }
             $path = $this->getCachePath(
                 ($this->getOption('keep_base_name') ? basename($input) : '').
                 $this->hashPrint($input)

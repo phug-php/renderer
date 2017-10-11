@@ -2,6 +2,7 @@
 
 namespace Phug\Test\Adapter;
 
+use JsPhpize\JsPhpizePhug;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\Adapter\StreamAdapter;
@@ -125,6 +126,27 @@ class FileAdapterTest extends AbstractRendererTest
         if (file_exists($path2)) {
             unlink($path2);
         }
+
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $renderer = new Renderer([
+            'debug'     => false,
+            'paths'     => [__DIR__.'/../../cases'],
+            'modules'   => [JsPhpizePhug::class],
+            'cache_dir' => $directory,
+        ]);
+        $attrs = $renderer->renderFile('attrs.pug');
+        $attrsData = $renderer->renderFile('attrs-data.pug');
+        $files = array_filter(scandir($directory), function ($item) {
+            return mb_substr($item, 0, 1) !== '.';
+        });
+        static::emptyDirectory($directory);
+
+        self::assertNotEquals($attrs, $attrsData);
+        self::assertCount(2, $files);
     }
 
     /**
@@ -203,23 +225,6 @@ class FileAdapterTest extends AbstractRendererTest
         );
     }
 
-    protected function emptyDirectory($dir)
-    {
-        if (!is_dir($dir)) {
-            return;
-        }
-        foreach (scandir($dir) as $file) {
-            if ($file !== '.' && $file !== '..') {
-                $path = $dir.'/'.$file;
-                if (is_dir($path)) {
-                    $this->emptyDirectory($path);
-                } else {
-                    unlink($path);
-                }
-            }
-        }
-    }
-
     /**
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
@@ -274,7 +279,7 @@ class FileAdapterTest extends AbstractRendererTest
     public function testCacheDirectory()
     {
         $cacheDirectory = sys_get_temp_dir().'/pug-test';
-        $this->emptyDirectory($cacheDirectory);
+        static::emptyDirectory($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);
         }
@@ -295,7 +300,7 @@ class FileAdapterTest extends AbstractRendererTest
             return pathinfo($file, PATHINFO_EXTENSION) === 'pug';
         }));
         list($errSuccess, $errErrors, $errErrorDetails) = $renderer->cacheDirectory(__DIR__.'/../../errored');
-        $this->emptyDirectory($cacheDirectory);
+        static::emptyDirectory($cacheDirectory);
         rmdir($cacheDirectory);
 
         self::assertSame(

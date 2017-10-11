@@ -93,6 +93,23 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
+    protected static function emptyDirectory($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        foreach (scandir($dir) as $file) {
+            if ($file !== '.' && $file !== '..') {
+                $path = $dir . '/' . $file;
+                if (is_dir($path)) {
+                    static::emptyDirectory($path);
+                } else {
+                    unlink($path);
+                }
+            }
+        }
+    }
+
     public static function flatContent($content)
     {
         return implode('', array_map(function ($line) {
