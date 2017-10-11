@@ -209,15 +209,9 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     private function isCacheUpToDate(&$path, $input = null)
     {
         if (!$input) {
-            $input = realpath($path);
-            if (!$input) {
-                $input = $path;
-                if ($this->hasOption('paths')) {
-                    $input = base64_encode(serialize($this->getOption('paths'))).'/'.$input;
-                }
-            }
+            $input = $this->getRenderer()->getCompiler()->resolve($path);
             $path = $this->getCachePath(
-                ($this->getOption('keep_base_name') ? basename($input) : '').
+                ($this->getOption('keep_base_name') ? basename($path) : '').
                 $this->hashPrint($input)
             );
 

@@ -140,12 +140,14 @@ class FileAdapterTest extends AbstractRendererTest
         ]);
         $attrs = $renderer->renderFile('attrs.pug');
         $attrsData = $renderer->renderFile('attrs-data.pug');
+        $attrsAgain = $renderer->renderFile('attrs.pug');
         $files = array_filter(scandir($directory), function ($item) {
             return mb_substr($item, 0, 1) !== '.';
         });
         static::emptyDirectory($directory);
 
         self::assertNotEquals($attrs, $attrsData);
+        self::assertSame($attrs, $attrsAgain);
         self::assertCount(2, $files);
     }
 
