@@ -132,6 +132,22 @@ class Renderer implements ModuleContainerInterface
         return array_merge($this->getOption('shared_variables'), $parameters);
     }
 
+    private function expectCacheAdapter($adapter)
+    {
+        if (!($adapter instanceof CacheInterface)) {
+            throw new RendererException(
+                'You cannot use "cache_dir" option with '.get_class($adapter).
+                ' because this adapter does not implement '.CacheInterface::class
+            );
+        }
+    }
+
+    /**
+     * Initialize/re-initialize the compiler. You should use it if you change initial options (for example: on_render
+     * or on_html events, or the compiler_class_name).
+     *
+     * @throws RendererException
+     */
     public function initCompiler()
     {
         if ($onRender = $this->getOption('on_render')) {
@@ -168,6 +184,8 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
+     * Get the current adapter used (file, stream, eval or custom adapter provided).
+     *
      * @return AdapterInterface
      */
     public function getAdapter()
@@ -176,7 +194,10 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @return Compiler
+     * Get the current compiler in use. The compiler class name can be changed with compiler_class_name option and
+     * is Phug\Compiler by default.
+     *
+     * @return CompilerInterface
      */
     public function getCompiler()
     {
@@ -184,8 +205,13 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param array|string $variables
-     * @param mixed        $value
+     * Share variables (local templates parameters) with all future templates rendered.
+     *
+     * @example $renderer->share('lang', 'fr')
+     * @example $renderer->share(['title' => 'My blog', 'today' => new DateTime()])
+     *
+     * @param array|string $variables a variables name-value pairs or a single variable name
+     * @param mixed        $value     the variable value if the first argument given is a string
      *
      * @return $this
      */
@@ -210,17 +236,10 @@ class Renderer implements ModuleContainerInterface
         return $this->setOption('shared_variables', []);
     }
 
-    private function expectCacheAdapter($adapter)
-    {
-        if (!($adapter instanceof CacheInterface)) {
-            throw new RendererException(
-                'You cannot use "cache_dir" option with '.get_class($adapter).
-                ' because this adapter does not implement '.CacheInterface::class
-            );
-        }
-    }
-
     /**
+     * Call a method on the adapter (render, renderFile, display, displayFile, more methods can be available depending
+     * on the adapter user).
+     *
      * @param string   $method
      * @param string   $path
      * @param string   $input
@@ -301,8 +320,10 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $string
-     * @param string $filename
+     * Compile a pug template string into a PHP string.
+     *
+     * @param string $string   pug input string
+     * @param string $filename optional file path of the given template
      *
      * @return string
      */
@@ -318,7 +339,9 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $path
+     * Compile a pug template file into a PHP string.
+     *
+     * @param string $path pug input file
      *
      * @return string
      */
@@ -333,9 +356,11 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $string     input string or path
-     * @param array  $parameters parameters or file name
-     * @param string $filename
+     * Render a pug template string into a HTML/XML string (or any tag templates if you use a custom format).
+     *
+     * @param string $string     pug input string
+     * @param array  $parameters parameters (values for variables used in the template)
+     * @param string $filename   optional file path of the given template
      *
      * @return string
      */
@@ -353,8 +378,10 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string       $path
-     * @param string|array $parameters parameters or file name
+     * Render a pug template file into a HTML/XML string (or any tag templates if you use a custom format).
+     *
+     * @param string       $path       pug input file
+     * @param string|array $parameters parameters (values for variables used in the template)
      *
      * @return string
      */
@@ -372,7 +399,9 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $string     input string or path
+     * Display a pug template string into a HTML/XML string (or any tag templates if you use a custom format).
+     *
+     * @param string $string     pug input string
      * @param array  $parameters parameters or file name
      * @param string $filename
      */
@@ -390,8 +419,10 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
-     * @param string $path
-     * @param array  $parameters
+     * Display a pug template file into a HTML/XML string (or any tag templates if you use a custom format).
+     *
+     * @param string $path       pug input file
+     * @param array  $parameters parameters (values for variables used in the template)
      */
     public function displayFile($path, array $parameters = [])
     {
@@ -407,6 +438,10 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
+     * Cache all templates in a directory in the cache directory you specified with the cache_dir option.
+     * You should call after deploying your application in production to avoid a slower page loading for the first
+     * user.
+     *
      * @param $directory
      *
      * @throws RendererException
