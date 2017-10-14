@@ -22,7 +22,6 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
     {
         ini_set('memory_limit', '512M');
         include_once __DIR__.'/Utils/Date.php';
-        include_once __DIR__.'/Utils/XmlHhvmFormat.php';
 
         $uglify = function ($contents) {
             $engine = new Uglify($contents);
@@ -68,9 +67,6 @@ abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
             'basedir'            => __DIR__.'/../cases',
             'pretty'             => true,
             'modules'            => [JsPhpizePhug::class],
-            'formats'            => [
-                'xml'            => XmlHhvmFormat::class,
-            ],
             'filters'            => [
                 'custom'        => $custom,
                 'coffee-script' => $coffee,
