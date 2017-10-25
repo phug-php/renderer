@@ -721,4 +721,31 @@ class RendererTest extends AbstractRendererTest
         self::assertContains('title Foo', $message);
         self::assertNotContains('Too far to be visible error context', $message);
     }
+
+    public function testHeadIndent()
+    {
+        $renderer = new Renderer([
+            'pretty' => true,
+        ]);
+
+        $html = str_replace("\r", '', trim($renderer->render(implode("\n", [
+            'doctype html',
+            'html',
+            '  head',
+            '    link(href="style.css")',
+            '    script(src="script.js")',
+            '    meta(charset="utf-8")',
+        ]))));
+
+        self::assertSame(implode("\n", [
+            '<!DOCTYPE html>',
+            '<html>',
+            '  <head>',
+            '    <link href="style.css">',
+            '    <script src="script.js"></script>',
+            '    <meta charset="utf-8">',
+            '  </head>',
+            '</html>',
+        ]), $html);
+    }
 }
