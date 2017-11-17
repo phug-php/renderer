@@ -748,4 +748,30 @@ class RendererTest extends AbstractRendererTest
             '</html>',
         ]), $html);
     }
+
+    /**
+     * @expectedException        \Exception
+     * @expectedExceptionMessage p= $undefined()
+     */
+    public function testExtendsUndefinedCall()
+    {
+        $renderer = new Renderer([
+            'pretty' => true,
+        ]);
+
+        $renderer->renderFile(__DIR__ . '/../call-undefined/extends-call-undefined.pug');
+    }
+
+    /**
+     * @expectedException        \Exception
+     * @expectedExceptionMessage div= $undefined()
+     */
+    public function testUndefinedCallInBlock()
+    {
+        $renderer = new Renderer([
+            'pretty' => true,
+        ]);
+
+        $renderer->renderFile(__DIR__ . '/../call-undefined/call-undefined-in-block.pug');
+    }
 }
