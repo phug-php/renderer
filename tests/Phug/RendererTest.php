@@ -759,7 +759,7 @@ class RendererTest extends AbstractRendererTest
             'pretty' => true,
         ]);
 
-        $renderer->renderFile(__DIR__ . '/../call-undefined/extends-call-undefined.pug');
+        $renderer->renderFile(__DIR__.'/../call-undefined/extends-call-undefined.pug');
     }
 
     /**
@@ -772,6 +772,6 @@ class RendererTest extends AbstractRendererTest
             'pretty' => true,
         ]);
 
-        $renderer->renderFile(__DIR__ . '/../call-undefined/call-undefined-in-block.pug');
+        $renderer->renderFile(__DIR__.'/../call-undefined/call-undefined-in-block.pug');
     }
 }
