@@ -315,10 +315,10 @@ class FileAdapterTest extends AbstractRendererTest
             $filesCount,
             'Each file successfully cached should be in the cache directory.'
         );
-        self::assertCount($errors, $errorDetails, 'Each error should match a detailed message.');
+        self::assertCount($errErrors, $errErrorDetails, 'Each error should match a detailed message.');
 
         self::assertSame(0, $errSuccess);
-        self::assertSame(1, $errErrors);
+        self::assertSame(2, $errErrors);
         self::assertStringEndsWith('errored', $errErrorDetails[0]['directory']);
         self::assertStringEndsWith('errored.pug', $errErrorDetails[0]['inputFile']);
         self::assertContains(
