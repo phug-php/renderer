@@ -92,9 +92,10 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             }
             $inputFile = $directory.DIRECTORY_SEPARATOR.$object;
             if (is_dir($inputFile)) {
-                list($subSuccess, $subErrors) = $this->cacheDirectory($inputFile);
+                list($subSuccess, $subErrors, $subErrorDetails) = $this->cacheDirectory($inputFile);
                 $success += $subSuccess;
                 $errors += $subErrors;
+                $errorDetails = array_merge($errorDetails, $subErrorDetails);
                 continue;
             }
             if ($this->fileMatchExtensions($object, $extensions)) {
