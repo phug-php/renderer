@@ -750,6 +750,26 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @group i
+     */
+    public function testWhiteSpace()
+    {
+        $renderer = new Renderer([
+            'pretty' => false,
+        ]);
+
+        $html = trim($renderer->render(implode("\n", [
+            '| Don\'t',
+            '|',
+            'button#self-destruct touch',
+            '|',
+            '| me!',
+        ])));
+
+        self::assertRegExp('/^Don\'t\s+<button id="self-destruct">touch<\/button>\s+me!$/', $html);
+    }
+
+    /**
      * @expectedException        \Exception
      * @expectedExceptionMessage p= $undefined()
      */
