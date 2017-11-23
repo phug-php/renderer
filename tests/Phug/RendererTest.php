@@ -749,9 +749,6 @@ class RendererTest extends AbstractRendererTest
         ]), $html);
     }
 
-    /**
-     * @group i
-     */
     public function testWhiteSpace()
     {
         $renderer = new Renderer([
