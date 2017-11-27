@@ -84,7 +84,7 @@ class RendererModuleTest extends \PHPUnit_Framework_TestCase
         ]);
 
         self::assertSame('<p></p>', $renderer->render('p'));
-        self::assertSame(null, $source);
+        self::assertNull($source);
 
         $message = null;
 

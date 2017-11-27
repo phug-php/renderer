@@ -8,10 +8,11 @@ use NodejsPhpFallback\CoffeeScript;
 use NodejsPhpFallback\Less;
 use NodejsPhpFallback\Stylus;
 use NodejsPhpFallback\Uglify;
+use PHPUnit\Framework\TestCase;
 use Phug\Renderer;
 use stdClass;
 
-abstract class AbstractRendererTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractRendererTest extends TestCase
 {
     /**
      * @var Renderer
