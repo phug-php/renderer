@@ -152,6 +152,44 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @group i
+     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     */
+    public function testCacheOnImportsChange()
+    {
+        $renderer = new Renderer([
+            'cache_dir' => sys_get_temp_dir(),
+        ]);
+        $include = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
+        file_put_contents($include, 'p=$message');
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'include.pug';
+        file_put_contents($path, 'include test');
+
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        file_put_contents($include, 'div=$message');
+        touch($include, time() - 3600);
+        touch($path, time() - 3600);
+        clearstatcache();
+        $GLOBALS['debug'] = true;
+
+        $html = $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]);
+        exit('la');
+        self::assertSame('<p>Hi</p>', $html);
+
+        touch($include, time() + 3600);
+        clearstatcache();
+
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+    }
+
+    /**
      * @covers ::<public>
      * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath

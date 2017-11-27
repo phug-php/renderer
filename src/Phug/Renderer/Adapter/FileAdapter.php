@@ -210,15 +210,44 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     private function isCacheUpToDate(&$path, $input = null)
     {
         if (!$input) {
-            $input = $this->getRenderer()->getCompiler()->resolve($path);
+            $compiler = $this->getRenderer()->getCompiler();
+            $input = $compiler->resolve($path);
             $path = $this->getCachePath(
                 ($this->getOption('keep_base_name') ? basename($path) : '').
                 $this->hashPrint($input)
             );
 
-            // Do not re-parse file if original is older
-            return !$this->getOption('up_to_date_check') ||
-                (file_exists($path) && filemtime($input) < filemtime($path));
+            // If up_to_date_check never refresh the cache
+            if (!$this->getOption('up_to_date_check')) {
+                return true;
+            }
+
+            // If there is no cache file, create it
+            if (!file_exists($path)) {
+                if (isset($GLOBALS['debug'])) {
+                    var_dump($path, $input);
+                    exit('ici');
+                }
+                return false;
+            }
+
+            // Else check the main input path and all imported paths in the template
+            $importPaths = $compiler->getCurrentImportPaths();
+            $importPaths[] = $input;
+            $time = filemtime($input);
+
+            foreach ($importPaths as $importPath) {
+                if (isset($GLOBALS['debug'])) {
+                    var_dump($importPath, file_exists($importPath), filemtime($importPath));
+                }
+                if (!file_exists($importPath) || filemtime($importPath) >= $time) {
+                    // If only one file has changed, expires
+                    return false;
+                }
+            }
+
+            // If only no files changed, it's up to date
+            return true;
         }
 
         $path = $this->getCachePath($this->hashPrint($input));
