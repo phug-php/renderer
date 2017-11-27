@@ -2,13 +2,14 @@
 
 namespace Phug\Test;
 
+use PHPUnit\Framework\TestCase;
 use Phug\Formatter;
 use Phug\Renderer;
 
 /**
  * @coversDefaultClass Phug\AbstractRendererModule
  */
-class RendererModuleTest extends \PHPUnit_Framework_TestCase
+class RendererModuleTest extends TestCase
 {
     public function testModule()
     {

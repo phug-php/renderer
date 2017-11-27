@@ -3,6 +3,7 @@
 namespace Phug\Test\Profiler;
 
 use JsPhpize\JsPhpizePhug;
+use PHPUnit\Framework\TestCase;
 use Phug\Renderer;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
@@ -11,7 +12,7 @@ use Phug\Renderer\Profiler\Dump;
 /**
  * @coversDefaultClass \Phug\Renderer\Profiler\Dump
  */
-class DumpTest extends \PHPUnit_Framework_TestCase
+class DumpTest extends TestCase
 {
     /**
      * @covers ::<public>
