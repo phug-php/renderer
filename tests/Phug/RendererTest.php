@@ -767,7 +767,7 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @group t
+     * @group twig
      */
     public function testTwigOutput()
     {
