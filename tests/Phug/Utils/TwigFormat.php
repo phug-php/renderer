@@ -23,11 +23,11 @@ class TwigFormat extends XhtmlFormat
                 ],
             ])
             ->setPatterns([
-                'class_attribute' => '%s',
-                'string_attribute' => '%s',
-                'expression_in_text' => '%s',
+                'class_attribute'        => '%s',
+                'string_attribute'       => '%s',
+                'expression_in_text'     => '%s',
                 'html_expression_escape' => '%s | e',
-                'php_handle_code' => function ($input) use (&$formatter, &$nestedCodes, &$codeBlocks) {
+                'php_handle_code'        => function ($input) use (&$formatter, &$nestedCodes, &$codeBlocks) {
                     $pugModuleName = '$'.$formatter->getOption('dependencies_storage');
                     if (strpos($input, $pugModuleName) !== false) {
                         $input = preg_replace_callback('/\{\[block:(\d+)\]\}/', function ($match) use (&$codeBlocks) {
@@ -53,7 +53,7 @@ class TwigFormat extends XhtmlFormat
                     return "{% $input %}";
                 },
                 'php_nested_html' => '%s',
-                'php_block_code' => function ($input) use (&$codeBlocks) {
+                'php_block_code'  => function ($input) use (&$codeBlocks) {
                     $id = count($codeBlocks);
                     $codeBlocks[] = $input;
 
