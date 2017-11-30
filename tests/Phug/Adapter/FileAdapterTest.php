@@ -54,6 +54,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -160,6 +161,7 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
      */
     public function testCacheOnImportsChange()
     {
@@ -223,6 +225,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -338,6 +341,7 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      */
