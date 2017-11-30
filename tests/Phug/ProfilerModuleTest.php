@@ -2,6 +2,7 @@
 
 namespace Phug\Test;
 
+use PHPUnit\Framework\TestCase;
 use Phug\Renderer;
 use Phug\Renderer\Profiler\ProfilerException;
 use Phug\Renderer\Profiler\ProfilerModule;
@@ -10,7 +11,7 @@ use Phug\RendererException;
 /**
  * @coversDefaultClass Phug\Renderer\Profiler\ProfilerModule
  */
-class ProfilerModuleTest extends \PHPUnit_Framework_TestCase
+class ProfilerModuleTest extends TestCase
 {
     /**
      * @group profiler

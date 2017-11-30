@@ -2,12 +2,13 @@
 
 namespace Phug\Test\Profiler;
 
+use PHPUnit\Framework\TestCase;
 use Phug\Renderer\Profiler\EventList;
 
 /**
  * @coversDefaultClass \Phug\Renderer\Profiler\EventList
  */
-class EventListTest extends \PHPUnit_Framework_TestCase
+class EventListTest extends TestCase
 {
     /**
      * @covers ::<public>
