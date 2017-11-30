@@ -222,7 +222,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
      */
     private function hasExpiredImport($sourcePath, $cachePath)
     {
-        $importsMap = $cachePath . '.imports.serialize.txt';
+        $importsMap = $cachePath.'.imports.serialize.txt';
 
         if (!file_exists($importsMap)) {
             return true;
