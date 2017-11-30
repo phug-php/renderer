@@ -767,6 +767,46 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @group twig
+     */
+    public function testTwigOutput()
+    {
+        include_once __DIR__.'/Utils/TwigFormat.php';
+
+        $formatter = null;
+        $renderer = new Renderer([
+            'debug'          => false,
+            'pretty'         => false,
+            'default_format' => TwigFormat::class,
+            'formats'        => [
+                'basic'        => TwigFormat::class,
+                'frameset'     => TwigFormat::class,
+                'html'         => TwigFormat::class,
+                'mobile'       => TwigFormat::class,
+                '1.1'          => TwigFormat::class,
+                'plist'        => TwigFormat::class,
+                'strict'       => TwigFormat::class,
+                'transitional' => TwigFormat::class,
+                'xml'          => TwigFormat::class,
+            ],
+        ]);
+
+        $html = str_replace("\n", '', trim($renderer->compile(implode("\n", [
+            'ul#users',
+            '  - for user in users',
+            '    li.user',
+            '      // comment',
+            '      = user.name',
+            '      | Email: #{user.email}',
+            '      a(href=user.url) Home page',
+        ]))));
+
+        self::assertSame('<ul id="users">{% for user in users %}'.
+            '<li class="user">{#  comment #}{{ user.name | e }}Email: {{ user.email | e }}<a href="{{ user.url | e }}">Home page</a></li>'.
+            '{% endfor %}</ul>', $html);
+    }
+
+    /**
      * @expectedException        \Exception
      * @expectedExceptionMessage p= $undefined()
      */

@@ -25,6 +25,16 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $this->setOptions($options);
     }
 
+    protected function cacheFile($destination, $output, $importsMap = [])
+    {
+        file_put_contents(
+            $destination.'.imports.serialize.txt',
+            serialize($importsMap)
+        );
+
+        return file_put_contents($destination, $output);
+    }
+
     /**
      * Return the cached file path after cache optional process.
      *
@@ -45,7 +55,11 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
                 throw new RuntimeException(sprintf('Cache directory must be writable. "%s" is not.', $cacheFolder), 6);
             }
 
-            $success = file_put_contents($destination, $rendered($path, $input));
+            $success = $this->cacheFile(
+                $destination,
+                $rendered($path, $input),
+                $this->getRenderer()->getCompiler()->getImportPaths($path)
+            );
         }
 
         return $destination;
@@ -84,7 +98,8 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $errors = 0;
         $errorDetails = [];
 
-        $extensions = $this->getRenderer()->getCompiler()->getOption('extensions');
+        $compiler = $this->getRenderer()->getCompiler();
+        $extensions = $compiler->getOption('extensions');
 
         foreach (scandir($directory) as $object) {
             if ($object === '.' || $object === '..') {
@@ -101,8 +116,8 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             if ($this->fileMatchExtensions($object, $extensions)) {
                 $path = $inputFile;
                 $this->isCacheUpToDate($path);
-                $sandBox = new SandBox(function () use (&$success, $path, $inputFile) {
-                    file_put_contents($path, $this->getRenderer()->getCompiler()->compileFile($inputFile));
+                $sandBox = new SandBox(function () use (&$success, $compiler, $path, $inputFile) {
+                    $this->cacheFile($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
                     $success++;
                 });
 
@@ -199,6 +214,35 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     }
 
     /**
+     * Returns true if the path has an expired imports linked.
+     *
+     * @param $path
+     *
+     * @return bool
+     */
+    private function hasExpiredImport($sourcePath, $cachePath)
+    {
+        $importsMap = $cachePath.'.imports.serialize.txt';
+
+        if (!file_exists($importsMap)) {
+            return true;
+        }
+
+        $importPaths = unserialize(file_get_contents($importsMap)) ?: [];
+        $importPaths[] = $sourcePath;
+        $time = filemtime($cachePath);
+        foreach ($importPaths as $importPath) {
+            if (!file_exists($importPath) || filemtime($importPath) >= $time) {
+                // If only one file has changed, expires
+                return true;
+            }
+        }
+
+        // If only no files changed, it's up to date
+        return false;
+    }
+
+    /**
      * Return true if the file or content is up to date in the cache folder,
      * false else.
      *
@@ -210,15 +254,25 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     private function isCacheUpToDate(&$path, $input = null)
     {
         if (!$input) {
-            $input = $this->getRenderer()->getCompiler()->resolve($path);
+            $compiler = $this->getRenderer()->getCompiler();
+            $input = $compiler->resolve($path);
             $path = $this->getCachePath(
                 ($this->getOption('keep_base_name') ? basename($path) : '').
                 $this->hashPrint($input)
             );
 
-            // Do not re-parse file if original is older
-            return !$this->getOption('up_to_date_check') ||
-                (file_exists($path) && filemtime($input) < filemtime($path));
+            // If up_to_date_check never refresh the cache
+            if (!$this->getOption('up_to_date_check')) {
+                return true;
+            }
+
+            // If there is no cache file, create it
+            if (!file_exists($path)) {
+                return false;
+            }
+
+            // Else check the main input path and all imported paths in the template
+            return !$this->hasExpiredImport($input, $path);
         }
 
         $path = $this->getCachePath($this->hashPrint($input));

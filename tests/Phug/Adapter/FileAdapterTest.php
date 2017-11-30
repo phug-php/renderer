@@ -54,6 +54,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -61,10 +62,15 @@ class FileAdapterTest extends AbstractRendererTest
      */
     public function testCache()
     {
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
         $renderer = new Renderer([
-            'cache_dir' => sys_get_temp_dir(),
+            'cache_dir' => $directory,
         ]);
-        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.'test.pug';
+        $path = $directory.DIRECTORY_SEPARATOR.'test.pug';
         file_put_contents($path, 'p=$message');
 
         self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
@@ -79,6 +85,7 @@ class FileAdapterTest extends AbstractRendererTest
         ]));
 
         $renderer->getAdapter()->setOption('up_to_date_check', true);
+        $GLOBALS['debug'] = true;
 
         self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
             'message' => 'Hi',
@@ -127,6 +134,7 @@ class FileAdapterTest extends AbstractRendererTest
             unlink($path2);
         }
 
+        static::emptyDirectory($directory);
         $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
         static::emptyDirectory($directory);
         if (!file_exists($directory)) {
@@ -142,13 +150,70 @@ class FileAdapterTest extends AbstractRendererTest
         $attrsData = $renderer->renderFile('attrs-data.pug');
         $attrsAgain = $renderer->renderFile('attrs.pug');
         $files = array_filter(scandir($directory), function ($item) {
-            return mb_substr($item, 0, 1) !== '.';
+            return mb_substr($item, 0, 1) !== '.' && pathinfo($item, PATHINFO_EXTENSION) !== 'txt';
         });
         static::emptyDirectory($directory);
 
         self::assertNotEquals($attrs, $attrsData);
         self::assertSame($attrs, $attrsAgain);
         self::assertCount(2, $files);
+    }
+
+    /**
+     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
+     */
+    public function testCacheOnImportsChange()
+    {
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $renderer = new Renderer([
+            'cache_dir' => $directory,
+        ]);
+        $include = $directory.DIRECTORY_SEPARATOR.'test.pug';
+        file_put_contents($include, 'p=$message');
+        $path = $directory.DIRECTORY_SEPARATOR.'include.pug';
+        file_put_contents($path, 'include test');
+
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        file_put_contents($include, 'div=$message');
+        touch($include, time() - 3600);
+        touch($path, time() - 3600);
+        clearstatcache();
+
+        $html = $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]);
+        self::assertSame('<p>Hi</p>', $html);
+
+        touch($include, time() + 3600);
+        clearstatcache();
+
+        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        file_put_contents($include, 'p=$message');
+        touch($include, time() - 3600);
+        clearstatcache();
+
+        foreach (scandir($directory) as $file) {
+            if (substr($file, -22) === '.imports.serialize.txt') {
+                unlink($directory.DIRECTORY_SEPARATOR.$file);
+            }
+        }
+
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
+            'message' => 'Hi',
+        ]));
+
+        static::emptyDirectory($directory);
     }
 
     /**
@@ -160,6 +225,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\AbstractAdapter::<public>
@@ -275,6 +341,7 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      */
@@ -292,7 +359,7 @@ class FileAdapterTest extends AbstractRendererTest
         ]);
         list($success, $errors, $errorDetails) = $renderer->cacheDirectory($templatesDirectory);
         $filesCount = count(array_filter(scandir($cacheDirectory), function ($file) {
-            return $file !== '.' && $file !== '..';
+            return $file !== '.' && $file !== '..' && pathinfo($file, PATHINFO_EXTENSION) !== 'txt';
         }));
         $expectedCount = count(array_filter(array_merge(
             scandir($templatesDirectory),
