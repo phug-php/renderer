@@ -128,15 +128,6 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
-    private function mergeWithSharedVariables(array $parameters)
-    {
-        return array_merge(
-            $this->getOption('globals'),
-            $this->getOption('shared_variables'),
-            $parameters
-        );
-    }
-
     private function expectCacheAdapter($adapter)
     {
         if (!($adapter instanceof CacheInterface)) {
@@ -145,6 +136,22 @@ class Renderer implements ModuleContainerInterface
                 ' because this adapter does not implement '.CacheInterface::class
             );
         }
+    }
+
+    /**
+     * Returns merged globals, shared variables and locals.
+     *
+     * @param array $parameters
+     *
+     * @return array
+     */
+    protected function mergeWithSharedVariables(array $parameters)
+    {
+        return array_merge(
+            $this->getOption('globals'),
+            $this->getOption('shared_variables'),
+            $parameters
+        );
     }
 
     /**
