@@ -48,6 +48,7 @@ class Renderer implements ModuleContainerInterface
                 ? FileAdapter::class
                 : EvalAdapter::class,
             'shared_variables'    => [],
+            'globals'             => [],
             'modules'             => [],
             'compiler_class_name' => Compiler::class,
             'self'                => false,
@@ -129,7 +130,11 @@ class Renderer implements ModuleContainerInterface
 
     private function mergeWithSharedVariables(array $parameters)
     {
-        return array_merge($this->getOption('shared_variables'), $parameters);
+        return array_merge(
+            $this->getOption('globals'),
+            $this->getOption('shared_variables'),
+            $parameters
+        );
     }
 
     private function expectCacheAdapter($adapter)
