@@ -138,6 +138,46 @@ class Renderer implements ModuleContainerInterface
         }
     }
 
+    private function fileMatchExtensions($path, $extensions)
+    {
+        foreach ($extensions as $extension) {
+            if (mb_substr($path, -mb_strlen($extension)) === $extension) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get all file matching extensions list recursively in a directory.
+     *
+     * @param $directory
+     *
+     * @return \Generator
+     */
+    public function scanDirectory($directory)
+    {
+        $extensions = $this->getOption('extensions');
+
+        foreach (scandir($directory) as $object) {
+            if ($object === '.' || $object === '..') {
+                continue;
+            }
+            $inputFile = $directory.DIRECTORY_SEPARATOR.$object;
+            if (is_dir($inputFile)) {
+                foreach ($this->scanDirectory($inputFile) as $file) {
+                    yield $file;
+                }
+
+                continue;
+            }
+            if ($this->fileMatchExtensions($object, $extensions)) {
+                yield $inputFile;
+            }
+        }
+    }
+
     /**
      * Returns merged globals, shared variables and locals.
      *
@@ -258,7 +298,7 @@ class Renderer implements ModuleContainerInterface
      * @param callable $getSource
      * @param array    $parameters
      *
-     * @throws RendererException
+     * @throws RendererException|\Throwable
      *
      * @return bool|string|null
      */
@@ -374,6 +414,8 @@ class Renderer implements ModuleContainerInterface
      * @param array  $parameters parameters (values for variables used in the template)
      * @param string $filename   optional file path of the given template
      *
+     * @throws RendererException
+     *
      * @return string
      */
     public function render($string, array $parameters = [], $filename = null)
@@ -392,8 +434,10 @@ class Renderer implements ModuleContainerInterface
     /**
      * Render a pug template file into a HTML/XML string (or any tag templates if you use a custom format).
      *
-     * @param string       $path       pug input file
+     * @param string       $path pug input file
      * @param string|array $parameters parameters (values for variables used in the template)
+     *
+     * @throws RendererException
      *
      * @return string
      */
@@ -411,11 +455,69 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
+     * Render all pug template files in an input directory and output in an other or the same directory.
+     * Return an array with success count and error count.
+     *
+     * @param string       $path        pug input directory containing pug files
+     * @param string       $destination pug output directory (optional)
+     * @param string       $extension   file extension (optional, .html by default)
+     * @param string|array $parameters  parameters (values for variables used in the template) (optional)
+     *
+     * @return array
+     */
+    public function renderDirectory($path, $destination = null, $extension = '.html', array $parameters = [])
+    {
+        if (is_array($destination)) {
+            $parameters = $destination;
+            $destination = null;
+        } elseif (is_array($extension)) {
+            $parameters = $extension;
+            $extension = '.html';
+        }
+        if (!$destination) {
+            $destination = $path;
+        }
+        $path = realpath($path);
+        $destination = realpath($destination);
+
+        $success = 0;
+        $errors = 0;
+        if ($path && $destination) {
+            $path = rtrim($path, '/\\');
+            $destination = rtrim($destination, '/\\');
+            $length = mb_strlen($path);
+            foreach ($this->scanDirectory($path) as $file) {
+                $relativeDirectory = trim(mb_substr(dirname($file), $length), '//\\');
+                $filename = pathinfo($file, PATHINFO_FILENAME);
+                $outputDirectory = $destination.DIRECTORY_SEPARATOR.$relativeDirectory;
+                $counter = null;
+                if (!file_exists($outputDirectory)) {
+                    if (!@mkdir($outputDirectory, 0777, true)) {
+                        $counter = 'errors';
+                    }
+                }
+                if (!$counter) {
+                    $outputFile = $outputDirectory.DIRECTORY_SEPARATOR.$filename.$extension;
+                    $sandBox = new SandBox(function () use ($outputFile, $file, $parameters) {
+                        return file_put_contents($outputFile, $this->renderFile($file, $parameters));
+                    });
+                    $counter = $sandBox->getResult() ? 'success' : 'errors';
+                }
+                $$counter++;
+            }
+        }
+
+        return [$success, $errors];
+    }
+
+    /**
      * Display a pug template string into a HTML/XML string (or any tag templates if you use a custom format).
      *
-     * @param string $string     pug input string
+     * @param string $string pug input string
      * @param array  $parameters parameters or file name
      * @param string $filename
+     *
+     * @throws RendererException|\Throwable
      */
     public function display($string, array $parameters = [], $filename = null)
     {
@@ -435,6 +537,8 @@ class Renderer implements ModuleContainerInterface
      *
      * @param string $path       pug input file
      * @param array  $parameters parameters (values for variables used in the template)
+     *
+     * @throws RendererException|\Throwable
      */
     public function displayFile($path, array $parameters = [])
     {

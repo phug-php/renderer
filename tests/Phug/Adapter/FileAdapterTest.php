@@ -47,18 +47,15 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers ::<public>
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
-     * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
-     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
-     * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
-     * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
+     * @covers \Phug\Renderer::getAdapter
+     * @covers ::getCachePath
+     * @covers ::hashPrint
+     * @covers ::isCacheUpToDate
+     * @covers ::getCacheDirectory
+     * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer::callAdapter
+     * @covers \Phug\Renderer::fileMatchExtensions
+     * @covers \Phug\Renderer::scanDirectory
      */
     public function testCache()
     {

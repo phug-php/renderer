@@ -52,6 +52,27 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::renderDirectory
+     */
+    public function testRenderDirectory()
+    {
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'foo'.mt_rand(0, 9999999);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        list($success, $errors) = $this->renderer->renderDirectory(__DIR__.'/../utils', $directory);
+
+        self::assertSame(2, $errors);
+        self::assertSame(3, $success);
+        self::assertFileExists($directory.'/subdirectory/scripts.html');
+        self::assertFileExists($directory.'/subdirectory/subsubdirectory/basic.html');
+        self::assertFileExists($directory.'/subdirectory/subsubdirectory/blanks.html');
+
+        self::emptyDirectory($directory);
+        rmdir($directory);
+    }
+
+    /**
      * @covers ::displayFile
      * @covers ::display
      */

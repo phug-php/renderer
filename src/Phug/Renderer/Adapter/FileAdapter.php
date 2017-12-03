@@ -98,38 +98,25 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $errors = 0;
         $errorDetails = [];
 
-        $compiler = $this->getRenderer()->getCompiler();
-        $extensions = $compiler->getOption('extensions');
+        $renderer = $this->getRenderer();
+        $compiler = $renderer->getCompiler();
 
-        foreach (scandir($directory) as $object) {
-            if ($object === '.' || $object === '..') {
-                continue;
-            }
-            $inputFile = $directory.DIRECTORY_SEPARATOR.$object;
-            if (is_dir($inputFile)) {
-                list($subSuccess, $subErrors, $subErrorDetails) = $this->cacheDirectory($inputFile);
-                $success += $subSuccess;
-                $errors += $subErrors;
-                $errorDetails = array_merge($errorDetails, $subErrorDetails);
-                continue;
-            }
-            if ($this->fileMatchExtensions($object, $extensions)) {
-                $path = $inputFile;
-                $this->isCacheUpToDate($path);
-                $sandBox = new SandBox(function () use (&$success, $compiler, $path, $inputFile) {
-                    $this->cacheFile($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
-                    $success++;
-                });
+        foreach ($renderer->scanDirectory($directory) as $inputFile) {
+            $path = $inputFile;
+            $this->isCacheUpToDate($path);
+            $sandBox = new SandBox(function () use (&$success, $compiler, $path, $inputFile) {
+                $this->cacheFile($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
+                $success++;
+            });
 
-                if ($sandBox->getThrowable()) {
-                    $errors++;
-                    $errorDetails[] = [
-                        'directory' => $directory,
-                        'inputFile' => $inputFile,
-                        'path'      => $path,
-                        'error'     => $sandBox->getThrowable(),
-                    ];
-                }
+            if ($sandBox->getThrowable()) {
+                $errors++;
+                $errorDetails[] = [
+                    'directory' => $directory,
+                    'inputFile' => $inputFile,
+                    'path'      => $path,
+                    'error'     => $sandBox->getThrowable(),
+                ];
             }
         }
 
@@ -306,16 +293,5 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         }
 
         return $cacheFolder;
-    }
-
-    private function fileMatchExtensions($path, $extensions)
-    {
-        foreach ($extensions as $extension) {
-            if (mb_substr($path, -mb_strlen($extension)) === $extension) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
