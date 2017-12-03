@@ -215,17 +215,14 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers ::<public>
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getRenderer
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getCachePath
-     * @covers \Phug\Renderer\Adapter\FileAdapter::hashPrint
-     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
-     * @covers \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
-     * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
-     * @covers \Phug\Renderer\Adapter\FileAdapter::displayCached
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
+     * @covers ::getCachePath
+     * @covers ::hashPrint
+     * @covers ::isCacheUpToDate
+     * @covers ::getCacheDirectory
+     * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
+     * @covers \Phug\Renderer::fileMatchExtensions
+     * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::callAdapter
      */
     public function testCacheWithDisplay()
@@ -338,9 +335,9 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
-     * @covers \Phug\Renderer\Adapter\FileAdapter::fileMatchExtensions
      */
     public function testCacheDirectory()
     {

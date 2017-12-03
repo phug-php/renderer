@@ -69,7 +69,7 @@ class RendererTest extends AbstractRendererTest
         self::assertFileExists($directory.'/subdirectory/subsubdirectory/blanks.html');
 
         self::emptyDirectory($directory);
-        rmdir($directory);
+        @rmdir($directory);
     }
 
     /**
