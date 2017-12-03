@@ -2,13 +2,12 @@
 
 namespace Phug;
 
-use Phug\Renderer\Adapter\EvalAdapter;
-use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
 use Phug\Renderer\Event\RenderEvent;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
+use Phug\Renderer\Partial\RendererOptionsTrait;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
 use Phug\Util\SandBox;
@@ -17,6 +16,7 @@ class Renderer implements ModuleContainerInterface
 {
     use ModuleContainerTrait;
     use DebuggerTrait;
+    use RendererOptionsTrait;
 
     /**
      * @var Compiler
@@ -35,31 +35,7 @@ class Renderer implements ModuleContainerInterface
 
     public function __construct($options = null)
     {
-        $this->setOptionsDefaults($options ?: [], [
-            'debug'                 => true,
-            'enable_profiler'       => false,
-            'up_to_date_check'      => true,
-            'keep_base_name'        => false,
-            'error_handler'         => null,
-            'html_error'            => php_sapi_name() !== 'cli',
-            'color_support'         => null,
-            'error_context_lines'   => 7,
-            'adapter_class_name'    => isset($options['cache_dir']) && $options['cache_dir']
-                ? FileAdapter::class
-                : EvalAdapter::class,
-            'shared_variables'    => [],
-            'globals'             => [],
-            'modules'             => [],
-            'compiler_class_name' => Compiler::class,
-            'self'                => false,
-            'on_render'           => null,
-            'on_html'             => null,
-            'filters'             => [
-                'cdata' => function ($contents) {
-                    return '<![CDATA['.trim($contents).']]>';
-                },
-            ],
-        ]);
+        $this->setOptionsDefaults($options ?: [], $this->getDefaultOptions($options));
 
         $this->initCompiler();
 
@@ -78,37 +54,22 @@ class Renderer implements ModuleContainerInterface
         $this->addModules($this->getOption('modules'));
         foreach ($this->getStaticModules() as $moduleClassName) {
             $interfaces = class_implements($moduleClassName);
-            if (in_array(CompilerModuleInterface::class, $interfaces) &&
-                !$this->compiler->hasModule($moduleClassName)
-            ) {
-                $this->compiler->addModule($moduleClassName);
-                $this->setOptionsRecursive([
-                    'compiler_modules' => [$moduleClassName],
-                ]);
-            }
-            if (in_array(FormatterModuleInterface::class, $interfaces) &&
-                !$this->compiler->getFormatter()->hasModule($moduleClassName)
-            ) {
-                $this->compiler->getFormatter()->addModule($moduleClassName);
-                $this->setOptionsRecursive([
-                    'formatter_modules' => [$moduleClassName],
-                ]);
-            }
-            if (in_array(ParserModuleInterface::class, $interfaces) &&
-                !$this->compiler->getParser()->hasModule($moduleClassName)
-            ) {
-                $this->compiler->getParser()->addModule($moduleClassName);
-                $this->setOptionsRecursive([
-                    'parser_modules' => [$moduleClassName],
-                ]);
-            }
-            if (in_array(LexerModuleInterface::class, $interfaces) &&
-                !$this->compiler->getParser()->getLexer()->hasModule($moduleClassName)
-            ) {
-                $this->compiler->getParser()->getLexer()->addModule($moduleClassName);
-                $this->setOptionsRecursive([
-                    'lexer_modules' => [$moduleClassName],
-                ]);
+            foreach ([
+                [CompilerModuleInterface::class, $this->compiler, 'compiler_modules'],
+                [FormatterModuleInterface::class, $this->compiler->getFormatter(), 'formatter_modules'],
+                [ParserModuleInterface::class, $this->compiler->getParser(), 'parser_modules'],
+                [LexerModuleInterface::class, $this->compiler->getParser()->getLexer(), 'lexer_modules'],
+            ] as $data) {
+                /** @var ModuleContainerInterface $moduleContainer */
+                list($className, $moduleContainer, $optionName) = $data;
+                if (in_array($className, $interfaces) &&
+                    !$moduleContainer->hasModule($moduleClassName)
+                ) {
+                    $moduleContainer->addModule($moduleClassName);
+                    $this->setOptionsRecursive([
+                        $optionName => [$moduleClassName],
+                    ]);
+                }
             }
         }
     }
@@ -136,17 +97,6 @@ class Renderer implements ModuleContainerInterface
                 ' because this adapter does not implement '.CacheInterface::class
             );
         }
-    }
-
-    private function fileMatchExtensions($path, $extensions)
-    {
-        foreach ($extensions as $extension) {
-            if (mb_substr($path, -mb_strlen($extension)) === $extension) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

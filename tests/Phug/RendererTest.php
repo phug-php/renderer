@@ -52,7 +52,7 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @covers ::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
      * @covers ::scanDirectory
      * @covers ::renderDirectory
      */

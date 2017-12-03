@@ -54,7 +54,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::getCacheDirectory
      * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
      * @covers \Phug\Renderer::scanDirectory
      */
     public function testCache()
@@ -221,7 +221,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::getCacheDirectory
      * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
      * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::callAdapter
      */
@@ -339,7 +339,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer::handleOptionAliases
      * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::cacheDirectory
-     * @covers \Phug\Renderer::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      */

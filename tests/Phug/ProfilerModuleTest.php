@@ -32,6 +32,7 @@ class ProfilerModuleTest extends TestCase
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getEventLink
      * @covers \Phug\Renderer\Profiler\LinkedProcesses::getProfilerEvent
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::getDefaultOptions
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
      */
     public function testRenderProfiler()
