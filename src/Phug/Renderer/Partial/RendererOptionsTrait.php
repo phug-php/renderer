@@ -58,7 +58,7 @@ trait RendererOptionsTrait
 
     protected function enableModule($moduleClassName, $className, ModuleContainerInterface $container, $optionName)
     {
-        /** @var ModuleContainerInterface $this */
+        /* @var ModuleContainerInterface $this */
 
         if (in_array($className, class_implements($moduleClassName)) &&
             !$container->hasModule($moduleClassName)
@@ -72,7 +72,7 @@ trait RendererOptionsTrait
 
     private function enableModules()
     {
-        /** @var ModuleContainerInterface $this */
+        /* @var ModuleContainerInterface $this */
 
         $this->addModules($this->getOption('modules'));
         foreach ($this->getStaticModules() as $moduleClassName) {
@@ -106,7 +106,6 @@ trait RendererOptionsTrait
     private function handleOptionAliases()
     {
         /** @var OptionInterface $this */
-
         if ($this->hasOption('basedir')) {
             $basedir = $this->getOption('basedir');
             $this->setOption('paths', array_merge(
@@ -129,7 +128,6 @@ trait RendererOptionsTrait
     public function initCompiler()
     {
         /** @var ModuleContainerInterface $this */
-
         if ($onRender = $this->getOption('on_render')) {
             if (isset($this->optionEvents['on_render'])) {
                 $this->detach(RendererEvent::RENDER, $this->optionEvents['on_render']);
