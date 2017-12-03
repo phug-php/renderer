@@ -434,7 +434,7 @@ class Renderer implements ModuleContainerInterface
     /**
      * Render a pug template file into a HTML/XML string (or any tag templates if you use a custom format).
      *
-     * @param string       $path pug input file
+     * @param string       $path       pug input file
      * @param string|array $parameters parameters (values for variables used in the template)
      *
      * @throws RendererException
@@ -513,7 +513,7 @@ class Renderer implements ModuleContainerInterface
     /**
      * Display a pug template string into a HTML/XML string (or any tag templates if you use a custom format).
      *
-     * @param string $string pug input string
+     * @param string $string     pug input string
      * @param array  $parameters parameters or file name
      * @param string $filename
      *
