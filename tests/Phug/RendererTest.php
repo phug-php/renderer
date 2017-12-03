@@ -52,6 +52,8 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
+     * @covers ::fileMatchExtensions
+     * @covers ::scanDirectory
      * @covers ::renderDirectory
      */
     public function testRenderDirectory()

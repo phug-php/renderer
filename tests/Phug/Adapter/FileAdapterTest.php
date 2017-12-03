@@ -250,6 +250,7 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer::expectCacheAdapter
      * @covers \Phug\Renderer::callAdapter
+     * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::cacheDirectory
      */
     public function testCacheIncompatibility()
@@ -288,6 +289,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers                \Phug\Renderer::scanDirectory
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
@@ -303,6 +305,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers                \Phug\Renderer::scanDirectory
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cache
@@ -334,6 +337,7 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers \Phug\Renderer::handleOptionAliases
+     * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::cacheDirectory
      * @covers \Phug\Renderer::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
