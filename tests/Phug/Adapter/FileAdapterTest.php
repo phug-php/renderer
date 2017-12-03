@@ -20,7 +20,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::createTemporaryFile
      * @covers ::getCompiledFile
      * @covers ::getRenderingFile
-     * @covers \Phug\Renderer::getAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\AbstractAdapter::getRenderer
      */
     public function testRender()
@@ -47,15 +47,15 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers ::<public>
-     * @covers \Phug\Renderer::getAdapter
      * @covers ::getCachePath
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
      * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
-     * @covers \Phug\Renderer::scanDirectory
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      */
     public function testCache()
     {
@@ -221,9 +221,9 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::getCacheDirectory
      * @covers ::cacheFile
      * @covers \Phug\Renderer\AbstractAdapter::<public>
-     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
-     * @covers \Phug\Renderer::scanDirectory
-     * @covers \Phug\Renderer::callAdapter
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      */
     public function testCacheWithDisplay()
     {
@@ -248,10 +248,11 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers \Phug\Renderer::expectCacheAdapter
-     * @covers \Phug\Renderer::callAdapter
-     * @covers \Phug\Renderer::scanDirectory
      * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer\Partial\AdapterTrait::expectCacheAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      */
     public function testCacheIncompatibility()
     {
@@ -289,7 +290,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers                \Phug\Renderer::scanDirectory
+     * @covers                \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
@@ -305,7 +306,7 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers                \Phug\Renderer::scanDirectory
+     * @covers                \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      * @covers                \Phug\Renderer::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cache
@@ -336,10 +337,10 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers \Phug\Renderer::handleOptionAliases
-     * @covers \Phug\Renderer::scanDirectory
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      * @covers \Phug\Renderer::cacheDirectory
-     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::handleOptionAliases
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      */

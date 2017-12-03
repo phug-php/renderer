@@ -52,8 +52,8 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::fileMatchExtensions
-     * @covers ::scanDirectory
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      * @covers ::renderDirectory
      */
     public function testRenderDirectory()
@@ -207,7 +207,7 @@ class RendererTest extends AbstractRendererTest
      * @covers ::__construct
      * @covers ::initCompiler
      * @covers ::getCompiler
-     * @covers ::handleOptionAliases
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::handleOptionAliases
      */
     public function testBasedir()
     {
@@ -268,9 +268,9 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @covers ::getAdapter
      * @covers ::getCompiler
-     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Adapter\EvalAdapter::display
      */
@@ -331,7 +331,6 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
-     * @covers ::callAdapter
      * @covers ::getDebuggedException
      * @covers ::setDebugFile
      * @covers ::setDebugString
@@ -341,6 +340,7 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getRendererException
      * @covers ::getErrorMessage
      * @covers ::highlightLine
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testHandleErrorInString()
@@ -414,7 +414,6 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
-     * @covers ::callAdapter
      * @covers ::getDebuggedException
      * @covers ::setDebugFile
      * @covers ::setDebugString
@@ -424,6 +423,7 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getRendererException
      * @covers ::getErrorMessage
      * @covers ::highlightLine
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
     public function testContextLines()
@@ -470,7 +470,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
-     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
@@ -580,7 +580,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::__construct
      * @covers ::initCompiler
-     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      */
     public function testSelfOption()
     {
@@ -641,7 +641,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
-     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorAsHtml
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
@@ -684,7 +684,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @group error
      * @covers ::handleError
-     * @covers ::callAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugString
