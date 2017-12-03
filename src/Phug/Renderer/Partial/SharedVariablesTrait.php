@@ -18,7 +18,7 @@ trait SharedVariablesTrait
      */
     protected function mergeWithSharedVariables(array $parameters)
     {
-        /** @var OptionInterface $this */
+        /* @var OptionInterface $this */
 
         return array_merge(
             $this->getOption('globals'),
@@ -40,7 +40,7 @@ trait SharedVariablesTrait
      */
     public function share($variables, $value = null)
     {
-        /** @var OptionInterface $this */
+        /* @var OptionInterface $this */
 
         if (func_num_args() === 2) {
             $key = $variables;
@@ -58,7 +58,7 @@ trait SharedVariablesTrait
      */
     public function resetSharedVariables()
     {
-        /** @var OptionInterface $this */
+        /* @var OptionInterface $this */
 
         return $this->setOption('shared_variables', []);
     }

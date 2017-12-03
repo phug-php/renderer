@@ -14,7 +14,6 @@ use Phug\Util\SandBox;
  */
 trait AdapterTrait
 {
-
     /**
      * @var AdapterInterface
      */
