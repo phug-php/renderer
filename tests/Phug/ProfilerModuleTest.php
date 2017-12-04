@@ -20,6 +20,10 @@ class ProfilerModuleTest extends TestCase
      * @covers ::cleanupProfilerNodes
      * @covers ::appendParam
      * @covers ::appendNode
+     * @covers ::getCompilerEventListeners
+     * @covers ::getFormatterEventListeners
+     * @covers ::getParserEventListeners
+     * @covers ::getLexerEventListeners
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
@@ -272,6 +276,10 @@ class ProfilerModuleTest extends TestCase
      * @covers ::cleanupProfilerNodes
      * @covers ::appendParam
      * @covers ::appendNode
+     * @covers ::getCompilerEventListeners
+     * @covers ::getFormatterEventListeners
+     * @covers ::getParserEventListeners
+     * @covers ::getLexerEventListeners
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
@@ -319,6 +327,10 @@ class ProfilerModuleTest extends TestCase
      * @covers ::reset
      * @covers ::initialize
      * @covers ::getFunctionDump
+     * @covers ::getCompilerEventListeners
+     * @covers ::getFormatterEventListeners
+     * @covers ::getParserEventListeners
+     * @covers ::getLexerEventListeners
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>
@@ -364,6 +376,10 @@ class ProfilerModuleTest extends TestCase
      * @covers ::reset
      * @covers ::initialize
      * @covers ::getFunctionDump
+     * @covers ::getCompilerEventListeners
+     * @covers ::getFormatterEventListeners
+     * @covers ::getParserEventListeners
+     * @covers ::getLexerEventListeners
      * @covers ::<public>
      * @covers \Phug\Renderer\Profiler\TokenDump::<public>
      * @covers \Phug\Renderer\Profiler\LinkDump::<public>

@@ -270,6 +270,8 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::getCompiler
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Adapter\EvalAdapter::display
@@ -340,6 +342,8 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getRendererException
      * @covers ::getErrorMessage
      * @covers ::highlightLine
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
@@ -423,6 +427,8 @@ class RendererTest extends AbstractRendererTest
      * @covers ::getRendererException
      * @covers ::getErrorMessage
      * @covers ::highlightLine
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\AbstractAdapter::captureBuffer
      */
@@ -470,6 +476,8 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile
@@ -580,6 +588,8 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::__construct
      * @covers ::initCompiler
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      */
     public function testSelfOption()
@@ -641,6 +651,8 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getErrorAsHtml
@@ -684,6 +696,8 @@ class RendererTest extends AbstractRendererTest
     /**
      * @group error
      * @covers ::handleError
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::getDebuggedException
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::setDebugFile

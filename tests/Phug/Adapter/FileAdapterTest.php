@@ -223,6 +223,8 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      */
     public function testCacheWithDisplay()
@@ -251,6 +253,8 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer::cacheDirectory
      * @covers \Phug\Renderer\Partial\AdapterTrait::expectCacheAdapter
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
+     * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      */
