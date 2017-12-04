@@ -36,6 +36,7 @@ class ProfilerModuleTest extends TestCase
      * @covers \Phug\Renderer\Partial\RendererOptionsTrait::enableModule
      * @covers \Phug\Renderer\Partial\RendererOptionsTrait::getDefaultOptions
      * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::initDebugOptions
+     * @covers \Phug\Renderer\Partial\Debug\DebuggerTrait::reInitOptions
      */
     public function testRenderProfiler()
     {
@@ -69,6 +70,12 @@ class ProfilerModuleTest extends TestCase
         self::assertRegExp('/\+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
         self::assertRegExp('/text\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
         self::assertRegExp('/mixin\s+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
+
+        $renderer->reInitOptions([
+            'debug' => false,
+        ]);
+
+        self::assertFalse($renderer->getOption('enable_profiler'));
     }
 
     /**

@@ -298,6 +298,28 @@ trait DebuggerTrait
     }
 
     /**
+     * Reinitialize debug options then set new options.
+     *
+     * @param $options
+     */
+    public function reInitOptions($options)
+    {
+        /* @var Renderer $this */
+
+        $this->setOptions([
+            'memory_limit'       => null,
+            'execution_max_time' => null,
+            'enable_profiler'    => false,
+            'profiler'           => [
+                'display'        => false,
+                'log'            => false,
+            ],
+        ]);
+        $this->setOptions($options);
+        $this->initDebugOptions($this);
+    }
+
+    /**
      * Handle error occurred in compiled PHP.
      *
      * @param \Throwable $error
