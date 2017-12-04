@@ -476,6 +476,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::handleError
+     * @covers \Phug\Renderer\Partial\AdapterTrait::initAdapter
      * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
      * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
      * @covers \Phug\Renderer\Partial\AdapterTrait::callAdapter
@@ -567,6 +568,7 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @covers ::__construct
+     * @covers \Phug\Renderer\Partial\AdapterTrait::initAdapter
      * @covers ::initCompiler
      */
     public function testAdapterClassNameException()

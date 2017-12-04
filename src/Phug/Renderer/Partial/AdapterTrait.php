@@ -38,6 +38,26 @@ trait AdapterTrait
     }
 
     /**
+     * Create/reset if needed the adapter.
+     *
+     * @throws RendererException
+     */
+    public function initAdapter()
+    {
+        $adapterClassName = $this->getOption('adapter_class_name');
+
+        if (!$this->adapter || !is_a($this->adapter, $adapterClassName)) {
+            if (!is_a($adapterClassName, AdapterInterface::class, true)) {
+                throw new RendererException(
+                    "Passed adapter class $adapterClassName is ".
+                    'not a valid '.AdapterInterface::class
+                );
+            }
+            $this->adapter = new $adapterClassName($this, $this->getOptions());
+        }
+    }
+
+    /**
      * Get the current adapter used (file, stream, eval or custom adapter provided).
      *
      * @return AdapterInterface

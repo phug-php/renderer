@@ -9,6 +9,7 @@ use Phug\Renderer\Profiler\ProfilerModule;
 use Phug\RendererException;
 use Phug\Util\Exception\LocatedException;
 use Phug\Util\SandBox;
+use Phug\Util\SourceLocation;
 
 trait DebuggerTrait
 {
@@ -58,17 +59,12 @@ trait DebuggerTrait
             "\e[0m\n";
     }
 
-    private function getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset)
+    private function getErrorAsHtml($error, $parameters, $data)
     {
         $sandBox = new SandBox(function () use (
             $error,
-            $start,
-            $message,
-            $code,
             $parameters,
-            $line,
-            $offset,
-            $untilOffset
+            $data
         ) {
             /* @var \Throwable $error */
             $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
@@ -79,17 +75,11 @@ trait DebuggerTrait
                         return str_replace('<?', '<<?= "?" ?>', $text);
                     },
                 ],
-            ]))->displayFile(__DIR__.'/resources/index.pug', [
+            ]))->displayFile(__DIR__.'/resources/index.pug', array_merge($data, [
                 'title'       => $error->getMessage(),
                 'trace'       => $trace,
-                'start'       => $start,
-                'untilOffset' => htmlspecialchars($untilOffset),
-                'line'        => $line,
-                'offset'      => $offset,
-                'message'     => trim($message),
-                'code'        => $code,
                 'parameters'  => $parameters ? print_r($parameters, true) : '',
-            ]);
+            ]));
         });
 
         if ($throwable = $sandBox->getThrowable()) {
@@ -99,21 +89,23 @@ trait DebuggerTrait
         return $sandBox->getBuffer();
     }
 
-    private function getErrorMessage($error, $line, $offset, $source, $path, $colored, $parameters, $options)
+    private function getErrorMessage($error, SourceLocation $location, $data)
     {
         /* @var \Throwable $error */
-        $source = explode("\n", rtrim($source));
+        $source = explode("\n", rtrim($data->source));
         $errorType = get_class($error);
         $message = $errorType;
-        if ($path) {
+        if ($path = $location->getPath()) {
             $message .= ' in '.$path;
         }
+        $line = $location->getLine();
+        $offset = $location->getOffset();
         $message .= ":\n".$error->getMessage().' on line '.$line.
             (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
-        $contextLines = $options['error_context_lines'];
+        $contextLines = $data->options['error_context_lines'];
         $code = '';
         $untilOffset = mb_substr($source[max(0, $line - 1)], 0, $offset ?: 0) ?: '';
-        $htmlError = $options['html_error'];
+        $htmlError = $data->options['html_error'];
         $start = null;
         foreach ($source as $index => $lineText) {
             if (abs($index + 1 - $line) > $contextLines) {
@@ -134,13 +126,20 @@ trait DebuggerTrait
 
                 continue;
             }
-            $code .= $this->highlightLine($lineText, $colored, $offset, $options);
+            $code .= $this->highlightLine($lineText, $data->colored, $offset, $data->options);
             if (!$htmlError && !is_null($offset)) {
                 $code .= str_repeat('-', $offset + 7)."^\n";
             }
         }
         if ($htmlError) {
-            return $this->getErrorAsHtml($error, $start, $message, $code, $parameters, $line, $offset, $untilOffset);
+            return $this->getErrorAsHtml($error, $data->parameters, [
+                'start'       => $start,
+                'untilOffset' => htmlspecialchars($untilOffset),
+                'line'        => $line,
+                'offset'      => $offset,
+                'message'     => trim($message),
+                'code'        => $code,
+            ]);
         }
 
         return $message.$code;
@@ -163,13 +162,18 @@ trait DebuggerTrait
 
         return new RendererException($this->getErrorMessage(
             $error,
-            $isPugError ? $error->getLocation()->getLine() : $line,
-            $isPugError ? $error->getLocation()->getOffset() : $offset,
-            $source,
-            $isPugError ? $error->getLocation()->getPath() : $sourcePath,
-            $colorSupport,
-            $parameters,
-            $options
+            new SourceLocation(
+                $isPugError ? $error->getLocation()->getPath() : $sourcePath,
+                $isPugError ? $error->getLocation()->getLine() : $line,
+                $isPugError ? $error->getLocation()->getOffset() : $offset,
+                null
+            ),
+            (object) [
+                'source'     => $source,
+                'colored'    => $colorSupport,
+                'parameters' => $parameters,
+                'options'    => $options,
+            ]
         ), $code, $error);
     }
 
