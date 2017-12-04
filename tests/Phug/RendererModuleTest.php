@@ -127,6 +127,8 @@ class RendererModuleTest extends TestCase
 
     /**
      * @covers \Phug\Renderer::__construct
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::enableModules
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::enableModule
      */
     public function testModulePropagation()
     {
