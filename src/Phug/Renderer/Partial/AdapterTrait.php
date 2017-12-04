@@ -48,6 +48,77 @@ trait AdapterTrait
     }
 
     /**
+     * Call an adapter method inside a sandbox and return the SandBox result.
+     *
+     * @param string   $source
+     * @param string   $method
+     * @param string   $path
+     * @param string   $input
+     * @param callable $getSource
+     * @param array    $parameters
+     *
+     * @return SandBox
+     */
+    private function getSandboxCall(&$source, $method, $path, $input, callable $getSource, array $parameters)
+    {
+        return new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
+            $adapter = $this->getAdapter();
+            $cacheEnabled = (
+                $adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir') ||
+                $this->hasOption('cache_dir') && $this->getOption('cache_dir')
+            );
+            if ($cacheEnabled) {
+                $this->expectCacheAdapter($adapter);
+                $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
+                    /* @var CacheInterface $adapter */
+                    $adapter->displayCached($path, $input, $getSource, $parameters);
+                };
+
+                return in_array($method, ['display', 'displayFile'])
+                    ? $display()
+                    : $adapter->captureBuffer($display);
+            }
+
+            $source = $getSource($path, $input);
+
+            return $adapter->$method(
+                $source,
+                $this->mergeWithSharedVariables($parameters)
+            );
+        });
+    }
+
+    /**
+     * Handle an html event and accordingly to it, display, returns or throw the result/error.
+     *
+     * @param HtmlEvent $htmlEvent
+     * @param array     $parameters
+     * @param callable  $getSource
+     *
+     * @throws RendererException|\Throwable
+     *
+     * @return mixed
+     */
+    private function handleHtmlEvent(HtmlEvent $htmlEvent, array $parameters, $path, callable $getSource)
+    {
+        if ($error = $htmlEvent->getError()) {
+            $this->handleError($error, 1, $path, $getSource(), $parameters, [
+                'debug'               => $this->getOption('debug'),
+                'error_handler'       => $this->getOption('error_handler'),
+                'html_error'          => $this->getOption('html_error'),
+                'error_context_lines' => $this->getOption('error_context_lines'),
+                'color_support'       => $this->getOption('color_support'),
+            ]);
+        }
+
+        if ($buffer = $htmlEvent->getBuffer()) {
+            echo $buffer;
+        }
+
+        return $htmlEvent->getResult();
+    }
+
+    /**
      * Call a method on the adapter (render, renderFile, display, displayFile, more methods can be available depending
      * on the adapter user).
      *
@@ -78,31 +149,7 @@ trait AdapterTrait
             ];
         }
 
-        $sandBox = new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
-            $adapter = $this->getAdapter();
-            $cacheEnabled = (
-                $adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir') ||
-                $this->hasOption('cache_dir') && $this->getOption('cache_dir')
-            );
-            if ($cacheEnabled) {
-                $this->expectCacheAdapter($adapter);
-                $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
-                    /* @var CacheInterface $adapter */
-                    $adapter->displayCached($path, $input, $getSource, $parameters);
-                };
-
-                return in_array($method, ['display', 'displayFile'])
-                    ? $display()
-                    : $adapter->captureBuffer($display);
-            }
-
-            $source = $getSource($path, $input);
-
-            return $adapter->$method(
-                $source,
-                $this->mergeWithSharedVariables($parameters)
-            );
-        });
+        $sandBox = $this->getSandboxCall($source, $method, $path, $input, $getSource, $parameters);
 
         $htmlEvent = new HtmlEvent(
             $renderEvent,
@@ -111,22 +158,10 @@ trait AdapterTrait
             $sandBox->getThrowable()
         );
         $this->trigger($htmlEvent);
+        $sourceOnDemand = function () use ($source, $getSource, $path, $input) {
+            return $source ?: $getSource($path, $input);
+        };
 
-        if ($error = $htmlEvent->getError()) {
-            $source = $source ?: $getSource($path, $input);
-            $this->handleError($error, 1, $path, $source, $parameters, [
-                'debug'               => $this->getOption('debug'),
-                'error_handler'       => $this->getOption('error_handler'),
-                'html_error'          => $this->getOption('html_error'),
-                'error_context_lines' => $this->getOption('error_context_lines'),
-                'color_support'       => $this->getOption('color_support'),
-            ]);
-        }
-
-        if ($buffer = $htmlEvent->getBuffer()) {
-            echo $buffer;
-        }
-
-        return $htmlEvent->getResult();
+        return $this->handleHtmlEvent($htmlEvent, $parameters, $path, $sourceOnDemand);
     }
 }

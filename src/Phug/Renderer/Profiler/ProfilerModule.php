@@ -280,18 +280,9 @@ class ProfilerModule extends AbstractModule
         }
     }
 
-    public function getEventListeners()
+    private function getCompilerEventListeners()
     {
-        $eventListeners = array_map(function (callable $eventListener) {
-            return function (Event $event) use ($eventListener) {
-                if ($this->isAlive() && $eventListener($event) !== false) {
-                    $this->record($event);
-                }
-            };
-        }, [
-            RendererEvent::RENDER => function (RenderEvent $event) {
-                $this->appendParam($event, '__link', $event);
-            },
+        return [
             CompilerEvent::COMPILE => function (CompileEvent $event) {
                 $this->appendParam($event, '__link', $event);
             },
@@ -304,12 +295,24 @@ class ProfilerModule extends AbstractModule
             CompilerEvent::OUTPUT => function (OutputEvent $event) {
                 $this->appendParam($event, '__link', $event->getCompileEvent());
             },
+        ];
+    }
+
+    private function getFormatterEventListeners()
+    {
+        return [
             FormatterEvent::DEPENDENCY_STORAGE => function (DependencyStorageEvent $event) {
                 $this->appendParam($event, '__link', $event->getDependencyStorage());
             },
             FormatterEvent::FORMAT => function (FormatEvent $event) {
                 $this->appendNode($event, $event->getElement()->getOriginNode());
             },
+        ];
+    }
+
+    private function getParserEventListeners()
+    {
+        return [
             ParserEvent::PARSE => function (ParseEvent $event) {
                 $this->appendParam($event, '__link', $event);
             },
@@ -325,6 +328,12 @@ class ProfilerModule extends AbstractModule
             ParserEvent::STATE_STORE => function (ParserNodeEvent $event) {
                 $this->appendNode($event, $event->getNode());
             },
+        ];
+    }
+
+    private function getLexerEventListeners()
+    {
+        return [
             LexerEvent::LEX => function (LexEvent $event) {
                 $this->appendParam($event, '__link', $event);
             },
@@ -336,7 +345,28 @@ class ProfilerModule extends AbstractModule
                 $this->appendParam($event, '__location', $token->getSourceLocation());
                 $this->appendParam($event, '__link', $token);
             },
-        ]);
+        ];
+    }
+
+    public function getEventListeners()
+    {
+        $eventListeners = array_map(function (callable $eventListener) {
+            return function (Event $event) use ($eventListener) {
+                if ($this->isAlive() && $eventListener($event) !== false) {
+                    $this->record($event);
+                }
+            };
+        }, array_merge(
+            [
+                RendererEvent::RENDER => function (RenderEvent $event) {
+                    $this->appendParam($event, '__link', $event);
+                },
+            ],
+            $this->getCompilerEventListeners(),
+            $this->getFormatterEventListeners(),
+            $this->getParserEventListeners(),
+            $this->getLexerEventListeners()
+        ));
 
         $eventListeners[RendererEvent::HTML] = function (HtmlEvent $event) {
             $this->appendParam($event, '__link', $event->getRenderEvent());
