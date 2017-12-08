@@ -10,6 +10,8 @@ use Phug\RendererException;
 use Phug\Util\Exception\LocatedException;
 use Phug\Util\SandBox;
 use Phug\Util\SourceLocation;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
+use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 trait DebuggerTrait
 {
@@ -66,6 +68,8 @@ trait DebuggerTrait
             $parameters,
             $data
         ) {
+            $dumper = new HtmlDumper();
+            $cloner = new VarCloner();
             /* @var \Throwable $error */
             $trace = '## '.$error->getFile().'('.$error->getLine().")\n".$error->getTraceAsString();
             (new Renderer([
@@ -78,7 +82,7 @@ trait DebuggerTrait
             ]))->displayFile(__DIR__.'/resources/index.pug', array_merge($data, [
                 'title'       => $error->getMessage(),
                 'trace'       => $trace,
-                'parameters'  => $parameters ? print_r($parameters, true) : '',
+                'parameters'  => $parameters ? $dumper->dump($cloner->cloneVar($parameters), true) : '',
             ]));
         });
 
