@@ -9,18 +9,18 @@ We worked hard to provide this pug port. And we get any profit of it. That's why
 Please report any security issue or risk by emailing phug@selfbuild.fr. Please don't disclose security bugs publicly until they have been handled by us.
 
 For any other bug or issue, please click this link and follow the template if applicable:
-[Create new issue](https://github.com/phug-php/phug/issues/new)
+[Create new issue](https://github.com/phug-php/renderer/issues/new)
 
 This template will help your provide us the informations we need for most issues (the PHP and/or Pug code you use, the expected behaviour and the current behaviour).
 
 ## Code Contributions
 
-Fork the [GitHub project](https://github.com/phug-php/phug) and chek out your copy locally:
+Fork the [GitHub project](https://github.com/phug-php/renderer) and chek out your copy locally:
 
 ```shell
 git clone https://github.com/<username>/phug.git
 cd phug
-git remote add upstream https://github.com/phug-php/phug.git
+git remote add upstream https://github.com/phug-php/renderer.git
 ```
 Replace `<username>` with your GitHub username.
 
