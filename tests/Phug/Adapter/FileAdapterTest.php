@@ -365,37 +365,28 @@ class FileAdapterTest extends AbstractRendererTest
      */
     public function testCacheIncompatibility()
     {
-        $message = null;
         $renderer = new Renderer([
             'adapter_class_name' => StreamAdapter::class,
             'cache_dir'          => sys_get_temp_dir(),
         ]);
 
-        try {
-            $renderer->render('foo');
-        } catch (RendererException $error) {
-            $message = $error->getMessage();
-        }
+        $renderer->render('foo');
 
-        self::assertSame(
-            'You cannot use "cache_dir" option with '.StreamAdapter::class.
-            ' because this adapter does not implement '.CacheInterface::class,
-            $message
-        );
+        self::assertInstanceOf(FileAdapter::class, $renderer->getAdapter());
+        self::assertSame(FileAdapter::class, $renderer->getOption('adapter_class_name'));
 
-        $message = null;
+        $renderer = new Renderer([
+            'adapter_class_name' => StreamAdapter::class,
+            'cache_dir'          => sys_get_temp_dir(),
+        ]);
 
-        try {
-            $renderer->cacheDirectory('foo');
-        } catch (RendererException $error) {
-            $message = $error->getMessage();
-        }
+        $emptyDirectory = sys_get_temp_dir().'/d'.mt_rand(0, 9999999);
+        @mkdir($emptyDirectory);
+        $renderer->cacheDirectory($emptyDirectory);
+        @rmdir($emptyDirectory);
 
-        self::assertSame(
-            'You cannot cache a directory with '.StreamAdapter::class.
-            ' because this adapter does not implement '.CacheInterface::class,
-            $message
-        );
+        self::assertInstanceOf(FileAdapter::class, $renderer->getAdapter());
+        self::assertSame(FileAdapter::class, $renderer->getOption('adapter_class_name'));
     }
 
     /**

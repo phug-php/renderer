@@ -2,6 +2,7 @@
 
 namespace Phug\Renderer\Partial;
 
+use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Event\HtmlEvent;
@@ -20,20 +21,13 @@ trait AdapterTrait
     private $adapter;
 
     /**
-     * Throw an exception if the given argument (typically an adapter) is not a cache adapter
+     * Fallback to FileAdapter if the current adapter (typically an adapter) is not a cache adapter
      * (implement CacheInterface).
-     *
-     * @param $adapter
-     *
-     * @throws RendererException
      */
-    private function expectCacheAdapter($adapter)
+    private function expectCacheAdapter()
     {
-        if (!($adapter instanceof CacheInterface)) {
-            throw new RendererException(
-                'You cannot use "cache_dir" option with '.get_class($adapter).
-                ' because this adapter does not implement '.CacheInterface::class
-            );
+        if (!($this->adapter instanceof CacheInterface)) {
+            $this->setAdapterClassName(FileAdapter::class);
         }
     }
 
@@ -41,6 +35,8 @@ trait AdapterTrait
      * Create/reset if needed the adapter.
      *
      * @throws RendererException
+     *
+     * @return $this
      */
     public function initAdapter()
     {
@@ -55,6 +51,8 @@ trait AdapterTrait
             }
             $this->adapter = new $adapterClassName($this, $this->getOptions());
         }
+
+        return $this;
     }
 
     /**
@@ -65,6 +63,16 @@ trait AdapterTrait
     public function getAdapter()
     {
         return $this->adapter;
+    }
+
+    /**
+     * Set the current adapter engine (file, stream, eval or custom adapter provided).
+     *
+     * @return $this
+     */
+    public function setAdapterClassName($adapterClassName)
+    {
+        return $this->setOption('adapter_class_name', $adapterClassName)->initAdapter();
     }
 
     /**
@@ -88,7 +96,8 @@ trait AdapterTrait
                 $this->hasOption('cache_dir') && $this->getOption('cache_dir')
             );
             if ($cacheEnabled) {
-                $this->expectCacheAdapter($adapter);
+                $this->expectCacheAdapter();
+                $adapter = $this->getAdapter();
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     /* @var CacheInterface $adapter */
                     $adapter->displayCached($path, $input, $getSource, $this->mergeWithSharedVariables($parameters));

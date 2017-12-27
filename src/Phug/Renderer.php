@@ -253,20 +253,12 @@ class Renderer implements ModuleContainerInterface
      *
      * @param $directory
      *
-     * @throws RendererException
-     *
      * @return array
      */
     public function cacheDirectory($directory)
     {
-        $adapter = $this->getAdapter();
-        if (!($adapter instanceof CacheInterface)) {
-            throw new RendererException(
-                'You cannot cache a directory with '.get_class($adapter).
-                ' because this adapter does not implement '.CacheInterface::class
-            );
-        }
+        $this->expectCacheAdapter();
 
-        return $adapter->cacheDirectory($directory);
+        return $this->getAdapter()->cacheDirectory($directory);
     }
 }
