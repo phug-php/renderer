@@ -77,35 +77,140 @@ class FileAdapterTest extends AbstractRendererTest
         $renderer->getAdapter()->setOption('up_to_date_check', false);
         file_put_contents($path, 'div=$message');
 
-        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<p>Ho</p>', $renderer->renderFile($path, [
+            'message' => 'Ho',
         ]));
 
         $renderer->getAdapter()->setOption('up_to_date_check', true);
         $GLOBALS['debug'] = true;
 
-        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<div>He</div>', $renderer->renderFile($path, [
+            'message' => 'He',
         ]));
 
         $renderer->getAdapter()->setOption('cache_dir', null);
 
-        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<div>Ha</div>', $renderer->renderFile($path, [
+            'message' => 'Ha',
         ]));
 
         $renderer->getAdapter()->setOption('cache_dir', null);
         $renderer->setOption('cache_dir', null);
 
-        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<div>He</div>', $renderer->renderFile($path, [
+            'message' => 'He',
         ]));
 
         $renderer->getAdapter()->setOption('cache_dir', true);
 
-        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<div>Hu</div>', $renderer->renderFile($path, [
+            'message' => 'Hu',
         ]));
+
+        /** @var FileAdapter $fileAdapter */
+        $fileAdapter = $renderer->getAdapter();
+        $path1 = $fileAdapter->cache(
+            __DIR__.'/../../cases/attrs.pug',
+            file_get_contents(__DIR__.'/../../cases/attrs.pug'),
+            function ($path, $input) {
+                return "$path\n$input";
+            });
+        $path2 = $fileAdapter->cache(
+            __DIR__.'/../../cases/attrs-data.pug',
+            file_get_contents(__DIR__.'/../../cases/attrs-data.pug'),
+            function ($path, $input) {
+                return "$path\n$input";
+            });
+
+        self::assertNotEquals($path1, $path2);
+
+        if (file_exists($path1)) {
+            unlink($path1);
+        }
+        if (file_exists($path2)) {
+            unlink($path2);
+        }
+
+        static::emptyDirectory($directory);
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $renderer = new Renderer([
+            'debug'     => false,
+            'paths'     => [__DIR__.'/../../cases'],
+            'modules'   => [JsPhpizePhug::class],
+            'cache_dir' => $directory,
+        ]);
+        $attrs = $renderer->renderFile('attrs.pug');
+        $attrsData = $renderer->renderFile('attrs-data.pug');
+        $attrsAgain = $renderer->renderFile('attrs.pug');
+        $files = array_filter(scandir($directory), function ($item) {
+            return mb_substr($item, 0, 1) !== '.' && pathinfo($item, PATHINFO_EXTENSION) !== 'txt';
+        });
+        static::emptyDirectory($directory);
+
+        self::assertNotEquals($attrs, $attrsData);
+        self::assertSame($attrs, $attrsAgain);
+        self::assertCount(2, $files);
+    }
+
+    /**
+     * @covers ::<public>
+     * @covers ::getCachePath
+     * @covers ::hashPrint
+     * @covers ::isCacheUpToDate
+     * @covers ::getCacheDirectory
+     * @covers ::cacheFile
+     * @covers \Phug\Renderer\AbstractAdapter::<public>
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
+     * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
+     */
+    public function testSharedVariablesWithCache()
+    {
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $renderer = new Renderer([
+            'cache_dir' => $directory,
+        ]);
+        $path = $directory.DIRECTORY_SEPARATOR.'test.pug';
+        file_put_contents($path, 'p=$message');
+
+        $renderer->share('message', 'Hi');
+        self::assertSame('<p>Hi</p>', $renderer->renderFile($path));
+
+        $renderer->getAdapter()->setOption('up_to_date_check', false);
+        file_put_contents($path, 'div=$message');
+
+        $renderer->share('message', 'Ho');
+        self::assertSame('<p>Ho</p>', $renderer->renderFile($path));
+
+        $renderer->getAdapter()->setOption('up_to_date_check', true);
+        $GLOBALS['debug'] = true;
+
+        $renderer->share('message', 'He');
+        self::assertSame('<div>He</div>', $renderer->renderFile($path));
+
+        $renderer->getAdapter()->setOption('cache_dir', null);
+
+        $renderer->share('message', 'Ha');
+        self::assertSame('<div>Ha</div>', $renderer->renderFile($path));
+
+        $renderer->getAdapter()->setOption('cache_dir', null);
+        $renderer->setOption('cache_dir', null);
+
+        $renderer->share('message', 'He');
+        self::assertSame('<div>He</div>', $renderer->renderFile($path));
+
+        $renderer->getAdapter()->setOption('cache_dir', true);
+
+        $renderer->share('message', 'Hu');
+        self::assertSame('<div>Hu</div>', $renderer->renderFile($path));
 
         /** @var FileAdapter $fileAdapter */
         $fileAdapter = $renderer->getAdapter();
@@ -185,15 +290,15 @@ class FileAdapterTest extends AbstractRendererTest
         clearstatcache();
 
         $html = $renderer->renderFile($path, [
-            'message' => 'Hi',
+            'message' => 'Ho',
         ]);
-        self::assertSame('<p>Hi</p>', $html);
+        self::assertSame('<p>Ho</p>', $html);
 
         touch($include, time() + 3600);
         clearstatcache();
 
-        self::assertSame('<div>Hi</div>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<div>Ha</div>', $renderer->renderFile($path, [
+            'message' => 'Ha',
         ]));
 
         file_put_contents($include, 'p=$message');
@@ -206,8 +311,8 @@ class FileAdapterTest extends AbstractRendererTest
             }
         }
 
-        self::assertSame('<p>Hi</p>', $renderer->renderFile($path, [
-            'message' => 'Hi',
+        self::assertSame('<p>He</p>', $renderer->renderFile($path, [
+            'message' => 'He',
         ]));
 
         static::emptyDirectory($directory);

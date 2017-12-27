@@ -91,7 +91,7 @@ trait AdapterTrait
                 $this->expectCacheAdapter($adapter);
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     /* @var CacheInterface $adapter */
-                    $adapter->displayCached($path, $input, $getSource, $parameters);
+                    $adapter->displayCached($path, $input, $getSource, $this->mergeWithSharedVariables($parameters));
                 };
 
                 return in_array($method, ['display', 'displayFile'])
