@@ -3,7 +3,6 @@
 namespace Phug;
 
 use Phug\Renderer\AdapterInterface;
-use Phug\Renderer\CacheInterface;
 use Phug\Renderer\Partial\AdapterTrait;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
 use Phug\Renderer\Partial\RendererOptionsTrait;

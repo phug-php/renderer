@@ -6,8 +6,6 @@ use JsPhpize\JsPhpizePhug;
 use Phug\Renderer;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\Adapter\StreamAdapter;
-use Phug\Renderer\CacheInterface;
-use Phug\RendererException;
 use Phug\Test\AbstractRendererTest;
 
 /**
