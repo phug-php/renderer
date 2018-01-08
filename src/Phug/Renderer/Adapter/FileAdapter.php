@@ -55,9 +55,10 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
                 throw new RuntimeException(sprintf('Cache directory must be writable. "%s" is not.', $cacheFolder), 6);
             }
 
+            $output = $rendered($path, $input);
             $success = $this->cacheFile(
                 $destination,
-                $rendered($path, $input),
+                $output,
                 $this->getRenderer()->getCompiler()->getImportPaths($path)
             );
         }
