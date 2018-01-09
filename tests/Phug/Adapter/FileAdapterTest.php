@@ -160,8 +160,8 @@ class FileAdapterTest extends AbstractRendererTest
      */
     public function testCacheOnExtendsChange()
     {
-        $cacheDirectory = sys_get_temp_dir().'/pug-cache-'.mt_rand(0, 99999999);
-        $templateDirectory = sys_get_temp_dir().'/pug-templates-'.mt_rand(0, 99999999);
+        $cacheDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-cache-'.mt_rand(0, 99999999);
+        $templateDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-templates-'.mt_rand(0, 99999999);
         foreach ([$cacheDirectory, $templateDirectory] as $directory) {
             static::emptyDirectory($directory);
             if (!file_exists($directory)) {

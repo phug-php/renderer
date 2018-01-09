@@ -56,7 +56,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             }
 
             $compiler = $this->getRenderer()->getCompiler();
-            $fullPath = $compiler->resolve($path);
+            $fullPath = $compiler->locate($path) ?: $path;
             $output = $rendered($fullPath, $input);
             $importsPaths = $compiler->getImportPaths($fullPath);
 
