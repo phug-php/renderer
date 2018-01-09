@@ -161,7 +161,7 @@ class FileAdapterTest extends AbstractRendererTest
     public function testCacheOnExtendsChange()
     {
         $cacheDirectory = sys_get_temp_dir().'/pug-cache-'.mt_rand(0, 99999999);
-        $templateDirectory = sys_get_temp_dir().'/pug-tempaltes-'.mt_rand(0, 99999999);
+        $templateDirectory = sys_get_temp_dir().'/pug-templates-'.mt_rand(0, 99999999);
         foreach ([$cacheDirectory, $templateDirectory] as $directory) {
             static::emptyDirectory($directory);
             if (!file_exists($directory)) {
@@ -172,10 +172,16 @@ class FileAdapterTest extends AbstractRendererTest
             'basedir'   => $templateDirectory,
             'cache_dir' => $cacheDirectory,
         ]);
-        $layout = $templateDirectory.DIRECTORY_SEPARATOR.'base.pug';
-        file_put_contents($layout, "p in base\nblock content");
-        $child = $templateDirectory.DIRECTORY_SEPARATOR.'extends.pug';
-        file_put_contents($child, "extends base\nblock content\n  p in child");
+        $layout = 'base.pug';
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base\nblock content"
+        );
+        $child = 'child.pug';
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$child,
+            "extends base\nblock content\n  p in child"
+        );
         $render = function ($path) use ($renderer) {
             ob_start();
             $renderer->displayFile($path);
@@ -187,7 +193,10 @@ class FileAdapterTest extends AbstractRendererTest
 
         self::assertSame('<p>in base</p><p>in child</p>', $render($child));
 
-        file_put_contents($layout, "p in base updated!\nblock content");
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base updated!\nblock content"
+        );
         touch($layout, time() - 3600);
         clearstatcache();
 
@@ -199,7 +208,10 @@ class FileAdapterTest extends AbstractRendererTest
             }
         }
 
-        file_put_contents($layout, "p in base updated twice!\nblock content");
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base updated twice!\nblock content"
+        );
         touch($layout, time() - 3600);
         clearstatcache();
 
