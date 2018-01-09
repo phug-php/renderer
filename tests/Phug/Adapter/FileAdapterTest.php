@@ -155,74 +155,6 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
-     * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
-     */
-    public function testCacheOnExtendsChange()
-    {
-        $cacheDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-cache-'.mt_rand(0, 99999999);
-        $templateDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-templates-'.mt_rand(0, 99999999);
-        foreach ([$cacheDirectory, $templateDirectory] as $directory) {
-            static::emptyDirectory($directory);
-            if (!file_exists($directory)) {
-                mkdir($directory);
-            }
-        }
-        $renderer = new Renderer([
-            'basedir'   => $templateDirectory,
-            'cache_dir' => $cacheDirectory,
-        ]);
-        $layout = 'base.pug';
-        file_put_contents(
-            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
-            "p in base\nblock content"
-        );
-        $child = 'child.pug';
-        file_put_contents(
-            $templateDirectory.DIRECTORY_SEPARATOR.$child,
-            "extends base\nblock content\n  p in child"
-        );
-        $render = function ($path) use ($renderer) {
-            ob_start();
-            $renderer->displayFile($path);
-            $html = ob_get_contents();
-            ob_end_clean();
-
-            return $html;
-        };
-
-        self::assertSame('<p>in base</p><p>in child</p>', $render($child));
-
-        file_put_contents(
-            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
-            "p in base updated!\nblock content"
-        );
-        touch($layout, time() - 3600);
-        clearstatcache();
-
-        self::assertSame('<p>in base updated!</p><p>in child</p>', $render($child));
-
-        foreach (scandir($cacheDirectory) as $file) {
-            if (substr($file, -22) === '.imports.serialize.txt') {
-                unlink($cacheDirectory.DIRECTORY_SEPARATOR.$file);
-            }
-        }
-
-        file_put_contents(
-            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
-            "p in base updated twice!\nblock content"
-        );
-        touch($layout, time() - 3600);
-        clearstatcache();
-
-        self::assertSame('<p>in base updated twice!</p><p>in child</p>', $render($child));
-
-        foreach ([$cacheDirectory, $templateDirectory] as $directory) {
-            static::emptyDirectory($directory);
-        }
-    }
-
-    /**
      * @covers ::<public>
      * @covers ::getCachePath
      * @covers ::hashPrint
@@ -331,7 +263,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
      * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
      */
-    public function testCacheOnImportsChange()
+    public function testCacheOnIcludeChange()
     {
         $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
         static::emptyDirectory($directory);
@@ -382,6 +314,75 @@ class FileAdapterTest extends AbstractRendererTest
         ]));
 
         static::emptyDirectory($directory);
+    }
+
+    /**
+     * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
+     * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
+     */
+    public function testCacheOnExtendsChange()
+    {
+        $cacheDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-cache-'.mt_rand(0, 99999999);
+        $templateDirectory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pug-templates-'.mt_rand(0, 99999999);
+        foreach ([$cacheDirectory, $templateDirectory] as $directory) {
+            static::emptyDirectory($directory);
+            if (!file_exists($directory)) {
+                mkdir($directory);
+            }
+        }
+        $renderer = new Renderer([
+            'basedir'   => $templateDirectory,
+            'cache_dir' => $cacheDirectory,
+        ]);
+        $layout = 'base.pug';
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base\nblock content"
+        );
+        $child = 'child.pug';
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$child,
+            "extends base\nblock content\n  p in child"
+        );
+        $render = function ($path) use ($renderer) {
+            ob_start();
+            $renderer->displayFile($path);
+            $html = ob_get_contents();
+            ob_end_clean();
+
+            return $html;
+        };
+
+        self::assertSame('<p>in base</p><p>in child</p>', $render($child));
+
+        touch($templateDirectory.DIRECTORY_SEPARATOR.$child, time() - 3600);
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base updated!\nblock content"
+        );
+        touch($templateDirectory.DIRECTORY_SEPARATOR.$layout, time() + 3600);
+        clearstatcache();
+
+        self::assertSame('<p>in base updated!</p><p>in child</p>', $render($child));
+
+        foreach (scandir($cacheDirectory) as $file) {
+            if (substr($file, -22) === '.imports.serialize.txt') {
+                unlink($cacheDirectory.DIRECTORY_SEPARATOR.$file);
+            }
+        }
+
+        file_put_contents(
+            $templateDirectory.DIRECTORY_SEPARATOR.$layout,
+            "p in base updated twice!\nblock content"
+        );
+        touch($templateDirectory.DIRECTORY_SEPARATOR.$layout, time() + 3600);
+        clearstatcache();
+
+        self::assertSame('<p>in base updated twice!</p><p>in child</p>', $render($child));
+
+        foreach ([$cacheDirectory, $templateDirectory] as $directory) {
+            static::emptyDirectory($directory);
+        }
     }
 
     /**
