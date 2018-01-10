@@ -788,6 +788,26 @@ class RendererTest extends AbstractRendererTest
         ]), $html);
     }
 
+    /**
+     * @group issues
+     * https://github.com/pug-php/pug/issues/186
+     */
+    public function testUndefinedVariableInIfStatement()
+    {
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = trim($renderer->render(implode("\n", [
+            'if $doesNotExist',
+            '  p Hello',
+            'else',
+            '  p Bye',
+        ])));
+
+        self::assertSame('<p>Bye</p>', $html);
+    }
+
     public function testWhiteSpace()
     {
         $renderer = new Renderer([
