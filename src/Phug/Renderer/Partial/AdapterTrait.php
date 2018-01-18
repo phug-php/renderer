@@ -93,7 +93,7 @@ trait AdapterTrait
                     throw new ErrorException($message, 0, $number, $file, $line);
                 }
 
-                return null;
+                return true;
             };
         }
 

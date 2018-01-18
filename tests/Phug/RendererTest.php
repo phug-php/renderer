@@ -846,6 +846,7 @@ class RendererTest extends AbstractRendererTest
             error_reporting(E_ALL);
 
             $severity = null;
+
             try {
                 $renderer->render($pugCode, $vars);
             } catch (ErrorException $exp) {
@@ -861,6 +862,7 @@ class RendererTest extends AbstractRendererTest
             self::assertSame('<p></p>', $html);
 
             $code = null;
+
             try {
                 $customRenderer->render($pugCode, $vars);
             } catch (ErrorException $exp) {
@@ -877,7 +879,7 @@ class RendererTest extends AbstractRendererTest
 
             $html = trim($renderer->render(implode("\n", [
                 '- error_reporting(E_ALL ^ E_NOTICE)',
-                $pugCode
+                $pugCode,
             ]), $vars));
 
             self::assertSame('<p></p>', $html);
@@ -885,6 +887,7 @@ class RendererTest extends AbstractRendererTest
             error_reporting(E_ALL);
 
             $code = null;
+
             try {
                 $customRenderer->render($pugCode, $vars);
             } catch (ErrorException $exp) {

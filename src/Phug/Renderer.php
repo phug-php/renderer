@@ -9,7 +9,6 @@ use Phug\Renderer\Partial\RendererOptionsTrait;
 use Phug\Renderer\Partial\SharedVariablesTrait;
 use Phug\Util\ModuleContainerInterface;
 use Phug\Util\Partial\ModuleContainerTrait;
-use Phug\Util\SandBox;
 
 class Renderer implements ModuleContainerInterface
 {

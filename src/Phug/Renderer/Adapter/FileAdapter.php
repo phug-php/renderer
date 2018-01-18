@@ -5,7 +5,6 @@ namespace Phug\Renderer\Adapter;
 use Phug\Renderer;
 use Phug\Renderer\AbstractAdapter;
 use Phug\Renderer\CacheInterface;
-use Phug\Util\SandBox;
 use RuntimeException;
 
 class FileAdapter extends AbstractAdapter implements CacheInterface
