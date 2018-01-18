@@ -4,7 +4,6 @@ namespace Phug\Renderer;
 
 use Phug\Renderer;
 use Phug\Util\Partial\OptionTrait;
-use Phug\Util\SandBox;
 
 abstract class AbstractAdapter implements AdapterInterface
 {
