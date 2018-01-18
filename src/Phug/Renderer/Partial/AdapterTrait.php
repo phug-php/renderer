@@ -2,6 +2,7 @@
 
 namespace Phug\Renderer\Partial;
 
+use ErrorException;
 use Phug\Renderer\Adapter\FileAdapter;
 use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\CacheInterface;
@@ -76,6 +77,30 @@ trait AdapterTrait
     }
 
     /**
+     * Return a sandbox with renderer settings for a given callable action.
+     *
+     * @param callable $action
+     *
+     * @return SandBox
+     */
+    public function getNewSandBox(callable $action)
+    {
+        $errorHandler = $this->getOption('error_reporting');
+        if ($errorHandler !== null && !is_callable($errorHandler)) {
+            $errorReporting = $errorHandler;
+            $errorHandler = function ($number, $message, $file, $line) use ($errorReporting) {
+                if ($errorReporting & $number) {
+                    throw new ErrorException($message, 0, $number, $file, $line);
+                }
+
+                return null;
+            };
+        }
+
+        return new SandBox($action, $errorHandler);
+    }
+
+    /**
      * Call an adapter method inside a sandbox and return the SandBox result.
      *
      * @param string   $source
@@ -89,7 +114,7 @@ trait AdapterTrait
      */
     private function getSandboxCall(&$source, $method, $path, $input, callable $getSource, array $parameters)
     {
-        return new SandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
+        return $this->getNewSandBox(function () use (&$source, $method, $path, $input, $getSource, $parameters) {
             $adapter = $this->getAdapter();
             $cacheEnabled = (
                 $adapter->hasOption('cache_dir') && $adapter->getOption('cache_dir') ||

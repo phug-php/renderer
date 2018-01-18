@@ -2,6 +2,7 @@
 
 namespace Phug\Test;
 
+use ErrorException;
 use JsPhpize\JsPhpizePhug;
 use Phug\Compiler\Event\NodeEvent;
 use Phug\CompilerInterface;
@@ -806,6 +807,94 @@ class RendererTest extends AbstractRendererTest
         ])));
 
         self::assertSame('<p>Bye</p>', $html);
+    }
+
+    /**
+     * @group issues
+     * https://github.com/pug-php/pug/issues/187
+     */
+    public function testUndefinedIndex()
+    {
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+        $tolerantRenderer = new Renderer([
+            'debug'           => false,
+            'error_reporting' => E_ALL ^ E_NOTICE,
+        ]);
+        $customRenderer = new Renderer([
+            'debug'           => false,
+            'error_reporting' => function ($number, $message) {
+                throw new ErrorException($message, $number);
+            },
+        ]);
+
+        $vars = [
+            'arr' => [],
+            'obj' => (object) [],
+        ];
+        $pugCodes = [
+            'p=$arr["foo"]',
+            'p=$none["foo"]',
+            'p=$obj->foo',
+            'p=$none->foo',
+        ];
+
+        $level = error_reporting();
+
+        foreach ($pugCodes as $pugCode) {
+            error_reporting(E_ALL);
+
+            $severity = null;
+            try {
+                $renderer->render($pugCode, $vars);
+            } catch (ErrorException $exp) {
+                $severity = $exp->getSeverity();
+            }
+
+            self::assertSame(E_NOTICE, $severity);
+
+            error_reporting(E_ALL ^ E_NOTICE);
+
+            $html = trim($renderer->render($pugCode, $vars));
+
+            self::assertSame('<p></p>', $html);
+
+            $code = null;
+            try {
+                $customRenderer->render($pugCode, $vars);
+            } catch (ErrorException $exp) {
+                $code = $exp->getCode();
+            }
+
+            self::assertSame(E_NOTICE, $code);
+
+            error_reporting(E_ALL);
+
+            $html = trim($tolerantRenderer->render($pugCode, $vars));
+
+            self::assertSame('<p></p>', $html);
+
+            $html = trim($renderer->render(implode("\n", [
+                '- error_reporting(E_ALL ^ E_NOTICE)',
+                $pugCode
+            ]), $vars));
+
+            self::assertSame('<p></p>', $html);
+
+            error_reporting(E_ALL);
+
+            $code = null;
+            try {
+                $customRenderer->render($pugCode, $vars);
+            } catch (ErrorException $exp) {
+                $code = $exp->getCode();
+            }
+
+            self::assertSame(E_NOTICE, $code);
+        }
+
+        error_reporting($level);
     }
 
     public function testWhiteSpace()

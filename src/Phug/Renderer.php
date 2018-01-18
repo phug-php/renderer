@@ -190,7 +190,7 @@ class Renderer implements ModuleContainerInterface
                 }
                 if (!$counter) {
                     $outputFile = $outputDirectory.DIRECTORY_SEPARATOR.$filename.$extension;
-                    $sandBox = new SandBox(function () use ($outputFile, $file, $parameters) {
+                    $sandBox = $this->getNewSandBox(function () use ($outputFile, $file, $parameters) {
                         return file_put_contents($outputFile, $this->renderFile($file, $parameters));
                     });
                     $counter = $sandBox->getResult() ? 'success' : 'errors';

@@ -109,7 +109,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         foreach ($renderer->scanDirectory($directory) as $inputFile) {
             $path = $inputFile;
             $this->isCacheUpToDate($path);
-            $sandBox = new SandBox(function () use (&$success, $compiler, $path, $inputFile) {
+            $sandBox = $this->getRenderer()->getNewSandBox(function () use (&$success, $compiler, $path, $inputFile) {
                 $this->cacheFile($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
                 $success++;
             });
