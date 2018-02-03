@@ -183,21 +183,15 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $algorithm = $algorithms[0];
         $number = 0;
         foreach ($algorithms as $hashAlgorithm) {
-            if (strpos($hashAlgorithm, 'md') === 0) {
-                $hashNumber = substr($hashAlgorithm, 2);
-                if ($hashNumber > $number) {
-                    $number = $hashNumber;
-                    $algorithm = $hashAlgorithm;
+            foreach (['md', 'sha'] as $type) {
+                if (strpos($hashAlgorithm, $type) === 0) {
+                    $hashNumber = substr($hashAlgorithm, strlen($type));
+                    if ($hashNumber > $number) {
+                        $number = $hashNumber;
+                        $algorithm = $hashAlgorithm;
+                    }
+                    continue 2;
                 }
-                continue;
-            }
-            if (strpos($hashAlgorithm, 'sha') === 0) {
-                $hashNumber = substr($hashAlgorithm, 3);
-                if ($hashNumber > $number) {
-                    $number = $hashNumber;
-                    $algorithm = $hashAlgorithm;
-                }
-                continue;
             }
         }
 
