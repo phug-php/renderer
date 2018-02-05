@@ -125,7 +125,7 @@ trait AdapterTrait
                 $adapter = $this->getAdapter();
                 $display = function () use ($adapter, $path, $input, $getSource, $parameters) {
                     /* @var CacheInterface $adapter */
-                    $adapter->displayCached($path, $input, $getSource, $this->mergeWithSharedVariables($parameters));
+                    $adapter->displayCached($path, $input, $getSource, $parameters);
                 };
 
                 return in_array($method, ['display', 'displayFile'])
@@ -137,7 +137,7 @@ trait AdapterTrait
 
             return $adapter->$method(
                 $source,
-                $this->mergeWithSharedVariables($parameters)
+                $parameters
             );
         });
     }
@@ -195,7 +195,7 @@ trait AdapterTrait
         $input = $renderEvent->getInput();
         $path = $renderEvent->getPath();
         $method = $renderEvent->getMethod();
-        $parameters = $renderEvent->getParameters();
+        $parameters = $this->mergeWithSharedVariables($renderEvent->getParameters());
         if ($self = $this->getOption('self')) {
             $self = $self === true ? 'self' : strval($self);
             $parameters = [
