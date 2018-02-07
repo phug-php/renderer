@@ -17,6 +17,16 @@ interface CacheInterface
     public function cache($path, $input, callable $rendered, &$success = null);
 
     /**
+     * Cache a template file in the cache directory.
+     *
+     * @param string $path
+     * @param bool   $forceSave save even if the cache is up to date.
+     *
+     * @return bool
+     */
+    public function cacheFile($path, $forceSave = false);
+
+    /**
      * @param string   $path      path to pug file
      * @param string   $input     pug input
      * @param callable $rendered  method to compile the source into PHP

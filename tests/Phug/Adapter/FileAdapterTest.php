@@ -49,7 +49,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
@@ -160,7 +160,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
@@ -391,7 +391,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
@@ -458,12 +458,12 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileContents
      */
     public function testCacheErrorTrace()
     {
         $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
-         static::emptyDirectory($directory);
+        static::emptyDirectory($directory);
         if (!file_exists($directory)) {
             mkdir($directory);
         }
@@ -558,7 +558,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer::cacheDirectory
      * @covers \Phug\Renderer\Partial\RendererOptionsTrait::handleOptionAliases
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileContents
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      */
     public function testCacheDirectory()

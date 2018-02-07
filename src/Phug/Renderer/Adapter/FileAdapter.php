@@ -24,14 +24,15 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $this->setOptions($options);
     }
 
-    protected function cacheFile($destination, $output, $importsMap = [])
+    protected function cacheFileContents($destination, $output, $importsMap = [])
     {
-        file_put_contents(
+        $imports = file_put_contents(
             $destination.'.imports.serialize.txt',
             serialize($importsMap)
-        );
+        ) ?: 0;
+        $template = file_put_contents($destination, $output);
 
-        return file_put_contents($destination, $output);
+        return $template === false ? false : $template + $imports;
     }
 
     /**
@@ -59,7 +60,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             $output = $rendered($fullPath, $input);
             $importsPaths = $compiler->getImportPaths($fullPath);
 
-            $success = $this->cacheFile(
+            $success = $this->cacheFileContents(
                 $destination,
                 $output,
                 $importsPaths
@@ -90,6 +91,34 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     }
 
     /**
+     * Cache a template file in the cache directory.
+     * Returns true if the cache is up to date and cache not change,
+     * else returns the bytes written in the cache file or false if a
+     * failure occurred.
+     *
+     * @param string $path
+     * @param bool   $forceSave save even if the cache is up to date.
+     *
+     * @return bool|int
+     */
+    public function cacheFile($path, $forceSave = false)
+    {
+        $outputFile = $path;
+        if (!$this->isCacheUpToDate($outputFile) || $forceSave) {
+            echo $outputFile . "\n";
+            $compiler = $this->getRenderer()->getCompiler();
+
+            return $this->cacheFileContents(
+                $outputFile,
+                $compiler->compileFile($path),
+                $compiler->getCurrentImportPaths()
+            );
+        }
+
+        return true;
+    }
+
+    /**
      * Scan a directory recursively, compile them and save them into the cache directory.
      *
      * @param string $directory the directory to search in pug templates
@@ -109,7 +138,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
             $path = $inputFile;
             $this->isCacheUpToDate($path);
             $sandBox = $this->getRenderer()->getNewSandBox(function () use (&$success, $compiler, $path, $inputFile) {
-                $this->cacheFile($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
+                $this->cacheFileContents($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
                 $success++;
             });
 
