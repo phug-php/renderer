@@ -263,7 +263,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers \Phug\Renderer\Adapter\FileAdapter::isCacheUpToDate
      * @covers \Phug\Renderer\Adapter\FileAdapter::hasExpiredImport
      */
-    public function testCacheOnIcludeChange()
+    public function testCacheOnIncludeChange()
     {
         $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
         static::emptyDirectory($directory);
@@ -454,6 +454,56 @@ class FileAdapterTest extends AbstractRendererTest
 
         self::assertInstanceOf(FileAdapter::class, $renderer->getAdapter());
         self::assertSame(FileAdapter::class, $renderer->getOption('adapter_class_name'));
+    }
+
+    /**
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     */
+    public function testCacheErrorTrace()
+    {
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+         static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $options = [
+            'debug'         => true,
+            'cache_dir'     => $directory,
+            'error_handler' => function (\Exception $error) use (&$lastError) {
+                $lastError = $error->getMessage();
+            },
+        ];
+        $lastError = null;
+        $renderer = new Renderer($options);
+        $path = $directory.DIRECTORY_SEPARATOR.'test.pug';
+        $code = "body\n\n  section\n\n    p=1/\$count\n\n  div\n";
+        file_put_contents($path, $code);
+        touch($path, time() - 10000);
+        clearstatcache();
+
+        $renderer->renderFile($path, [
+            'count' => 1,
+        ]);
+
+        self::assertSame(null, $lastError);
+
+        $cachedFiles = glob($directory.'/*.php');
+        self::assertCount(1, $cachedFiles);
+
+        touch($cachedFiles[0], time() - 5000);
+        clearstatcache();
+
+        $lastError = null;
+        $GLOBALS['debug'] = true;
+        $renderer = new Renderer($options);
+        $renderer->renderFile($path, [
+            'count' => 0,
+        ]);
+
+        self::assertContains('on line 5, offset 6', $lastError);
+
+        static::emptyDirectory($directory);
     }
 
     /**
