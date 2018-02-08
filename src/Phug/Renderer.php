@@ -2,7 +2,6 @@
 
 namespace Phug;
 
-use Phug\Renderer\AdapterInterface;
 use Phug\Renderer\Partial\CacheTrait;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
 use Phug\Renderer\Partial\RendererOptionsTrait;
