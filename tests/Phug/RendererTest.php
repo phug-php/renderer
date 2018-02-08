@@ -55,6 +55,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
+     * @covers ::renderAndWriteFile
      * @covers ::renderDirectory
      */
     public function testRenderDirectory()

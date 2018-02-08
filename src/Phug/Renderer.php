@@ -139,6 +139,29 @@ class Renderer implements ModuleContainerInterface
     }
 
     /**
+     * Render a pug file and dump it into a file.
+     * Return true if the render and the writing succeeded.
+     *
+     * @param string $inputFile  input file (Pug file)
+     * @param string $outputFile output file (typically the HTML/XML file)
+     * @param array  $parameters local variables
+     *
+     * @return bool
+     */
+    public function renderAndWriteFile($inputFile, $outputFile, $parameters)
+    {
+        $outputDirectory = dirname($outputFile);
+
+        if (!file_exists($outputDirectory) && !@mkdir($outputDirectory, 0777, true)) {
+            return false;
+        }
+
+        return is_int($this->getNewSandBox(function () use ($outputFile, $inputFile, $parameters) {
+            return file_put_contents($outputFile, $this->renderFile($inputFile, $parameters));
+        })->getResult());
+    }
+
+    /**
      * Render all pug template files in an input directory and output in an other or the same directory.
      * Return an array with success count and error count.
      *
@@ -174,19 +197,11 @@ class Renderer implements ModuleContainerInterface
                 $relativeDirectory = trim(mb_substr(dirname($file), $length), '//\\');
                 $filename = pathinfo($file, PATHINFO_FILENAME);
                 $outputDirectory = $destination.DIRECTORY_SEPARATOR.$relativeDirectory;
-                $counter = null;
-                if (!file_exists($outputDirectory)) {
-                    if (!@mkdir($outputDirectory, 0777, true)) {
-                        $counter = 'errors';
-                    }
-                }
-                if (!$counter) {
-                    $outputFile = $outputDirectory.DIRECTORY_SEPARATOR.$filename.$extension;
-                    $sandBox = $this->getNewSandBox(function () use ($outputFile, $file, $parameters) {
-                        return file_put_contents($outputFile, $this->renderFile($file, $parameters));
-                    });
-                    $counter = $sandBox->getResult() ? 'success' : 'errors';
-                }
+                $counter = $this->renderAndWriteFile(
+                    $file,
+                    $outputDirectory.DIRECTORY_SEPARATOR.$filename.$extension,
+                    $parameters
+                ) ? 'success' : 'errors';
                 $$counter++;
             }
         }
