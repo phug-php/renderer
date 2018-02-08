@@ -3,11 +3,12 @@
 namespace Phug;
 
 use Phug\Renderer\AdapterInterface;
-use Phug\Renderer\Partial\AdapterTrait;
+use Phug\Renderer\Partial\CacheTrait;
 use Phug\Renderer\Partial\Debug\DebuggerTrait;
 use Phug\Renderer\Partial\RendererOptionsTrait;
 use Phug\Renderer\Partial\SharedVariablesTrait;
 use Phug\Util\ModuleContainerInterface;
+use Phug\Util\Partial\MacroableTrait;
 use Phug\Util\Partial\ModuleContainerTrait;
 
 class Renderer implements ModuleContainerInterface
@@ -16,7 +17,8 @@ class Renderer implements ModuleContainerInterface
     use DebuggerTrait;
     use RendererOptionsTrait;
     use SharedVariablesTrait;
-    use AdapterTrait;
+    use CacheTrait;
+    use MacroableTrait;
 
     /**
      * @var Compiler
@@ -38,15 +40,7 @@ class Renderer implements ModuleContainerInterface
 
         $this->initDebugOptions($this);
 
-        $adapterClassName = $this->getOption('adapter_class_name');
-
-        if (!is_a($adapterClassName, AdapterInterface::class, true)) {
-            throw new RendererException(
-                "Passed adapter class $adapterClassName is ".
-                'not a valid '.AdapterInterface::class
-            );
-        }
-        $this->adapter = new $adapterClassName($this, $this->getOptions());
+        $this->initAdapter();
 
         $this->enableModules();
     }
@@ -242,39 +236,5 @@ class Renderer implements ModuleContainerInterface
             },
             $parameters
         );
-    }
-
-    /**
-     * Cache a template file in the cache directory.
-     * Returns true if the cache is up to date and cache not change,
-     * else returns the bytes written in the cache file or false if a
-     * failure occurred.
-     *
-     * @param string $path
-     * @param bool   $forceSave save even if the cache is up to date.
-     *
-     * @return bool|int
-     */
-    public function cacheFile($path, $forceSave = false)
-    {
-        $this->expectCacheAdapter();
-
-        return $this->getAdapter()->cacheFile($path, $forceSave);
-    }
-
-    /**
-     * Cache all templates in a directory in the cache directory you specified with the cache_dir option.
-     * You should call after deploying your application in production to avoid a slower page loading for the first
-     * user.
-     *
-     * @param $directory
-     *
-     * @return array
-     */
-    public function cacheDirectory($directory)
-    {
-        $this->expectCacheAdapter();
-
-        return $this->getAdapter()->cacheDirectory($directory);
     }
 }

@@ -105,7 +105,6 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     {
         $outputFile = $path;
         if (!$this->isCacheUpToDate($outputFile) || $forceSave) {
-            echo $outputFile . "\n";
             $compiler = $this->getRenderer()->getCompiler();
 
             return $this->cacheFileContents(

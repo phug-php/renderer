@@ -150,6 +150,7 @@ class RendererTest extends AbstractRendererTest
     /**
      * @covers ::__construct
      * @covers ::initCompiler
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::getDefaultOptions
      */
     public function testFilter()
     {
@@ -811,7 +812,10 @@ class RendererTest extends AbstractRendererTest
 
     /**
      * @group issues
-     * https://github.com/pug-php/pug/issues/187
+     *
+     * @see https://github.com/pug-php/pug/issues/187
+     *
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getNewSandBox
      */
     public function testUndefinedIndex()
     {
@@ -821,6 +825,10 @@ class RendererTest extends AbstractRendererTest
         $tolerantRenderer = new Renderer([
             'debug'           => false,
             'error_reporting' => E_ALL ^ E_NOTICE,
+        ]);
+        $noWarningRenderer = new Renderer([
+            'debug'           => false,
+            'error_reporting' => E_ALL ^ E_WARNING,
         ]);
         $customRenderer = new Renderer([
             'debug'           => false,
@@ -872,6 +880,16 @@ class RendererTest extends AbstractRendererTest
             self::assertSame(E_NOTICE, $code);
 
             error_reporting(E_ALL);
+
+            $code = null;
+
+            try {
+                $noWarningRenderer->render($pugCode, $vars);
+            } catch (ErrorException $exp) {
+                $code = $exp->getSeverity();
+            }
+
+            self::assertSame(E_NOTICE, $code);
 
             $html = trim($tolerantRenderer->render($pugCode, $vars));
 

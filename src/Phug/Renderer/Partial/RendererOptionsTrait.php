@@ -54,6 +54,7 @@ trait RendererOptionsTrait
                     return '<![CDATA['.trim($contents).']]>';
                 },
             ],
+            'macros'              => [],
         ];
     }
 

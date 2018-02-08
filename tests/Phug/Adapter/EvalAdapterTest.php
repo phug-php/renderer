@@ -13,6 +13,7 @@ class EvalAdapterTest extends AbstractRendererTest
 {
     /**
      * @covers ::display
+     * @covers \Phug\Renderer\Partial\AdapterTrait::getNewSandBox
      */
     public function testRender()
     {
