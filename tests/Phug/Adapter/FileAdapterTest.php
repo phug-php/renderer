@@ -49,7 +49,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
@@ -160,7 +160,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
@@ -391,7 +391,7 @@ class FileAdapterTest extends AbstractRendererTest
      * @covers ::hashPrint
      * @covers ::isCacheUpToDate
      * @covers ::getCacheDirectory
-     * @covers ::cacheFile
+     * @covers ::cacheFileContents
      * @covers \Phug\Renderer\AbstractAdapter::<public>
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
@@ -422,8 +422,11 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
+     * @covers \Phug\Renderer\Partial\CacheTrait::cacheDirectory
+     * @covers \Phug\Renderer\Partial\AdapterTrait::initAdapter
      * @covers \Phug\Renderer\Partial\AdapterTrait::expectCacheAdapter
+     * @covers \Phug\Renderer\Partial\AdapterTrait::setAdapterClassName
      * @covers \Phug\Renderer\Partial\AdapterTrait::getAdapter
      * @covers \Phug\Renderer\Partial\AdapterTrait::getSandboxCall
      * @covers \Phug\Renderer\Partial\AdapterTrait::handleHtmlEvent
@@ -458,12 +461,12 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers \Phug\Renderer\Adapter\FileAdapter::cache
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileContents
      */
     public function testCacheErrorTrace()
     {
         $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
-         static::emptyDirectory($directory);
+        static::emptyDirectory($directory);
         if (!file_exists($directory)) {
             mkdir($directory);
         }
@@ -508,7 +511,8 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers                \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
-     * @covers                \Phug\Renderer::cacheDirectory
+     * @covers                \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
+     * @covers                \Phug\Renderer\Partial\CacheTrait::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::getCacheDirectory
      * @expectedException     \RuntimeException
@@ -524,7 +528,8 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers                \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
-     * @covers                \Phug\Renderer::cacheDirectory
+     * @covers                \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
+     * @covers                \Phug\Renderer\Partial\CacheTrait::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers                \Phug\Renderer\Adapter\FileAdapter::cache
      * @covers                \Phug\Renderer\Adapter\FileAdapter::displayCached
@@ -555,15 +560,16 @@ class FileAdapterTest extends AbstractRendererTest
 
     /**
      * @covers \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
-     * @covers \Phug\Renderer::cacheDirectory
+     * @covers \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
+     * @covers \Phug\Renderer\Partial\CacheTrait::cacheDirectory
      * @covers \Phug\Renderer\Partial\RendererOptionsTrait::handleOptionAliases
      * @covers \Phug\Renderer\Partial\FileSystemTrait::fileMatchExtensions
-     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileContents
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      */
     public function testCacheDirectory()
     {
-        $cacheDirectory = sys_get_temp_dir().'/pug-test';
+        $cacheDirectory = sys_get_temp_dir().'/pug-test'.mt_rand(0, 99999);
         static::emptyDirectory($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);
@@ -608,5 +614,47 @@ class FileAdapterTest extends AbstractRendererTest
             'Inconsistent indentation. Expecting either 0 or 4 spaces/tabs.',
             $errErrorDetails[0]['error']->getMessage()
         );
+    }
+
+    /**
+     * @covers \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
+     * @covers \Phug\Renderer\Partial\CacheTrait::cacheFile
+     * @covers \Phug\Renderer\Partial\CacheTrait::cacheFileIfChanged
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileIfChanged
+     */
+    public function testCacheFile()
+    {
+        $cacheDirectory = sys_get_temp_dir().'/pug-test'.mt_rand(0, 99999);
+        static::emptyDirectory($cacheDirectory);
+        if (!is_dir($cacheDirectory)) {
+            mkdir($cacheDirectory, 0777, true);
+        }
+        $templatesDirectory = __DIR__.'/../../utils';
+        $renderer = new Renderer([
+            'basedir'   => $templatesDirectory,
+            'cache_dir' => $cacheDirectory,
+        ]);
+
+        $freshResult = $renderer->cacheFileIfChanged($templatesDirectory.'/subdirectory/scripts.pug');
+
+        foreach (glob($cacheDirectory.'/*.php') as $file) {
+            touch($file, time() + 3600);
+        }
+
+        $cachedResult = $renderer->cacheFileIfChanged($templatesDirectory.'/subdirectory/scripts.pug');
+
+        foreach (glob($cacheDirectory.'/*.php') as $file) {
+            touch($file, time() + 3600);
+        }
+
+        $forceRefreshResult = $renderer->cacheFile($templatesDirectory.'/subdirectory/scripts.pug');
+
+        static::emptyDirectory($cacheDirectory);
+        rmdir($cacheDirectory);
+
+        self::assertGreaterThan(60, $freshResult);
+        self::assertTrue($cachedResult);
+        self::assertGreaterThan(60, $forceRefreshResult);
     }
 }
