@@ -17,14 +17,22 @@ interface CacheInterface
     public function cache($path, $input, callable $rendered, &$success = null);
 
     /**
-     * Cache a template file in the cache directory.
+     * Cache a template file in the cache directory (even if the cache is up to date).
      *
      * @param string $path
-     * @param bool   $forceSave save even if the cache is up to date.
      *
      * @return bool
      */
-    public function cacheFile($path, $forceSave = false);
+    public function cacheFile($path);
+
+    /**
+     * Cache a template file in the cache directory if the cache is obsolete.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    public function cacheFileIfChanged($path);
 
     /**
      * @param string   $path      path to pug file

@@ -17,19 +17,32 @@ trait CacheTrait
     }
 
     /**
-     * Cache a template file in the cache directory.
-     * Returns true if the cache is up to date and cache not change,
-     * else returns the bytes written in the cache file or false if a
+     * Cache a template file in the cache directory (even if the cache is up to date).
+     * Returns the number of bytes written in the cache file or false if a
      * failure occurred.
      *
      * @param string $path
-     * @param bool   $forceSave save even if the cache is up to date.
      *
      * @return bool|int
      */
-    public function cacheFile($path, $forceSave = false)
+    public function cacheFile($path)
     {
-        return $this->getCacheAdapter()->cacheFile($path, $forceSave);
+        return $this->getCacheAdapter()->cacheFile($path);
+    }
+
+    /**
+     * Cache a template file in the cache directory if the cache is obsolete.
+     * Returns true if the cache is up to date and cache not change,
+     * else returns the number of bytes written in the cache file or false if
+     * a failure occurred.
+     *
+     * @param string $path
+     *
+     * @return bool|int
+     */
+    public function cacheFileIfChanged($path)
+    {
+        return $this->getCacheAdapter()->cacheFileIfChanged($path);
     }
 
     /**

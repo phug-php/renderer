@@ -619,7 +619,9 @@ class FileAdapterTest extends AbstractRendererTest
     /**
      * @covers \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
      * @covers \Phug\Renderer\Partial\CacheTrait::cacheFile
+     * @covers \Phug\Renderer\Partial\CacheTrait::cacheFileIfChanged
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFile
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileIfChanged
      */
     public function testCacheFile()
     {
@@ -634,18 +636,25 @@ class FileAdapterTest extends AbstractRendererTest
             'cache_dir' => $cacheDirectory,
         ]);
 
-        $freshResult = $renderer->cacheFile($templatesDirectory.'/subdirectory/scripts.pug');
+        $freshResult = $renderer->cacheFileIfChanged($templatesDirectory.'/subdirectory/scripts.pug');
 
         foreach (glob($cacheDirectory.'/*.php') as $file) {
             touch($file, time() + 3600);
         }
 
-        $cachedResult = $renderer->cacheFile($templatesDirectory.'/subdirectory/scripts.pug');
+        $cachedResult = $renderer->cacheFileIfChanged($templatesDirectory.'/subdirectory/scripts.pug');
+
+        foreach (glob($cacheDirectory.'/*.php') as $file) {
+            touch($file, time() + 3600);
+        }
+
+        $forceRefreshResult = $renderer->cacheFile($templatesDirectory.'/subdirectory/scripts.pug');
 
         static::emptyDirectory($cacheDirectory);
         rmdir($cacheDirectory);
 
         self::assertGreaterThan(60, $freshResult);
         self::assertTrue($cachedResult);
+        self::assertGreaterThan(60, $forceRefreshResult);
     }
 }
