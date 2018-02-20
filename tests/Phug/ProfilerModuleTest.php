@@ -208,14 +208,15 @@ class ProfilerModuleTest extends TestCase
 
         $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = null;
         $limit = 500000;
+        $factor = 1;
         $renderer = new Renderer([
             'memory_limit' => $limit,
             'filters'      => [
-                'verbatim' => function ($string) use ($limit) {
+                'verbatim' => function ($string) use ($limit, &$factor) {
                     // Pollute memory
                     $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat(
                         'a',
-                        $limit * 1.6
+                        $limit * $factor
                     );
 
                     return $string;
@@ -226,6 +227,7 @@ class ProfilerModuleTest extends TestCase
 
         try {
             for ($i = 0; $i < 10; $i++) {
+                $factor = $i + 1.3;
                 $renderer->renderFile(__DIR__.'/../cases/includes.pug');
             }
         } catch (ProfilerException $exception) {
