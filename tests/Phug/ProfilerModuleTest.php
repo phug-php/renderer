@@ -215,7 +215,7 @@ class ProfilerModuleTest extends TestCase
                     // Pollute memory
                     $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat(
                         'a',
-                        $limit * 1.3
+                        $limit * 1.6
                     );
 
                     return $string;
