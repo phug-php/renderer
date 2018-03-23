@@ -141,7 +141,9 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
     /**
      * Scan a directory recursively, compile them and save them into the cache directory.
      *
-     * @param string $directory the directory to search in pug templates
+     * @param string $directory the directory to search in pug
+     *
+     * @throws \Phug\RendererException
      *
      * @return array count of cached files and error count
      */
