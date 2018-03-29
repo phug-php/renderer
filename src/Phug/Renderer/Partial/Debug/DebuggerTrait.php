@@ -350,7 +350,7 @@ trait DebuggerTrait
         $handler = $options['error_handler'];
         if (!$handler) {
             // @codeCoverageIgnoreStart
-            if ($options['debug']) {
+            if ($options['debug'] && $options['exit_on_error']) {
                 if ($options['html_error']) {
                     echo $exception->getMessage();
                     exit(1);
