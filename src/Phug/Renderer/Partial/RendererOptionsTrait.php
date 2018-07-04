@@ -161,6 +161,14 @@ trait RendererOptionsTrait
             );
         }
 
+        if (isset($this->compiler)) {
+            $events = $this->compiler->getEventListeners();
+        }
+
         $this->compiler = new $compilerClassName($this->getOptions());
+
+        if (isset($events)) {
+            $this->compiler->mergeEventListeners($events);
+        }
     }
 }

@@ -657,4 +657,73 @@ class FileAdapterTest extends AbstractRendererTest
         self::assertTrue($cachedResult);
         self::assertGreaterThan(60, $forceRefreshResult);
     }
+
+    /**
+     * Test cacheDirectory method dependencies
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
+     * @covers \Phug\Renderer\Partial\RendererOptionsTrait::initCompiler
+     */
+    public function testCacheDirectoryPreserveRendererDependencies()
+    {
+        $cacheDirectory = sys_get_temp_dir() . '/phug-test'.mt_rand(0, 999999);
+        $this->emptyDirectory($cacheDirectory);
+        if (!is_dir($cacheDirectory)) {
+            mkdir($cacheDirectory, 0777, true);
+        }
+        $templatesDirectory = __DIR__ . '/../../for-cache';
+        $renderer = new Renderer([
+            'modules'   => [JsPhpizePhug::class],
+            'paths'     => [$templatesDirectory],
+            'cache_dir' => $cacheDirectory,
+        ]);
+        $renderer->cacheDirectory($templatesDirectory);
+        $files = glob("$cacheDirectory/*.php");
+        $file = count($files) ? file_get_contents($files[0]) : null;
+        $this->emptyDirectory($cacheDirectory);
+        rmdir($cacheDirectory);
+
+        self::assertNotNull($file);
+
+        $foo = ['bar' => 'biz'];
+        ob_start();
+        eval('?>' . $file);
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        self::assertSame('<p>biz</p>', trim($contents));
+    }
+
+    /**
+     * Test cacheDirectory method dependencies
+     */
+    public function testCacheDirectoryPreserveCompilerDependencies()
+    {
+        $cacheDirectory = sys_get_temp_dir() . '/phug-test'.mt_rand(0, 999999);
+        $this->emptyDirectory($cacheDirectory);
+        if (!is_dir($cacheDirectory)) {
+            mkdir($cacheDirectory, 0777, true);
+        }
+        $templatesDirectory = __DIR__ . '/../../for-cache';
+        $renderer = new Renderer([
+            'paths'     => [$templatesDirectory],
+            'cache_dir' => $cacheDirectory,
+        ]);
+        $compiler = $renderer->getCompiler();
+        $compiler->addModule(new JsPhpizePhug($compiler));
+        $renderer->cacheDirectory($templatesDirectory);
+        $files = glob("$cacheDirectory/*.php");
+        $file = count($files) ? file_get_contents($files[0]) : null;
+        $this->emptyDirectory($cacheDirectory);
+        rmdir($cacheDirectory);
+
+        self::assertNotNull($file);
+
+        $foo = ['bar' => 'biz'];
+        ob_start();
+        eval('?>' . $file);
+        $contents = ob_get_contents();
+        ob_end_clean();
+
+        self::assertSame('<p>biz</p>', trim($contents));
+    }
 }
