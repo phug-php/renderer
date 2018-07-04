@@ -404,12 +404,6 @@ class ProfilerModuleTest extends TestCase
             return;
         }
 
-        if (version_compare(PHP_VERSION, '7.1.0') >= 0) {
-            self::markTestSkipped('var_dump test disabled for PHP '.PHP_VERSION.'.');
-
-            return;
-        }
-
         $renderer = new Renderer([
             'enable_profiler' => true,
         ]);

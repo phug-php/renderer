@@ -538,22 +538,8 @@ class FileAdapterTest extends AbstractRendererTest
      */
     public function testReadOnlyDirectory()
     {
-        $dir = __DIR__;
-        while (is_writable($dir)) {
-            $parent = realpath($dir.'/..');
-            if ($parent === $dir) {
-                $dir = 'C:';
-                if (!file_exists($dir) || is_writable($dir)) {
-                    self::markTestSkipped('No read-only directory found to do the test');
-
-                    return;
-                }
-                break;
-            }
-            $dir = $parent;
-        }
         $renderer = new Renderer([
-            'cache_dir' => $dir,
+            'cache_dir' => static::getReadOnlyDirectory(),
         ]);
         $renderer->render(__DIR__.'/../../cases/attrs.pug');
     }

@@ -208,4 +208,24 @@ abstract class AbstractRendererTest extends TestCase
 
         self::assertSame($expected, $actual, $message);
     }
+
+    protected static function getReadOnlyDirectory()
+    {
+        $dir = __DIR__;
+        while (is_writable($dir)) {
+            $parent = realpath($dir.'/..');
+            if ($parent === $dir) {
+                $dir = 'C:';
+                if (!file_exists($dir) || is_writable($dir)) {
+                    self::markTestSkipped('No read-only directory found to do the test');
+
+                    return;
+                }
+                break;
+            }
+            $dir = $parent;
+        }
+
+        return $dir;
+    }
 }
