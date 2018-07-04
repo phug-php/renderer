@@ -73,7 +73,36 @@ class RendererTest extends AbstractRendererTest
         self::assertFileExists($directory.'/subdirectory/subsubdirectory/blanks.html');
 
         self::emptyDirectory($directory);
+        file_put_contents("$directory/foo.pug", 'p=foo');
+
+        list($success, $errors) = $this->renderer->renderDirectory($directory, ['foo' => 'bar']);
+
+        self::assertSame(0, $errors);
+        self::assertSame(1, $success);
+        self::assertFileExists("$directory/foo.html");
+        self::assertSame('<p>bar</p>', trim(file_get_contents("$directory/foo.html")));
+
+        self::emptyDirectory($directory);
+        file_put_contents("$directory/foo.pug", 'p=foo');
+
+        list($success, $errors) = $this->renderer->renderDirectory($directory, null, ['foo' => 'bar']);
+
+        self::assertSame(0, $errors);
+        self::assertSame(1, $success);
+        self::assertFileExists("$directory/foo.html");
+        self::assertSame('<p>bar</p>', trim(file_get_contents("$directory/foo.html")));
+
+        self::emptyDirectory($directory);
         @rmdir($directory);
+    }
+
+    /**
+     * @covers ::renderAndWriteFile
+     */
+    public function testRenderAndWriteFile()
+    {
+        self::assertFalse($this->renderer->renderAndWriteFile(__DIR__.'/../utils/error.pug', static::getReadOnlyDirectory().'/output.html'));
+        self::assertFalse($this->renderer->renderAndWriteFile(__DIR__.'/../utils/error.pug', static::getReadOnlyDirectory().'/foobar/output.html'));
     }
 
     /**
