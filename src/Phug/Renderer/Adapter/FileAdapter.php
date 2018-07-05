@@ -166,15 +166,11 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
                 $this->cacheFileContents($path, $compiler->compileFile($inputFile), $compiler->getCurrentImportPaths());
                 $success++;
             });
+            $error = $sandBox->getThrowable();
 
-            if ($sandBox->getThrowable()) {
+            if ($error) {
                 $errors++;
-                $errorDetails[] = [
-                    'directory' => $directory,
-                    'inputFile' => $inputFile,
-                    'path'      => $path,
-                    'error'     => $sandBox->getThrowable(),
-                ];
+                $errorDetails[] = compact(['directory', 'inputFile', 'path', 'error']);
             }
         }
 
