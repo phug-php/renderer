@@ -154,10 +154,12 @@ class FileAdapter extends AbstractAdapter implements CacheInterface
         $errorDetails = [];
 
         $renderer = $this->getRenderer();
+        $events = $renderer->getCompiler()->getEventListeners();
 
         foreach ($renderer->scanDirectory($directory) as $inputFile) {
             $renderer->initCompiler();
             $compiler = $renderer->getCompiler();
+            $compiler->mergeEventListeners($events);
             $path = $inputFile;
             $this->isCacheUpToDate($path);
             $sandBox = $this->getRenderer()->getNewSandBox(function () use (&$success, $compiler, $path, $inputFile) {
