@@ -645,18 +645,19 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * Test cacheDirectory method dependencies
+     * Test cacheDirectory method dependencies.
+     *
      * @covers \Phug\Renderer\Adapter\FileAdapter::cacheDirectory
      * @covers \Phug\Renderer\Partial\RendererOptionsTrait::initCompiler
      */
     public function testCacheDirectoryPreserveRendererDependencies()
     {
-        $cacheDirectory = sys_get_temp_dir() . '/phug-test'.mt_rand(0, 999999);
+        $cacheDirectory = sys_get_temp_dir().'/phug-test'.mt_rand(0, 999999);
         $this->emptyDirectory($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);
         }
-        $templatesDirectory = __DIR__ . '/../../for-cache';
+        $templatesDirectory = __DIR__.'/../../for-cache';
         $renderer = new Renderer([
             'modules'   => [JsPhpizePhug::class],
             'paths'     => [$templatesDirectory],
@@ -672,7 +673,7 @@ class FileAdapterTest extends AbstractRendererTest
 
         $foo = ['bar' => 'biz'];
         ob_start();
-        eval('?>' . $file);
+        eval('?>'.$file);
         $contents = ob_get_contents();
         ob_end_clean();
 
@@ -680,16 +681,16 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
-     * Test cacheDirectory method dependencies
+     * Test cacheDirectory method dependencies.
      */
     public function testCacheDirectoryPreserveCompilerDependencies()
     {
-        $cacheDirectory = sys_get_temp_dir() . '/phug-test'.mt_rand(0, 999999);
+        $cacheDirectory = sys_get_temp_dir().'/phug-test'.mt_rand(0, 999999);
         $this->emptyDirectory($cacheDirectory);
         if (!is_dir($cacheDirectory)) {
             mkdir($cacheDirectory, 0777, true);
         }
-        $templatesDirectory = __DIR__ . '/../../for-cache';
+        $templatesDirectory = __DIR__.'/../../for-cache';
         $renderer = new Renderer([
             'paths'     => [$templatesDirectory],
             'cache_dir' => $cacheDirectory,
@@ -706,7 +707,7 @@ class FileAdapterTest extends AbstractRendererTest
 
         $foo = ['bar' => 'biz'];
         ob_start();
-        eval('?>' . $file);
+        eval('?>'.$file);
         $contents = ob_get_contents();
         ob_end_clean();
 
