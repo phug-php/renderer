@@ -1056,7 +1056,6 @@ class RendererTest extends AbstractRendererTest
         $renderer = new Renderer([
             'debug' => false,
         ]);
-        file_put_contents('debug.php', $renderer->compile($code));
 
         $html = $renderer->render($code);
 
