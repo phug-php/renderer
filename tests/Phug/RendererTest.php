@@ -1061,4 +1061,26 @@ class RendererTest extends AbstractRendererTest
 
         self::assertSame('<p class="bar foo"></p>', $html);
     }
+
+    public function testMixinNestedScope()
+    {
+        $code = implode("\n", [
+            'mixin paragraph($text)',
+            '  p= $text',
+            '  block',
+            '+paragraph(\'1\')',
+            '  +paragraph($text)',
+            '+paragraph($text)',
+        ]);
+
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = $renderer->render($code, [
+            'text' => '2',
+        ]);
+
+        self::assertSame('<p>1</p><p>2</p><p>2</p>', $html);
+    }
 }
