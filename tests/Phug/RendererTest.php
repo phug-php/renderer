@@ -1042,4 +1042,24 @@ class RendererTest extends AbstractRendererTest
 
         $renderer->renderFile(__DIR__.'/../call-undefined/call-undefined-in-block.pug');
     }
+
+    public function testAttributesTransmission()
+    {
+        $code = implode("\n", [
+            'mixin b',
+            '  p&attributes($attributes)',
+            'mixin a',
+            '  +b.bar&attributes($attributes)',
+            '+a.foo',
+        ]);
+
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+        file_put_contents('debug.php', $renderer->compile($code));
+
+        $html = $renderer->render($code);
+
+        self::assertSame('<p class="bar foo"></p>', $html);
+    }
 }
