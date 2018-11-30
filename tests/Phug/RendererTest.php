@@ -1063,8 +1063,6 @@ class RendererTest extends AbstractRendererTest
     }
 
     /**
-     * @group i
-     *
      * @throws RendererException
      */
     public function testMixinNestedScope()
