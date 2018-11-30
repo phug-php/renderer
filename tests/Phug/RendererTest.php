@@ -1062,6 +1062,11 @@ class RendererTest extends AbstractRendererTest
         self::assertSame('<p class="bar foo"></p>', $html);
     }
 
+    /**
+     * @group i
+     *
+     * @throws RendererException
+     */
     public function testMixinNestedScope()
     {
         $code = implode("\n", [
