@@ -1093,12 +1093,12 @@ class RendererTest extends AbstractRendererTest
             'debug' => false,
         ]);
 
-        $html = $renderer->renderFile(__DIR__ . '/../fixtures/append/page.pug');
+        $html = $renderer->renderFile(__DIR__.'/../fixtures/append/page.pug');
 
-        $this->assertSameLines(file_get_contents(__DIR__ . '/../fixtures/append/page.html'), $html);
+        $this->assertSameLines(file_get_contents(__DIR__.'/../fixtures/append/page.html'), $html);
 
-        $html = $renderer->renderFile(__DIR__ . '/../cases/comments.pug');
+        $html = $renderer->renderFile(__DIR__.'/../cases/comments.pug');
 
-        $this->assertSameLines(file_get_contents(__DIR__ . '/../cases/comments.html'), $html);
+        $this->assertSameLines(file_get_contents(__DIR__.'/../cases/comments.html'), $html);
     }
 }
