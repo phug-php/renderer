@@ -1086,4 +1086,19 @@ class RendererTest extends AbstractRendererTest
 
         self::assertSame('<p>1</p><p>2</p><p>2</p>', $html);
     }
+
+    public function testConsecutiveRenders()
+    {
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = $renderer->renderFile(__DIR__ . '/../fixtures/append/page.pug');
+
+        $this->assertSameLines(file_get_contents(__DIR__ . '/../fixtures/append/page.html'), $html);
+
+        $html = $renderer->renderFile(__DIR__ . '/../cases/comments.pug');
+
+        $this->assertSameLines(file_get_contents(__DIR__ . '/../cases/comments.html'), $html);
+    }
 }

@@ -191,6 +191,7 @@ trait AdapterTrait
     {
         $source = '';
 
+        $this->getCompiler()->reset();
         $renderEvent = new RenderEvent($input, $path, $method, $parameters);
         $this->trigger($renderEvent);
         $input = $renderEvent->getInput();

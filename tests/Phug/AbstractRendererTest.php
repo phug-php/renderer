@@ -192,6 +192,7 @@ abstract class AbstractRendererTest extends TestCase
 
     public static function assertSameLines($expected, $actual, $message = null)
     {
+        $message = $message ?: 'Contents should have the same HTML lines.';
         $flatExpected = self::flatContent($expected);
         $flatActual = self::flatContent($actual);
         if ($flatExpected === $flatActual) {

@@ -1,5 +1,6 @@
 ---
-engines:
+version: "2"
+plugins:
   duplication:
     enabled: true
     config:
@@ -14,14 +15,5 @@ engines:
     enabled: true
     exclude_paths:
     - src/Phug/Renderer/Adapter/
-ratings:
-  paths:
-  - "**.inc"
-  - "**.js"
-  - "**.jsx"
-  - "**.module"
-  - "**.php"
-  - "**.py"
-  - "**.rb"
-exclude_paths:
-- tests/
+exclude_patterns:
+- 'tests/'
