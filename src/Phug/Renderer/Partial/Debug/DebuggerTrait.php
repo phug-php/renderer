@@ -108,7 +108,8 @@ trait DebuggerTrait
             (is_null($offset) ? '' : ', offset '.$offset)."\n\n";
         $contextLines = $data->options['error_context_lines'];
         $code = '';
-        $untilOffset = mb_substr($source[max(0, $line - 1)], 0, $offset ?: 0) ?: '';
+        $sourceOffset = max(0, $line - 1);
+        $untilOffset = isset($source[$sourceOffset]) ? (mb_substr($source[$sourceOffset] , 0, $offset ?: 0) ?: '') : '';
         $htmlError = $data->options['html_error'];
         $start = null;
         foreach ($source as $index => $lineText) {
