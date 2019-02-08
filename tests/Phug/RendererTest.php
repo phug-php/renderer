@@ -1018,7 +1018,8 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
-            'pretty' => true,
+            'color_support' => false,
+            'pretty'        => true,
         ]);
 
         $renderer->renderFile(__DIR__.'/../call-undefined/extends-call-undefined.pug');
@@ -1037,7 +1038,8 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
-            'pretty' => true,
+            'color_support' => false,
+            'pretty'        => true,
         ]);
 
         $renderer->renderFile(__DIR__.'/../call-undefined/call-undefined-in-block.pug');
@@ -1118,5 +1120,23 @@ class RendererTest extends AbstractRendererTest
         $html = $renderer->renderFile(__DIR__.'/../cases/comments.pug');
 
         $this->assertSameLines(file_get_contents(__DIR__.'/../cases/comments.html'), $html);
+    }
+
+    /**
+     * @throws RendererException
+     */
+    public function testConsecutiveStringRenders()
+    {
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = $renderer->render('p Hello');
+
+        $this->assertSameLines('<p>Hello</p>', $html);
+
+        $html = $renderer->render('div Bye');
+
+        $this->assertSameLines('<div>Bye</div>', $html);
     }
 }

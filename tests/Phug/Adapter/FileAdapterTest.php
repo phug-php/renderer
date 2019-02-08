@@ -510,6 +510,37 @@ class FileAdapterTest extends AbstractRendererTest
     }
 
     /**
+     * @covers \Phug\Renderer\Adapter\FileAdapter::<public>
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cache
+     * @covers \Phug\Renderer\Adapter\FileAdapter::cacheFileContents
+     */
+    public function testCacheRenderString()
+    {
+        $directory = sys_get_temp_dir().'/pug'.mt_rand(0, 99999999);
+        static::emptyDirectory($directory);
+        if (!file_exists($directory)) {
+            mkdir($directory);
+        }
+        $options = [
+            'debug'         => true,
+            'cache_dir'     => $directory,
+        ];
+        $lastError = null;
+        $renderer = new Renderer($options);
+
+
+        $html = $renderer->render('p Hello');
+
+        self::assertSame('<p>Hello</p>', $html);
+
+        $html = $renderer->render('div Bye');
+
+        self::assertSame('<div>Bye</div>', $html);
+
+        static::emptyDirectory($directory);
+    }
+
+    /**
      * @covers                \Phug\Renderer\Partial\FileSystemTrait::scanDirectory
      * @covers                \Phug\Renderer\Partial\CacheTrait::getCacheAdapter
      * @covers                \Phug\Renderer\Partial\CacheTrait::cacheDirectory
