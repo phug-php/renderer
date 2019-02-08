@@ -528,7 +528,6 @@ class FileAdapterTest extends AbstractRendererTest
         $lastError = null;
         $renderer = new Renderer($options);
 
-
         $html = $renderer->render('p Hello');
 
         self::assertSame('<p>Hello</p>', $html);
