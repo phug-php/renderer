@@ -1,49 +1,26 @@
-
 language: php
 
 git:
-    depth: 5
+  depth: 5
 
 php:
-    - 5.5
-    - 5.6
-    - 7.0
-    - 7.1
-    - 7.2
-
-matrix:
-    include:
-        - php: hhvm-3.18
-          dist: trusty
-          sudo: required
-        - php: hhvm-3.21
-          dist: trusty
-          sudo: required
-        - php: hhvm-3.24
-          dist: trusty
-          sudo: required
-    allow_failures:
-        - php: hhvm-3.18
-          dist: trusty
-          sudo: required
-        - php: hhvm-3.21
-          dist: trusty
-          sudo: required
-        - php: hhvm-3.24
-          dist: trusty
-          sudo: required
-    fast_finish: true
+  - 5.5
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+  - 7.3
 
 install:
-    - travis_retry composer self-update
-    - travis_retry composer install
+  - travis_retry composer self-update
+  - travis_retry composer install
 
 script:
-    - vendor/bin/phug-dev check --report --ignore-tests --ignore-debug --coverage-php-version=5.6
+  - vendor/bin/phug-dev check --report --ignore-tests --ignore-debug --coverage-php-version=5.6
 
 notifications:
-    slack: phug:nzXFnxhU14RWK2EQSDL0u08z
+  slack: phug:nzXFnxhU14RWK2EQSDL0u08z
 
 addons:
-    code_climate:
-        repo_token: a2adfbf99ea6d5f8e89d5b2a2ab3e58dd6b52ccf32c047bdead69da2970fc5ab
+  code_climate:
+    repo_token: a2adfbf99ea6d5f8e89d5b2a2ab3e58dd6b52ccf32c047bdead69da2970fc5ab
