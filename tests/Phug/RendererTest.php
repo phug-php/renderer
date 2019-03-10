@@ -1105,6 +1105,47 @@ class RendererTest extends AbstractRendererTest
         $html = $renderer->render($code);
 
         self::assertSame('<p>1</p><p>2</p><p>2</p>', $html);
+
+        $code = implode("\n", [
+            '- $text = "2"',
+            'mixin paragraph($text)',
+            '  p= $text',
+            '  block',
+            '+paragraph(\'1\')',
+            '  +paragraph($text)',
+            '    +paragraph($text)',
+            '      +paragraph(\'3\')',
+            '+paragraph($text)',
+        ]);
+
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = $renderer->render($code);
+
+        self::assertSame('<p>1</p><p>2</p><p>2</p><p>3</p><p>2</p>', $html);
+
+        $code = implode("\n", [
+            'body',
+            '  if ($test == true)',
+            '    h1 Phug',
+            '  else',
+            '    <!---->',
+            '  div test',
+        ]);
+
+        $renderer = new Renderer([
+            'debug' => false,
+        ]);
+
+        $html = $renderer->render($code, ['test' => false]);
+
+        self::assertSame('<body><!----><div>test</div></body>', $html);
+
+        $html = $renderer->render($code, ['test' => true]);
+
+        self::assertSame('<body><h1>Phug</h1><div>test</div></body>', $html);
     }
 
     public function testConsecutiveRenders()
