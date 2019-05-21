@@ -5,6 +5,7 @@ namespace Phug\Test;
 use PHPUnit\Framework\TestCase;
 use Phug\Formatter;
 use Phug\Renderer;
+use Phug\RendererException;
 
 /**
  * @coversDefaultClass Phug\AbstractRendererModule
@@ -150,5 +151,52 @@ class RendererModuleTest extends TestCase
         self::assertSame([TestFormatterModule::class], $renderer->getOption('formatter_modules'));
         self::assertSame([TestParserModule::class], $renderer->getOption('parser_modules'));
         self::assertSame([TestLexerModule::class], $renderer->getOption('lexer_modules'));
+    }
+
+    /**
+     * @group i
+     */
+    public function testMissingMixin()
+    {
+        include_once __DIR__.'/Utils/TestCompilerModule.php';
+        include_once __DIR__.'/Utils/TestFormatterModule.php';
+        include_once __DIR__.'/Utils/TestParserModule.php';
+        include_once __DIR__.'/Utils/TestLexerModule.php';
+
+        $renderer = new Renderer([
+            'debug' => true,
+        ]);
+        $exception = null;
+
+        try {
+            $renderer->renderFile(__DIR__.'/../fixtures/missing-mixin.pug');
+        } catch (\InvalidArgumentException $e) {
+            $exception = $e;
+        } catch (\Exception $e) {
+            $exception = $e;
+        } catch (\Throwable $e) {
+            $exception = $e;
+        }
+
+        self::assertInstanceOf(RendererException::class, $exception);
+
+        $message = str_replace("\r", '', trim($exception->getMessage()));
+
+        self::assertStringStartsWith('InvalidArgumentException in ', $message);
+
+        $message = array_slice(explode("\n", $message), 1);
+
+        self::assertSame([
+            'Unknown yolo mixin called. on line 5, offset 9',
+            '',
+            '    1 | div',
+            '    2 |     | Foo',
+            '    3 | section',
+            '    4 |     .foo',
+            '>   5 |         +yolo()',
+            '----------------^',
+            '    6 | ',
+            '    7 |     footer End',
+        ], $message);
     }
 }
