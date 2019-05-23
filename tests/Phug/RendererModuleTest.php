@@ -153,9 +153,6 @@ class RendererModuleTest extends TestCase
         self::assertSame([TestLexerModule::class], $renderer->getOption('lexer_modules'));
     }
 
-    /**
-     * @group i
-     */
     public function testMissingMixin()
     {
         include_once __DIR__.'/Utils/TestCompilerModule.php';
@@ -164,7 +161,8 @@ class RendererModuleTest extends TestCase
         include_once __DIR__.'/Utils/TestLexerModule.php';
 
         $renderer = new Renderer([
-            'debug' => true,
+            'debug'         => true,
+            'color_support' => false,
         ]);
         $exception = null;
 
