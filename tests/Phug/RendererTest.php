@@ -756,6 +756,7 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
+            'exit_on_error'      => false,
             'debug'              => true,
             'adapter_class_name' => FileAdapter::class,
         ]);
@@ -853,17 +854,21 @@ class RendererTest extends AbstractRendererTest
     public function testUndefinedIndex()
     {
         $renderer = new Renderer([
-            'debug' => false,
+            'exit_on_error' => false,
+            'debug'         => false,
         ]);
         $tolerantRenderer = new Renderer([
+            'exit_on_error'   => false,
             'debug'           => false,
             'error_reporting' => E_ALL ^ E_NOTICE,
         ]);
         $noWarningRenderer = new Renderer([
+            'exit_on_error'   => false,
             'debug'           => false,
             'error_reporting' => E_ALL ^ E_WARNING,
         ]);
         $customRenderer = new Renderer([
+            'exit_on_error'   => false,
             'debug'           => false,
             'error_reporting' => function ($number, $message) {
                 throw new ErrorException($message, $number);
