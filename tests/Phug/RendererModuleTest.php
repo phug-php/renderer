@@ -162,6 +162,7 @@ class RendererModuleTest extends TestCase
         include_once __DIR__.'/Utils/TestLexerModule.php';
 
         $renderer = new Renderer([
+            'exit_on_error' => false,
             'debug'         => true,
             'color_support' => false,
         ]);
