@@ -551,7 +551,8 @@ class FileAdapterTest extends AbstractRendererTest
     public function testMissingDirectory()
     {
         $renderer = new Renderer([
-            'cache_dir' => '///cannot/be/created',
+            'exit_on_error' => false,
+            'cache_dir'     => '///cannot/be/created',
         ]);
         $renderer->render(__DIR__.'/../../cases/attrs.pug');
     }
@@ -569,7 +570,8 @@ class FileAdapterTest extends AbstractRendererTest
     public function testReadOnlyDirectory()
     {
         $renderer = new Renderer([
-            'cache_dir' => static::getReadOnlyDirectory(),
+            'exit_on_error' => false,
+            'cache_dir'     => static::getReadOnlyDirectory(),
         ]);
         $renderer->render(__DIR__.'/../../cases/attrs.pug');
     }
