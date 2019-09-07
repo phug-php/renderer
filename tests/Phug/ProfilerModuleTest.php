@@ -49,15 +49,15 @@ class ProfilerModuleTest extends TestCase
         ]);
         $render = $renderer->render('div');
 
-        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div lexing\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div lexing:', $render);
-        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div parsing\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div parsing:', $render);
-        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div compiling\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div compiling:', $render);
-        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div formatting\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div formatting:', $render);
-        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div rendering\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div rendering:', $render);
 
         $renderer = new Renderer([
@@ -71,9 +71,9 @@ class ProfilerModuleTest extends TestCase
         ]);
         $render = $renderer->render("mixin foo\n  p&attributes(\$attributes)\n    | Hello\n+foo(a='b')");
 
-        self::assertRegExp('/\+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
-        self::assertRegExp('/text\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
-        self::assertRegExp('/mixin\s+foo\s+parsing\s*<br>\s*[\.\d]+µs/', $render);
+        self::assertRegExp('/\+foo\s+parsing\s*<br>\s*-?[\.\d]+µs/', $render);
+        self::assertRegExp('/text\s+parsing\s*<br>\s*-?[\.\d]+µs/', $render);
+        self::assertRegExp('/mixin\s+foo\s+parsing\s*<br>\s*-?[\.\d]+µs/', $render);
 
         $renderer->reInitOptions([
             'debug' => false,
@@ -92,6 +92,7 @@ class ProfilerModuleTest extends TestCase
     {
         $log = sys_get_temp_dir().DIRECTORY_SEPARATOR.'profiler'.mt_rand(0, 9999999).'.log';
         $renderer = new Renderer([
+            'exit_on_error'   => false,
             'enable_profiler' => true,
             'profiler'        => [
                 'log'     => $log,
@@ -107,15 +108,15 @@ class ProfilerModuleTest extends TestCase
         $count = count($profiler->getEvents());
         $profiler->recordDisplayEvent(1);
         self::assertCount($count, $profiler->getEvents());
-        self::assertRegExp('/div lexing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div lexing\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div lexing:', $render);
-        self::assertRegExp('/div parsing\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div parsing\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div parsing:', $render);
-        self::assertRegExp('/div compiling\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div compiling\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div compiling:', $render);
-        self::assertRegExp('/div formatting\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div formatting\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div formatting:', $render);
-        self::assertRegExp('/div rendering\s*<br>\s*[\.\d]+[µm]?s/', $render);
+        self::assertRegExp('/div rendering\s*<br>\s*-?[\.\d]+[µm]?s/', $render);
         self::assertContains('title="div rendering:', $render);
     }
 
@@ -164,6 +165,7 @@ class ProfilerModuleTest extends TestCase
     public function testExecutionMaxTime()
     {
         $renderer = new Renderer([
+            'exit_on_error'      => false,
             'execution_max_time' => 3,
             'filters'            => [
                 'verbatim' => function ($string) {
@@ -210,9 +212,10 @@ class ProfilerModuleTest extends TestCase
         $limit = 500000;
         $factor = 1;
         $renderer = new Renderer([
-            'memory_limit' => $limit,
-            'filters'      => [
-                'verbatim' => function ($string) use ($limit, &$factor) {
+            'exit_on_error' => false,
+            'memory_limit'  => $limit,
+            'filters'       => [
+                'verbatim'  => function ($string) use ($limit, &$factor) {
                     // Pollute memory
                     $GLOBALS['LAkjdJHSmlakSJHGdjAJGdjGAHgsjHDAD'] = str_repeat(
                         'a',
