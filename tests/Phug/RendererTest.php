@@ -387,6 +387,7 @@ class RendererTest extends AbstractRendererTest
             StreamAdapter::class,
         ] as $adapter) {
             $renderer = new Renderer([
+                'exit_on_error'      => false,
                 'debug'              => false,
                 'adapter_class_name' => $adapter,
             ]);
@@ -467,6 +468,7 @@ class RendererTest extends AbstractRendererTest
     public function testContextLines()
     {
         $renderer = new Renderer([
+            'exit_on_error'       => false,
             'debug'               => true,
             'error_context_lines' => 3,
             'color_support'       => false,
@@ -527,6 +529,7 @@ class RendererTest extends AbstractRendererTest
     {
         $message = null;
         $renderer = new Renderer([
+            'exit_on_error' => false,
             'debug'         => false,
             'pretty'        => true,
             'error_handler' => function ($error) use (&$message) {
