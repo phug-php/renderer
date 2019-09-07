@@ -1026,6 +1026,7 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
+            'exit_on_error' => false,
             'color_support' => false,
             'pretty'        => true,
         ]);
@@ -1046,6 +1047,7 @@ class RendererTest extends AbstractRendererTest
         }
 
         $renderer = new Renderer([
+            'exit_on_error' => false,
             'color_support' => false,
             'pretty'        => true,
         ]);
