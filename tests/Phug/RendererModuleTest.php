@@ -77,7 +77,8 @@ class RendererModuleTest extends TestCase
     {
         $source = null;
         $renderer = new Renderer([
-            'on_html' => function (Renderer\Event\HtmlEvent $event) use (&$source) {
+            'exit_on_error' => false,
+            'on_html'       => function (Renderer\Event\HtmlEvent $event) use (&$source) {
                 if ($event->getResult() === '<div></div>') {
                     $event->setError(new \Exception('Empty div'));
                     $source = $event->getRenderEvent()->getInput();
