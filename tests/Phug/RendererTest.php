@@ -540,45 +540,21 @@ class RendererTest extends AbstractRendererTest
         $path = realpath(__DIR__.'/../utils/error.pug');
         $renderer->renderFile($path);
 
-        self::assertContains(
-            defined('HHVM_VERSION')
-                ? 'Invalid operand type was used: implode() '.
-                'expects a container as one of the arguments'
-                : 'implode(): Invalid arguments passed',
-            $message
-        );
+        self::assertContains('implode(): Invalid arguments passed', $message);
 
-        self::assertNotContains(
-            'on line 3',
-            $message
-        );
+        self::assertNotContains( 'on line 3', $message);
 
-        self::assertNotContains(
-            $path,
-            $message
-        );
+        self::assertNotContains($path, $message);
 
         $message = null;
         $renderer->setOption('debug', true);
         $renderer->renderFile($path);
 
-        self::assertContains(
-            defined('HHVM_VERSION')
-                ? 'Invalid operand type was used: implode() '.
-                'expects a container as one of the arguments on line 3'
-                : 'implode(): Invalid arguments passed on line 3',
-            $message
-        );
+        self::assertContains('implode(): Invalid arguments passed on line 3', $message);
 
-        self::assertContains(
-            $path,
-            $message
-        );
+        self::assertContains($path, $message);
 
-        self::assertContains(
-            "implode('','')",
-            $message
-        );
+        self::assertContains("implode('','')", $message);
     }
 
     /**
