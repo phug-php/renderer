@@ -542,7 +542,7 @@ class RendererTest extends AbstractRendererTest
 
         self::assertContains('implode(): Invalid arguments passed', $message);
 
-        self::assertNotContains( 'on line 3', $message);
+        self::assertNotContains('on line 3', $message);
 
         self::assertNotContains($path, $message);
 
