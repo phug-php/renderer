@@ -23,4 +23,30 @@ class EventListTest extends TestCase
         self::assertSame($list, $list->unlock());
         self::assertFalse($list->isLocked());
     }
+
+    /**
+     * @covers ::<public>
+     */
+    public function testReset()
+    {
+        $list = new EventList();
+        $list[] = 5;
+        $list[] = 'foo';
+
+        self::assertSame(2, count($list));
+        self::assertSame('foo', $list[1]);
+
+        $list->reset();
+
+        self::assertSame(0, count($list));
+        self::assertFalse(isset($list[1]));
+
+        $list->lock();
+
+        self::assertTrue($list->isLocked());
+
+        $list->reset();
+
+        self::assertFalse($list->isLocked());
+    }
 }
