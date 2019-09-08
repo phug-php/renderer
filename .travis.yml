@@ -36,7 +36,7 @@ before_script:
 
 script:
   - if [ "$MULTITEST" != "on" ]; then php -d memory_limit=-1 vendor/phug/dev-tool/bin/phug-dev check --report --ignore-tests --ignore-debug --coverage-php-version=5.6; fi;
-  - if [ "$MULTITEST" = "on" ]; then php -d memory_limit=-1 vendor/kylekatarnls/multi-tester/bin/multi-tester --verbose; fi;
+  - if [ "$MULTITEST" = "on" ]; then php -d memory_limit=-1 vendor/kylekatarnls/multi-tester/bin/multi-tester --verbose --quiet-install; fi;
 
 notifications:
   slack: phug:nzXFnxhU14RWK2EQSDL0u08z
