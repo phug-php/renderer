@@ -3,44 +3,35 @@ language: php
 git:
   depth: 5
 
-env:
-  global:
-    - COVERAGE='off'
-    - MULTITEST='off'
-
 matrix:
   include:
-    - php: 5.5
-      dist: trusty
-    - php: 5.6
-      env: COVERAGE='on'
-    - php: 7.0
-    - php: 7.1
-    - php: 7.2
-    - php: 7.3
-      env: COVERAGE='on'
     - php: 7.4snapshot
     - php: 7.3
-      env: MULTITEST='on'
-
-before_install:
-  - if [ "$COVERAGE" != "on" ]; then phpenv config-rm xdebug.ini || echo "XDebug is not enabled"; fi;
+      env: COVERAGE=on
+      dist: trusty
+    - php: 7.3
+      env: STYLECHECK=on
 
 install:
-  - travis_retry composer self-update
-  - COMPOSER_MEMORY_LIMIT=-1 travis_retry composer install
-
-before_script:
-  - echo "memory_limit = 1024M" > travis.php.ini
-  - phpenv config-add travis.php.ini
+  - composer self-update
+  - if [[ "$STYLECHECK" != "on" ]]; then composer require phpunit/phpunit:^7 js-phpize/js-phpize-phug:^2 nodejs-php-fallback/coffeescript:^1 nodejs-php-fallback/less:^1 nodejs-php-fallback/uglify:^1 nodejs-php-fallback/stylus:^1 cebe/markdown:^1.1 phug/split --no-update; fi;
+  - if [[ "$STYLECHECK" = "on" ]]; then composer require squizlabs/php_codesniffer --no-update; fi;
+  - composer install
+  - |
+    if [[ "$STYLECHECK" != "on" ]]; then
+      mkdir -p tests/Phug && \
+      vendor/bin/split copy https://github.com/phug-php/phug.git tests/Phug/ --filters=tests/Phug/Adapter,tests/Phug/Profiler,tests/Phug/Utils,tests/Phug/AbstractRendererTest.php,tests/Phug/CasesTest.php,tests/Phug/ProfilerModuleTest.php,tests/Phug/Renderer*
+      vendor/bin/split copy https://github.com/phug-php/phug.git tests/ --filters=tests/call-undefined,tests/cases,tests/errored,tests/fixtures,tests/for-cache,tests/utils,tests/state.php,tests/update.php;
+    fi;
 
 script:
-  - if [ "$MULTITEST" != "on" ]; then php -d memory_limit=-1 vendor/phug/dev-tool/bin/phug-dev check --report --ignore-tests --ignore-debug --coverage-php-version=5.6; fi;
-  - if [ "$MULTITEST" = "on" ]; then php -d memory_limit=-1 vendor/kylekatarnls/multi-tester/bin/multi-tester --verbose --quiet-install; fi;
+  - if [[ "$STYLECHECK" != "on" && "$COVERAGE" != "on" ]]; then vendor/bin/phpunit; fi;
+  - if [[ "$COVERAGE" = "on" ]]; then vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml; fi;
+  - if [[ "$STYLECHECK" = "on" ]]; then vendor/bin/phpcs; fi;
 
 notifications:
   slack: phug:nzXFnxhU14RWK2EQSDL0u08z
 
 addons:
   code_climate:
-    repo_token: a2adfbf99ea6d5f8e89d5b2a2ab3e58dd6b52ccf32c047bdead69da2970fc5ab
+    repo_token: 4c27d7efe84c820a751151e32eb3850b5238eadf335953720f2e1da7a5633144
