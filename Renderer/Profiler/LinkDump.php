@@ -78,10 +78,9 @@ class LinkDump
     {
         $name = $link instanceof TextToken
             ? 'text'
-            : (
-                method_exists($link, 'getName')
-                    ? $link->getName()
-                    : get_class($link)
+            : (method_exists($link, 'getName')
+                ? $link->getName()
+                : get_class($link)
             );
         if ($link instanceof MixinCallToken) {
             $name = '+'.$name;

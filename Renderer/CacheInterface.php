@@ -2,10 +2,6 @@
 
 namespace Phug\Renderer;
 
-/**
- * CacheInterface describes additional methods an adapter must implement to be compatible with caching methods
- * and commands.
- */
 interface CacheInterface
 {
     /**
