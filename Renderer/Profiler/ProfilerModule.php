@@ -203,13 +203,14 @@ class ProfilerModule extends AbstractModule
         parent::attachEvents();
         $formatter = $this->getContainer();
         if ($formatter instanceof Formatter) {
-            $formatter->setOption('patterns.debug_comment', function ($nodeId) use ($formatter) {
-                return "\n".($nodeId !== ''
+            $formatter->setOption('patterns.debug_comment', function ($nodeId) {
+                return "\n".(
+                    $nodeId !== ''
                         ? '\\'.static::class.'::recordProfilerDisplayEvent('.
                             var_export($this->getDebugId($nodeId), true).
                         ");\n"
                         : ''
-                    )."// PUG_DEBUG:$nodeId\n";
+                )."// PUG_DEBUG:$nodeId\n";
             });
         }
     }
