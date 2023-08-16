@@ -26,11 +26,3 @@ $html = $renderer->render($pugInput);
 
 //$html is now a string of HTML or any other markup according to the formatter you choose (XML, xHTML, etc.)
 ```
-
-Security contact information
------
-
-To report a security vulnerability, please use the
-[Tidelift security contact](https://tidelift.com/security).
-Tidelift will coordinate the fix and disclosure.
-        
