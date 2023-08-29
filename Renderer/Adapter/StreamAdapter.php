@@ -31,7 +31,7 @@ class StreamAdapter extends AbstractAdapter
     {
         $stream = $this->getOption('stream_name').$this->getOption('stream_suffix');
 
-        if (!in_array($stream, stream_get_wrappers(), true)) {
+        if (!in_array($stream, stream_get_wrappers())) {
             stream_register_wrapper($stream, Template::class);
         }
 
