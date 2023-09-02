@@ -145,7 +145,7 @@ trait AdapterTrait
                     $adapter->displayCached($path, $input, $getSource, $parameters);
                 };
 
-                return in_array($method, ['display', 'displayFile'], true)
+                return in_array($method, ['display', 'displayFile'])
                     ? $display()
                     : $adapter->captureBuffer($display);
             }
