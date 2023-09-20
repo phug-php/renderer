@@ -394,13 +394,23 @@ class FileAdapter extends AbstractAdapter implements CacheInterface, LocatorInte
         $cacheFolder = $this->hasOption('cache_dir')
             ? $this->getOption('cache_dir')
             : null;
+
         if (!$cacheFolder && $cacheFolder !== false) {
             $cacheFolder = $this->getRenderer()->hasOption('cache_dir')
                 ? $this->getRenderer()->getOption('cache_dir')
                 : null;
         }
+
         if ($cacheFolder === true) {
             $cacheFolder = $this->getOption('tmp_dir');
+        }
+
+        if ($cacheFolder === null) {
+            throw new RuntimeException(
+                'You need to set "cache_dir" option to a writable location in order '.
+                'to use cache feature.',
+                7
+            );
         }
 
         if (!is_dir($cacheFolder) && !@mkdir($cacheFolder, 0777, true)) {
