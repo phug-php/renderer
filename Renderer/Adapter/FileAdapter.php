@@ -389,7 +389,7 @@ class FileAdapter extends AbstractAdapter implements CacheInterface, LocatorInte
         return file_exists($path);
     }
 
-    private function getCacheDirectory()
+    private function readCacheDirectoryFromOptions()
     {
         $cacheFolder = $this->hasOption('cache_dir')
             ? $this->getOption('cache_dir')
@@ -402,8 +402,15 @@ class FileAdapter extends AbstractAdapter implements CacheInterface, LocatorInte
         }
 
         if ($cacheFolder === true) {
-            $cacheFolder = $this->getOption('tmp_dir');
+            return $this->getOption('tmp_dir');
         }
+
+        return $cacheFolder;
+    }
+
+    private function getCacheDirectory()
+    {
+        $cacheFolder = $this->readCacheDirectoryFromOptions();
 
         if ($cacheFolder === null) {
             throw new RuntimeException(
